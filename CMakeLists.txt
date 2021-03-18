@@ -20,6 +20,7 @@ else ()
 endif ()
 
 add_definitions(-DMETROLOGICAL=1)
+add_definitions(-DBROADCOM_PLATFORM=1)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Source/cmake")
 
