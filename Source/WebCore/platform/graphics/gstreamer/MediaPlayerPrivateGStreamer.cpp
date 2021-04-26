@@ -173,6 +173,7 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
     , m_durationAtEOS(MediaTime::invalidTime())
     , m_paused(true)
     , m_playbackRate(1)
+    , m_playbackRatePause(false)
     , m_requestedState(GST_STATE_VOID_PENDING)
     , m_resetPipeline(false)
     , m_seeking(false)
@@ -183,7 +184,6 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
     , m_previousDuration(MediaTime::invalidTime())
     , m_mediaLocations(nullptr)
     , m_mediaLocationCurrentIndex(0)
-    , m_playbackRatePause(false)
     , m_timeOfOverlappingSeek(MediaTime::invalidTime())
     , m_lastPlaybackRate(1)
     , m_fillTimer(*this, &MediaPlayerPrivateGStreamer::fillTimerFired)
@@ -3002,7 +3002,9 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
         GST_ERROR ("setting stop caps tp %" GST_PTR_FORMAT, defaultCaps);
         gst_caps_unref(defaultCaps);
     }
-#endif
+#else
+    UNUSED_PARAM(player);
+#endif // USE(WESTEROS_SINK)
 }
 
 }

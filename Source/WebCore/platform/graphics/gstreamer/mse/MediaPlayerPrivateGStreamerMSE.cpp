@@ -1061,7 +1061,7 @@ bool MediaPlayerPrivateGStreamerMSE::supportsCodec(String codec)
         if (codecMatchesPattern) {
             if (codec.startsWith("vp09")) {
                 auto fields = codec.split(".");
-                for (int i = 1; codecMatchesPattern && i < fields.size(); ++i) {
+                for (size_t i = 1; codecMatchesPattern && i < fields.size(); ++i) {
                     bool ok;
                     int val = fields[i].toInt(&ok);
                     codecMatchesPattern = ok && val < 99;

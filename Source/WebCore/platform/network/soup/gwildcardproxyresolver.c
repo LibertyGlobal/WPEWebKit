@@ -184,8 +184,8 @@ static gchar* glob_to_regex(const gchar *glob_pattern)
 
 static gchar** g_wildcard_proxy_resolver_lookup(GProxyResolver *proxy_resolver,
                                                 const gchar *uri,
-                                                GCancellable *cancellable,
-                                                GError **error)
+                                                __attribute__ ((unused)) GCancellable *cancellable,
+                                                __attribute__ ((unused)) GError **error)
 {
     GWildcardProxyResolver *resolver = G_WILDCARD_PROXY_RESOLVER(proxy_resolver);
     GWildcardProxyResolverPrivate *priv = resolver->priv;

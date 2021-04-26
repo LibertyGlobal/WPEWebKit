@@ -50,9 +50,9 @@ public:
         m_family = AF_INET6;
     }
 
-    const struct in_addr& getSinAddr() { return m_address.sin_addr; };
-    const struct in6_addr& getSin6Addr() {return p_address.sin6_addr;};
-    const int family() {return m_family;};
+    const struct in_addr& getSinAddr() { return m_address.sin_addr; }
+    const struct in6_addr& getSin6Addr() {return p_address.sin6_addr;}
+    int family() {return m_family;}
 
 private:
     int m_family;

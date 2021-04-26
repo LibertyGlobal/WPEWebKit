@@ -121,6 +121,8 @@ inline WKConsoleMessageSource toAPI(JSC::MessageSource source)
     case JSC::MessageSource::ContentBlocker:
         return WKConsoleMessageSourceContentBlocker;
     case JSC::MessageSource::Other:
+    case JSC::MessageSource::Media:
+    case JSC::MessageSource::WebRTC:
         return WKConsoleMessageSourceOther;
     }
     ASSERT_NOT_REACHED();

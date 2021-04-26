@@ -166,6 +166,7 @@ void MediaPlayerPrivateHolePunch::setNetworkState(MediaPlayer::NetworkState netw
 
 void MediaPlayerPrivateHolePunch::load(const String& loadUrl)
 {
+    UNUSED_PARAM(loadUrl);
     if (m_player) {
         auto mimeType = m_player->contentMIMEType();
         if (mimeType.isEmpty() || !(mimeTypeCache().contains(mimeType))) {

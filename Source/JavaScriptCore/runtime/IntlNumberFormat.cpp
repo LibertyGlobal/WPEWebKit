@@ -476,6 +476,10 @@ ASCIILiteral IntlNumberFormat::partTypeString(UNumberFormatFields field, double 
 #if !defined(U_HIDE_DEPRECATED_API)
     case UNUM_FIELD_COUNT:
 #endif
+#if !defined(U_HIDE_DRAFT_API)
+    case UNUM_MEASURE_UNIT_FIELD:
+    case UNUM_COMPACT_FIELD:
+#endif
         return "unknown"_s;
     }
     // Any newer additions to the UNumberFormatFields enum should just be considered an "unknown" part.

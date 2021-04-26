@@ -134,7 +134,7 @@ void WebResourceLoader::didReceiveResponse(const ResourceResponse& response, boo
 
 void WebResourceLoader::didReceiveData(const IPC::DataReference& data, int64_t encodedDataLength)
 {
-    LOG(Network, "(WebProcess) WebResourceLoader::didReceiveData of size %lu for '%s'", data.size(), m_coreLoader->url().string().latin1().data());
+    LOG(Network, "(WebProcess) WebResourceLoader::didReceiveData of size %zu for '%s'", data.size(), m_coreLoader->url().string().latin1().data());
     ASSERT_WITH_MESSAGE(!m_isProcessingNetworkResponse, "Network process should not send data until we've validated the response");
 
     if (!m_numBytesReceived) {
@@ -147,7 +147,7 @@ void WebResourceLoader::didReceiveData(const IPC::DataReference& data, int64_t e
 
 void WebResourceLoader::didRetrieveDerivedData(const String& type, const IPC::DataReference& data)
 {
-    LOG(Network, "(WebProcess) WebResourceLoader::didRetrieveDerivedData of size %lu for '%s'", data.size(), m_coreLoader->url().string().latin1().data());
+    LOG(Network, "(WebProcess) WebResourceLoader::didRetrieveDerivedData of size %zu for '%s'", data.size(), m_coreLoader->url().string().latin1().data());
 
     auto buffer = SharedBuffer::create(data.data(), data.size());
     m_coreLoader->didRetrieveDerivedDataFromCache(type, buffer.get());

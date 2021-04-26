@@ -1563,6 +1563,8 @@ void GraphicsContext3D::bindVertexArray(Platform3DObject array)
     makeContextCurrent();
 #if (!USE(OPENGL_ES) && (PLATFORM(GTK) || PLATFORM(WIN))) || PLATFORM(COCOA)
     ::glBindVertexArray(array);
+#else
+    UNUSED_PARAM(array);
 #endif
 }
 

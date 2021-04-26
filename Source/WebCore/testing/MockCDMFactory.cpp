@@ -271,6 +271,7 @@ CDMInstance::SuccessValue MockCDMInstance::setStorageDirectory(const String&)
 
 void MockCDMInstance::requestLicense(LicenseType licenseType, const AtomicString& initDataType, Ref<SharedBuffer>&& initData, Ref<SharedBuffer>&& customData, LicenseCallback callback)
 {
+    UNUSED_PARAM(customData);
     MockCDMFactory* factory = m_cdm ? m_cdm->factory() : nullptr;
     if (!factory) {
         callback(SharedBuffer::create(), emptyAtom(), false, SuccessValue::Failed);

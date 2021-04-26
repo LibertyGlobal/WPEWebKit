@@ -252,29 +252,6 @@ static CDMInstance::SessionLoadFailure sessionLoadFailureFromOpenCDM(const Strin
     return CDMInstance::SessionLoadFailure::Other;
 }
 
-static MediaKeyStatus mediaKeyStatusFromOpenCDM(const String& keyStatus)
-{
-    if (keyStatus == "KeyUsable")
-        return MediaKeyStatus::Usable;
-    if (keyStatus == "KeyExpired")
-        return MediaKeyStatus::Expired;
-    if (keyStatus == "KeyReleased")
-        return MediaKeyStatus::Released;
-    if (keyStatus == "KeyOutputRestricted")
-        return MediaKeyStatus::OutputRestricted;
-    if (keyStatus == "KeyOutputDownscaled")
-        return MediaKeyStatus::OutputDownscaled;
-    if (keyStatus == "KeyStatusPending")
-        return MediaKeyStatus::StatusPending;
-    return MediaKeyStatus::InternalError;
-}
-
-static MediaKeyStatus mediaKeyStatusFromOpenCDM(const SharedBuffer& keyStatusBuffer)
-{
-    String keyStatus(StringImpl::createWithoutCopying(reinterpret_cast<const LChar*>(keyStatusBuffer.data()), keyStatusBuffer.size()));
-    return mediaKeyStatusFromOpenCDM(keyStatus);
-}
-
 static CDMInstance::KeyStatusVector copyAndMaybeReplaceValue(CDMInstance::KeyStatusVector& keyStatuses, std::optional<MediaKeyStatus> newStatus = std::nullopt)
 {
     CDMInstance::KeyStatusVector copy;
@@ -535,6 +512,7 @@ void CDMInstanceOpenCDM::updateLicense(const String& sessionId, LicenseType, con
     }
 
     session->update(reinterpret_cast<const uint8_t*>(response.data()), response.size(), [callback = WTFMove(callback)](Session* session, bool success, RefPtr<SharedBuffer>&& buffer, KeyStatusVector& keyStatuses) {
+        UNUSED_PARAM(session);
         if (success) {
             if (!buffer) {
                 ASSERT(!keyStatuses.isEmpty());

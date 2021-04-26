@@ -121,7 +121,6 @@ if (COMPILER_IS_GCC_OR_CLANG)
     # Warnings to be enabled
     WEBKIT_PREPEND_GLOBAL_COMPILER_FLAGS(-Wall
                                          -Wextra
-                                         -Wcast-align
                                          -Wformat-security
                                          -Wmissing-format-attribute
                                          -Wpointer-arith

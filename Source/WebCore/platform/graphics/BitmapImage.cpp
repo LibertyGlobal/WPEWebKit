@@ -402,7 +402,7 @@ BitmapImage::StartAnimationStatus BitmapImage::internalStartAnimation()
     // Don't start a new animation until we draw the frame that is currently being decoded.
     size_t nextFrame = (m_currentFrame + 1) % frameCount();
     if (frameIsBeingDecodedAndIsCompatibleWithOptionsAtIndex(nextFrame, DecodingOptions(DecodingMode::Asynchronous))) {
-        LOG(Images, "BitmapImage::%s - %p - url: %s [nextFrame = %ld is being decoded]", __FUNCTION__, this, sourceURL().string().utf8().data(), nextFrame);
+        LOG(Images, "BitmapImage::%s - %p - url: %s [nextFrame = %zu is being decoded]", __FUNCTION__, this, sourceURL().string().utf8().data(), nextFrame);
         return StartAnimationStatus::DecodingActive;
     }
 
@@ -451,11 +451,11 @@ BitmapImage::StartAnimationStatus BitmapImage::internalStartAnimation()
     // when the timer fires and m_currentFrame will be advanced to nextFrame since it is not being decoded.
     if (shouldUseAsyncDecodingForAnimatedImages()) {
         if (frameHasDecodedNativeImageCompatibleWithOptionsAtIndex(nextFrame, m_currentSubsamplingLevel, DecodingOptions(std::optional<IntSize>())))
-            LOG(Images, "BitmapImage::%s - %p - url: %s [cachedFrameCount = %ld nextFrame = %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_cachedFrameCount, nextFrame);
+            LOG(Images, "BitmapImage::%s - %p - url: %s [cachedFrameCount = %zu nextFrame = %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_cachedFrameCount, nextFrame);
         else {
             m_source->requestFrameAsyncDecodingAtIndex(nextFrame, m_currentSubsamplingLevel);
             m_currentFrameDecodingStatus = DecodingStatus::Decoding;
-            LOG(Images, "BitmapImage::%s - %p - url: %s [requesting async decoding for nextFrame = %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), nextFrame);
+            LOG(Images, "BitmapImage::%s - %p - url: %s [requesting async decoding for nextFrame = %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), nextFrame);
         }
 
         if (m_clearDecoderAfterAsyncFrameRequestForTesting)
@@ -479,7 +479,7 @@ void BitmapImage::advanceAnimation()
         // Force repaint if showDebugBackground() is on.
         if (m_showDebugBackground)
             imageObserver()->changedInRect(*this);
-        LOG(Images, "BitmapImage::%s - %p - url: %s [lateFrameCount = %ld nextFrame = %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_lateFrameCount, nextFrame);
+        LOG(Images, "BitmapImage::%s - %p - url: %s [lateFrameCount = %zu nextFrame = %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_lateFrameCount, nextFrame);
     }
 }
 
@@ -498,7 +498,7 @@ void BitmapImage::internalAdvanceAnimation()
     if (imageObserver())
         imageObserver()->imageFrameAvailable(*this, ImageAnimatingState::Yes, nullptr, decodingStatus);
 
-    LOG(Images, "BitmapImage::%s - %p - url: %s [m_currentFrame = %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), m_currentFrame);
+    LOG(Images, "BitmapImage::%s - %p - url: %s [m_currentFrame = %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), m_currentFrame);
 }
 
 bool BitmapImage::isAnimating() const
@@ -575,7 +575,7 @@ void BitmapImage::callDecodingCallbacks()
 
 void BitmapImage::imageFrameAvailableAtIndex(size_t index)
 {
-    LOG(Images, "BitmapImage::%s - %p - url: %s [requested frame %ld is now available]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
+    LOG(Images, "BitmapImage::%s - %p - url: %s [requested frame %zu is now available]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
 
     if (canAnimate()) {
         if (index == (m_currentFrame + 1) % frameCount()) {
@@ -583,7 +583,7 @@ void BitmapImage::imageFrameAvailableAtIndex(size_t index)
             if (!m_frameTimer)
                 internalAdvanceAnimation();
             else
-                LOG(Images, "BitmapImage::%s - %p - url: %s [earlyFrameCount = %ld nextFrame = %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_earlyFrameCount, index);
+                LOG(Images, "BitmapImage::%s - %p - url: %s [earlyFrameCount = %zu nextFrame = %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), ++m_earlyFrameCount, index);
             return;
         }
 

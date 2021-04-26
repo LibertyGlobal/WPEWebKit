@@ -235,6 +235,8 @@ if (COMPILER_IS_GCC_OR_CLANG AND UNIX AND NOT APPLE)
         set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-stack-protector")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-stack-protector")
     endif()
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Werror -Wformat=1 -Wno-pragmas")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Werror -Wformat=1 -Wno-pragmas")
 endif ()
 
 include(GStreamerChecks)

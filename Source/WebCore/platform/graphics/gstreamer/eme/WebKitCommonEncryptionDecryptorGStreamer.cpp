@@ -125,7 +125,6 @@ static GstCaps* webkitMediaCommonEncryptionDecryptTransformCaps(GstBaseTransform
     GST_LOG_OBJECT(base, "direction: %s, caps: %" GST_PTR_FORMAT " filter: %" GST_PTR_FORMAT, (direction == GST_PAD_SRC) ? "src" : "sink", caps, filter);
 
     GstCaps* transformedCaps = gst_caps_new_empty();
-    WebKitMediaCommonEncryptionDecrypt* self = WEBKIT_MEDIA_CENC_DECRYPT(base);
 
     unsigned size = gst_caps_get_size(caps);
     for (unsigned i = 0; i < size; ++i) {
@@ -378,7 +377,7 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
         GST_ELEMENT_ERROR (self, STREAM, DECRYPT, ("Decryption failed"), (NULL));
         klass->releaseCipher(self);
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
-        gst_element_post_message(GST_ELEMENT(self), gst_message_new_element(GST_OBJECT(self), gst_structure_new("drm-decryption-error-encountered", nullptr)));
+        gst_element_post_message(GST_ELEMENT(self), gst_message_new_element(GST_OBJECT(self), gst_structure_new_empty("drm-decryption-error-encountered")));
         return GST_FLOW_NOT_SUPPORTED;
     }
 
@@ -545,7 +544,6 @@ static gboolean webkitMediaCommonEncryptionDecryptSinkEventHandler(GstBaseTransf
 {
     WebKitMediaCommonEncryptionDecrypt* self = WEBKIT_MEDIA_CENC_DECRYPT(trans);
     WebKitMediaCommonEncryptionDecryptPrivate* priv = WEBKIT_MEDIA_CENC_DECRYPT_GET_PRIVATE(self);
-    WebKitMediaCommonEncryptionDecryptClass* klass = WEBKIT_MEDIA_CENC_DECRYPT_GET_CLASS(self);
     gboolean result = FALSE;
 
     switch (GST_EVENT_TYPE(event)) {

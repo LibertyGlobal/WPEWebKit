@@ -208,11 +208,11 @@ AppendPipeline::AppendPipeline(Ref<MediaSourceClientGStreamerMSE> mediaSourceCli
     , m_sourceBufferPrivate(sourceBufferPrivate.get())
     , m_playerPrivate(&playerPrivate)
     , m_id(0)
+    , m_allowedGap(MediaTime(1,10))
     , m_wasBusAlreadyNotifiedOfAvailableSamples(false)
     , m_appendState(AppendState::NotStarted)
     , m_abortPending(false)
     , m_streamType(Unknown)
-    , m_allowedGap(MediaTime(1,10))
 {
     ASSERT(WTF::isMainThread());
     std::call_once(s_staticInitializationFlag, AppendPipeline::staticInitialization);

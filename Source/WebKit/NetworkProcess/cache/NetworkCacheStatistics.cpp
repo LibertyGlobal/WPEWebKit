@@ -125,7 +125,7 @@ void Statistics::initialize(const String& databasePath)
 #else
         UNUSED_PARAM(startTime);
 #endif
-        LOG(NetworkCache, "(NetworkProcess) Network cache statistics database load complete, entries=%lu time=%" PRIi64 "ms", static_cast<size_t>(m_approximateEntryCount), elapsed.millisecondsAs<int64_t>());
+        LOG(NetworkCache, "(NetworkProcess) Network cache statistics database load complete, entries=%zu time=%" PRIi64 "ms", static_cast<size_t>(m_approximateEntryCount), elapsed.millisecondsAs<int64_t>());
 
         if (!m_approximateEntryCount) {
             bootstrapFromNetworkCache(networkCachePath);
@@ -134,7 +134,7 @@ void Statistics::initialize(const String& databasePath)
 #else
             UNUSED_PARAM(startTime);
 #endif
-            LOG(NetworkCache, "(NetworkProcess) Network cache statistics database bootstrapping complete, entries=%lu time=%" PRIi64 "ms", static_cast<size_t>(m_approximateEntryCount), elapsed.millisecondsAs<int64_t>());
+            LOG(NetworkCache, "(NetworkProcess) Network cache statistics database bootstrapping complete, entries=%zu time=%" PRIi64 "ms", static_cast<size_t>(m_approximateEntryCount), elapsed.millisecondsAs<int64_t>());
         }
     });
 }
@@ -174,13 +174,13 @@ void Statistics::shrinkIfNeeded()
     if (m_approximateEntryCount < maxEntries)
         return;
 
-    LOG(NetworkCache, "(NetworkProcess) shrinking statistics cache m_approximateEntryCount=%lu, maxEntries=%lu", static_cast<size_t>(m_approximateEntryCount), maxEntries);
+    LOG(NetworkCache, "(NetworkProcess) shrinking statistics cache m_approximateEntryCount=%zu, maxEntries=%zu", static_cast<size_t>(m_approximateEntryCount), maxEntries);
 
     clear();
 
     serialBackgroundIOQueue().dispatch([this, networkCachePath = m_cache.recordsPath()] {
         bootstrapFromNetworkCache(networkCachePath);
-        LOG(NetworkCache, "(NetworkProcess) statistics cache shrink completed m_approximateEntryCount=%lu", static_cast<size_t>(m_approximateEntryCount));
+        LOG(NetworkCache, "(NetworkProcess) statistics cache shrink completed m_approximateEntryCount=%zu", static_cast<size_t>(m_approximateEntryCount));
     });
 }
 

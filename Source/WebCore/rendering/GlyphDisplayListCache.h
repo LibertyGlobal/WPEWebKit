@@ -50,7 +50,7 @@ public:
     {
         if (MemoryPressureHandler::singleton().isUnderMemoryPressure()) {
             if (!m_glyphRunMap.isEmpty()) {
-                LOG(MemoryPressure, "GlyphDisplayListCache::%s - Under memory pressure - size: %d - sizeInBytes: %ld", __FUNCTION__, size(), sizeInBytes());
+                LOG(MemoryPressure, "GlyphDisplayListCache::%s - Under memory pressure - size: %d - sizeInBytes: %zu", __FUNCTION__, size(), sizeInBytes());
                 clear();
             }
             return nullptr;

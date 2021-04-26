@@ -286,7 +286,7 @@ void ImageSource::cacheNativeImageAtIndexAsync(NativeImagePtr&& nativeImage, siz
 
     // Clean the old native image and set a new one
     cacheNativeImageAtIndex(WTFMove(nativeImage), index, subsamplingLevel, decodingOptions, decodingStatus);
-    LOG(Images, "ImageSource::%s - %p - url: %s [frame %ld has been cached]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
+    LOG(Images, "ImageSource::%s - %p - url: %s [frame %zu has been cached]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
 
     // Notify the image with the readiness of the new frame NativeImage.
     if (m_image)
@@ -337,9 +337,9 @@ void ImageSource::startAsyncDecodingQueue()
             // Get the frame NativeImage on the decoding thread.
             NativeImagePtr nativeImage = protectedDecoder->createFrameImageAtIndex(frameRequest.index, frameRequest.subsamplingLevel, frameRequest.decodingOptions);
             if (nativeImage)
-                LOG(Images, "ImageSource::%s - %p - url: %s [frame %ld has been decoded]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
+                LOG(Images, "ImageSource::%s - %p - url: %s [frame %zu has been decoded]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
             else {
-                LOG(Images, "ImageSource::%s - %p - url: %s [decoding for frame %ld has failed]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
+                LOG(Images, "ImageSource::%s - %p - url: %s [decoding for frame %zu has failed]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
                 continue;
             }
 
@@ -355,7 +355,7 @@ void ImageSource::startAsyncDecodingQueue()
                     protectedThis->m_frameCommitQueue.removeFirst();
                     protectedThis->cacheNativeImageAtIndexAsync(WTFMove(nativeImage), frameRequest.index, frameRequest.subsamplingLevel, frameRequest.decodingOptions, frameRequest.decodingStatus);
                 } else
-                    LOG(Images, "ImageSource::%s - %p - url: %s [frame %ld will not cached]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
+                    LOG(Images, "ImageSource::%s - %p - url: %s [frame %zu will not cached]", __FUNCTION__, protectedThis.ptr(), sourceURL.utf8().data(), frameRequest.index);
             });
         }
     });
@@ -370,7 +370,7 @@ void ImageSource::requestFrameAsyncDecodingAtIndex(size_t index, SubsamplingLeve
     ASSERT(index < m_frames.size());
     DecodingStatus decodingStatus = m_decoder->frameIsCompleteAtIndex(index) ? DecodingStatus::Complete : DecodingStatus::Partial;
 
-    LOG(Images, "ImageSource::%s - %p - url: %s [enqueuing frame %ld for decoding]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
+    LOG(Images, "ImageSource::%s - %p - url: %s [enqueuing frame %zu for decoding]", __FUNCTION__, this, sourceURL().string().utf8().data(), index);
     m_frameRequestQueue->enqueue({ index, subsamplingLevel, sizeForDrawing, decodingStatus });
     m_frameCommitQueue.append({ index, subsamplingLevel, sizeForDrawing, decodingStatus });
 }
@@ -388,7 +388,7 @@ void ImageSource::stopAsyncDecodingQueue()
     std::for_each(m_frameCommitQueue.begin(), m_frameCommitQueue.end(), [this](const ImageFrameRequest& frameRequest) {
         ImageFrame& frame = m_frames[frameRequest.index];
         if (!frame.isInvalid()) {
-            LOG(Images, "ImageSource::%s - %p - url: %s [decoding has been cancelled for frame %ld]", __FUNCTION__, this, sourceURL().string().utf8().data(), frameRequest.index);
+            LOG(Images, "ImageSource::%s - %p - url: %s [decoding has been cancelled for frame %zu]", __FUNCTION__, this, sourceURL().string().utf8().data(), frameRequest.index);
             frame.clear();
         }
     });

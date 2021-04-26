@@ -404,6 +404,10 @@ void WebChromeClient::addMessageToConsole(MessageSource source, MessageLevel lev
             src = "Security"; break;
         case JSC::MessageSource::ContentBlocker:
             src = "ContentBlocker"; break;
+        case JSC::MessageSource::Media:
+            src = "Media"; break;
+        case JSC::MessageSource::WebRTC:
+            src = "WebRTC"; break;
         case JSC::MessageSource::Other:
             src = "Other"; break;
     }
