@@ -24,6 +24,7 @@
  */
 
 #include "NetworkProcessMainUnix.h"
+#include "HijackSignals.h"
 
 #include <cstdlib>
 #include <stdio.h>
@@ -58,6 +59,10 @@ int main(int argc, char** argv)
 #if USE(GCRYPT)
     PAL::GCrypt::initialize();
 #endif
+    if(!::getenv("WPE_BYPASS_NETWORK_PROCESS_HIJACK_SIGNALS"))
+    {
+        hijackSignals();
+    }
 
     return NetworkProcessMainUnix(argc, argv);
 }

@@ -245,9 +245,24 @@ void WTFPrintBacktrace(void** stack, int size)
     out.print(stackTrace);
 }
 
+namespace {
+std::atomic<WTFCrashHookFunction> globalHook_;
+} // namespace
+
+void WTFSetCrashHook(WTFCrashHookFunction hook)
+{
+    globalHook_ = hook;
+}
+
+
 #if !defined(NDEBUG) || !OS(DARWIN)
 void WTFCrash()
 {
+    {
+        const WTFCrashHookFunction hook = globalHook_;
+        if(hook) hook();
+    }
+
     WTFReportBacktrace();
 #if ASAN_ENABLED
     __builtin_trap();

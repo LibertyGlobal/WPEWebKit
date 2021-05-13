@@ -66,10 +66,12 @@ set(WEBKIT_EXTRA_DEPENDENCIES
 )
 
 list(APPEND WebProcess_SOURCES
+    Shared/HijackSignals.cpp
     WebProcess/EntryPoint/unix/WebProcessMain.cpp
 )
 
 list(APPEND NetworkProcess_SOURCES
+    Shared/HijackSignals.cpp
     NetworkProcess/EntryPoint/unix/NetworkProcessMain.cpp
 )
 
