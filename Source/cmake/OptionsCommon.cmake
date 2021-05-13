@@ -102,6 +102,18 @@ if (USE_OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif ()
 
+if (ENABLE_BACKTRACE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -rdynamic")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fasynchronous-unwind-tables")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funwind-tables")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fasynchronous-unwind-tables")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funwind-tables")
+else ()
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fvisibility=hidden")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fvisibility=hidden -fvisibility-inlines-hidden")
+endif ()
+
 # GTK and WPE use the GNU installation directories as defaults.
 if (NOT PORT STREQUAL "GTK" AND NOT PORT STREQUAL "WPE")
     set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Absolute path to library installation directory")

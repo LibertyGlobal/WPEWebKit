@@ -24,6 +24,7 @@
  */
 
 #include "WebProcessMainUnix.h"
+#include "HijackSignals.h"
 
 #include <cstdlib>
 
@@ -56,6 +57,11 @@ int main(int argc, char** argv)
 #if USE(GCRYPT)
     PAL::GCrypt::initialize();
 #endif
+
+    if(!::getenv("WPE_BYPASS_WEB_PROCESS_HIJACK_SIGNALS"))
+    {
+        hijackSignals();
+    }
 
     return WebProcessMainUnix(argc, argv);
 }
