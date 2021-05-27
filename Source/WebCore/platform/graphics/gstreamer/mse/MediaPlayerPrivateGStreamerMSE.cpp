@@ -835,7 +835,8 @@ bool MediaPlayerPrivateGStreamerMSE::isTimeBuffered(const MediaTime &time) const
 
 std::optional<VideoPlaybackQualityMetrics> MediaPlayerPrivateGStreamerMSE::videoPlaybackQualityMetrics()
 {
-#if USE(WESTEROS_SINK) && PLATFORM(BROADCOM)
+#if PLATFORM(BROADCOM)
+#if USE(WESTEROS_SINK)
     if (!m_videoSink)
         return std::nullopt;
     GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_videoSink.get(), "sink"));
@@ -864,7 +865,28 @@ std::optional<VideoPlaybackQualityMetrics> MediaPlayerPrivateGStreamerMSE::video
         corrupted = 0;
     gst_query_unref(query);
     return VideoPlaybackQualityMetrics {total, dropped, corrupted, 0};
-#endif
+#else
+    GRefPtr<GstQuery> query = adoptGRef(gst_query_new_custom(GST_QUERY_CUSTOM, gst_structure_new_empty("get_frame_drop_stats")));
+    if (!gst_element_query(m_pipeline.get(), query.get())) {
+        return std::nullopt;
+    }
+
+    const GstStructure *ret = gst_query_get_structure(query.get());
+    guint rendered_frames;
+    if (!gst_structure_get_uint(ret, "rendered_frames", &rendered_frames)){
+        GST_DEBUG("rendered_frames field is missing in get_frame_drop_stats structure");
+        return std::nullopt;
+    }
+
+    guint dropped_frames;
+    if (!gst_structure_get_uint(ret, "dropped_frames", &dropped_frames)) {
+        GST_DEBUG("dropped_frames field is missing in get_frame_drop_stats structure");
+        return std::nullopt;
+    }
+
+    return VideoPlaybackQualityMetrics {rendered_frames, dropped_frames, 0, 0};
+#endif // USE(WESTEROS_SINK)
+#endif // PLATFORM(BROADCOM)
     return VideoPlaybackQualityMetrics { decodedFrameCount(), droppedFrameCount(), 0, 0.0 };
 }
 
