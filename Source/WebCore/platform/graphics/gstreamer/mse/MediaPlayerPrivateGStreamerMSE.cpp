@@ -851,23 +851,18 @@ std::optional<VideoPlaybackQualityMetrics> MediaPlayerPrivateGStreamerMSE::video
     return VideoPlaybackQualityMetrics {total, dropped, corrupted, 0};
 #else
     GRefPtr<GstQuery> query = adoptGRef(gst_query_new_custom(GST_QUERY_CUSTOM, gst_structure_new_empty("get_frame_drop_stats")));
-    if (!gst_element_query(m_pipeline.get(), query.get())) {
-        return VideoPlaybackQualityMetrics {m_cached_decoded_frames, m_cached_dropped_frames, 0, 0};
-    }
+    if (gst_element_query(m_pipeline.get(), query.get())) {
+        const GstStructure *ret = gst_query_get_structure(query.get());
+        guint decoded_frames;
+        if (gst_structure_get_uint(ret, "decoded_frames", &decoded_frames)){
+            m_cached_decoded_frames = decoded_frames;
+        }
 
-    const GstStructure *ret = gst_query_get_structure(query.get());
-    guint decoded_frames;
-    if (!gst_structure_get_uint(ret, "decoded_frames", &decoded_frames)){
-        return VideoPlaybackQualityMetrics {m_cached_decoded_frames, m_cached_dropped_frames, 0, 0};
+        guint dropped_frames;
+        if (gst_structure_get_uint(ret, "dropped_frames", &dropped_frames)) {
+            m_cached_dropped_frames = dropped_frames;
+        }
     }
-
-    guint dropped_frames;
-    if (!gst_structure_get_uint(ret, "dropped_frames", &dropped_frames)) {
-        return VideoPlaybackQualityMetrics {m_cached_decoded_frames, m_cached_dropped_frames, 0, 0};
-    }
-
-    m_cached_decoded_frames = decoded_frames;
-    m_cached_dropped_frames = dropped_frames;
 
     return VideoPlaybackQualityMetrics {m_cached_decoded_frames, m_cached_dropped_frames, 0, 0};
 #endif // USE(WESTEROS_SINK)
