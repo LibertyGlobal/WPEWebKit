@@ -817,59 +817,6 @@ bool MediaPlayerPrivateGStreamerMSE::isTimeBuffered(const MediaTime &time) const
     return result;
 }
 
-std::optional<VideoPlaybackQualityMetrics> MediaPlayerPrivateGStreamerMSE::videoPlaybackQualityMetrics()
-{
-#if PLATFORM(BROADCOM)
-#if USE(WESTEROS_SINK)
-    if (!m_videoSink)
-        return std::nullopt;
-    GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_videoSink.get(), "sink"));
-    if (!videoSinkPad)
-        return std::nullopt;
-    GstStructure *structure =
-        gst_structure_new("get_video_playback_quality",
-                          "total", G_TYPE_UINT, 0,
-                          "dropped", G_TYPE_UINT, 0,
-                          "corrupted", G_TYPE_UINT, 0,
-                          nullptr);
-    GstQuery *query = gst_query_new_custom(GST_QUERY_CUSTOM, structure);
-    if (!gst_pad_query(videoSinkPad.get(), query)) {
-        gst_query_unref(query);
-        return std::nullopt;
-    }
-    guint total = 0;
-    guint dropped = 0;
-    guint corrupted = 0;
-    structure = (GstStructure *)gst_query_get_structure(query);
-    if (!gst_structure_get_uint(structure, "total", &total))
-        total = 0;
-    if (!gst_structure_get_uint(structure, "dropped", &dropped))
-        dropped = 0;
-    if (!gst_structure_get_uint(structure, "corrupted", &corrupted))
-        corrupted = 0;
-    gst_query_unref(query);
-    return VideoPlaybackQualityMetrics {total, dropped, corrupted, 0};
-#else
-    GRefPtr<GstQuery> query = adoptGRef(gst_query_new_custom(GST_QUERY_CUSTOM, gst_structure_new_empty("get_frame_drop_stats")));
-    if (gst_element_query(m_pipeline.get(), query.get())) {
-        const GstStructure *ret = gst_query_get_structure(query.get());
-        guint decoded_frames;
-        if (gst_structure_get_uint(ret, "decoded_frames", &decoded_frames)){
-            m_cached_decoded_frames = decoded_frames;
-        }
-
-        guint dropped_frames;
-        if (gst_structure_get_uint(ret, "dropped_frames", &dropped_frames)) {
-            m_cached_dropped_frames = dropped_frames;
-        }
-    }
-
-    return VideoPlaybackQualityMetrics {m_cached_decoded_frames, m_cached_dropped_frames, 0, 0};
-#endif // USE(WESTEROS_SINK)
-#endif // PLATFORM(BROADCOM)
-    return VideoPlaybackQualityMetrics { decodedFrameCount(), droppedFrameCount(), 0, 0.0 };
-}
-
 bool MediaPlayerPrivateGStreamerMSE::playbackPipelineHasFutureData() const
 {
     if (!m_playbackPipeline || m_isEndReached || m_errorOccured)

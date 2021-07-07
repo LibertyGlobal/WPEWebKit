@@ -145,6 +145,12 @@ public:
 
     String errorMessage() const override { return m_errorMessage; }
 
+#if ENABLE(MEDIA_SOURCE)
+    std::optional<VideoPlaybackQualityMetrics> videoPlaybackQualityMetrics() override;
+#endif
+    unsigned decodedFrameCount() const override;
+    unsigned droppedFrameCount() const override;
+
 private:
     static void getSupportedTypes(HashSet<String, ASCIICaseInsensitiveHash>&);
     static MediaPlayer::SupportsType supportsType(const MediaEngineSupportParameters&);
@@ -197,6 +203,8 @@ private:
 #endif
 
     long long determineTotalBytes() const;
+
+    void updateFrameStats() const;
 
 protected:
     bool m_buffering;
@@ -306,6 +314,9 @@ private:
     virtual bool isMediaSource() const { return false; }
 
     String m_errorMessage;
+
+    mutable guint m_decoded_frames = 0;
+    mutable guint m_dropped_frames = 0;
 };
 }
 

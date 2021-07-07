@@ -115,7 +115,6 @@ private:
     void updatePlaybackRate() override;
     void asyncStateChangeDone() override;
 
-    std::optional<VideoPlaybackQualityMetrics> videoPlaybackQualityMetrics() final;
     bool isTimeBuffered(const MediaTime&) const;
     bool playbackPipelineHasFutureData() const;
 
