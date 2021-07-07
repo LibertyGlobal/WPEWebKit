@@ -121,7 +121,6 @@ private:
     void updatePlaybackRate() override;
     void asyncStateChangeDone() override;
 
-    std::optional<VideoPlaybackQualityMetrics> videoPlaybackQualityMetrics() final;
     bool isTimeBuffered(const MediaTime&) const;
     bool playbackPipelineHasFutureData() const;
 
@@ -142,6 +141,8 @@ private:
     bool m_didLogRebufferingOnce { false };
     URL m_url;
     bool m_didFirstSeek = false;
+    guint m_cached_decoded_frames = 0;
+    guint m_cached_dropped_frames = 0;
 };
 
 } // namespace WebCore
