@@ -115,12 +115,8 @@ Ref<MediaKeyStatusMap> MediaKeySession::keyStatuses() const
     return m_keyStatuses.copyRef();
 }
 
-void MediaKeySession::generateRequest(const AtomicString& initDataType, const BufferSource& initData, std::optional<BufferSource::VariantType>&& customInput, Ref<DeferredPromise>&& promise)
+void MediaKeySession::generateRequest(const AtomicString& initDataType, const BufferSource& initData, const AtomicString& customInput, Ref<DeferredPromise>&& promise)
 {
-    std::optional<BufferSource> customData;
-    if (customInput)
-        customData = BufferSource(WTFMove(customInput.value()));
-
     // https://w3c.github.io/encrypted-media/#dom-mediakeysession-generaterequest
     // W3C Editor's Draft 09 November 2016
 
@@ -156,7 +152,7 @@ void MediaKeySession::generateRequest(const AtomicString& initDataType, const Bu
     // 8. Let session type be this object's session type.
     // 9. Let promise be a new promise.
     // 10. Run the following steps in parallel:
-    m_taskQueue.enqueueTask([this, initData = SharedBuffer::create(initData.data(), initData.length()), initDataType, customData = SharedBuffer::create(customData ? customData->data(): nullptr, customData ? customData->length() : 0), promise = WTFMove(promise)] () mutable {
+    m_taskQueue.enqueueTask([this, initData = SharedBuffer::create(initData.data(), initData.length()), initDataType, customData = SharedBuffer::create((!customInput.isNull() && !customInput.isEmpty()) ? customInput.characters8(): nullptr, customInput.length()), promise = WTFMove(promise)] () mutable {
         // 10.1. If the init data is not valid for initDataType, reject promise with a newly created TypeError.
         // 10.2. Let sanitized init data be a validated and sanitized version of init data.
         RefPtr<SharedBuffer> sanitizedInitData = m_implementation->sanitizeInitData(initDataType, initData);
