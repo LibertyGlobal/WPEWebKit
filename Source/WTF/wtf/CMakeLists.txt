@@ -484,6 +484,7 @@ list(APPEND WTF_LIBRARIES
     ${ICU_DATA_LIBRARIES}
     ${ICU_I18N_LIBRARIES}
     ${ICU_LIBRARIES}
+    odherr
 )
 
 if (WIN32)
