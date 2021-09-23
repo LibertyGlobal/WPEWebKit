@@ -47,6 +47,24 @@
 #include "Settings.h"
 #include "SharedBuffer.h"
 
+namespace {
+
+bool gWorkaroundForShaka = getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") != nullptr && *getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") == '1';
+
+void ConvertKIDEndianness(Ref<WebCore::SharedBuffer>& playreadyKID)
+{
+    const char* playreadyKeyId = playreadyKID->data();
+
+    uint8_t* keyId = const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(playreadyKeyId));
+    // Converting the KID format between the standard and PlayReady formats
+    // consists of switching endian on bytes 0-3, 4-5, and 6-7.
+    std::swap(keyId[0], keyId[3]);
+    std::swap(keyId[1], keyId[2]);
+    std::swap(keyId[4], keyId[5]);
+    std::swap(keyId[6], keyId[7]);
+}
+}
+
 namespace WebCore {
 
 Ref<MediaKeySession> MediaKeySession::create(ScriptExecutionContext& context, WeakPtr<MediaKeys>&& keys, MediaKeySessionType sessionType, bool useDistinctiveIdentifier, Ref<CDM>&& implementation, Ref<CDMInstance>&& instance)
@@ -681,8 +699,14 @@ void MediaKeySession::updateKeyStatuses(CDMInstanceClient::KeyStatusVector&& inp
 
     m_statuses.clear();
     m_statuses.reserveCapacity(inputStatuses.size());
-    for (auto& status : inputStatuses)
+    for (auto& status : inputStatuses) {
+        if (gWorkaroundForShaka) {
+            LOG(EME, "EME - workaround for Shaka, convert KID endianness");
+            ConvertKIDEndianness(status.first);
+        }
+
         m_statuses.uncheckedAppend({ WTFMove(status.first), toMediaKeyStatus(status.second) });
+    }
 
     // 5. Queue a task to fire a simple event named keystatuseschange at the session.
     m_eventQueue.enqueueEvent(Event::create(eventNames().keystatuseschangeEvent, Event::CanBubble::No, Event::IsCancelable::No));
