@@ -2572,7 +2572,8 @@ static HashSet<String, ASCIICaseInsensitiveHash>& mimeTypeSet()
             {Demuxer, "application/x-pn-realaudio", { }},
             {Demuxer, "application/vnd.rn-realmedia", { }},
             {Demuxer, "audio/x-wav", {"audio/x-wav", "audio/wav", "audio/vnd.wave"}},
-            {Demuxer, "application/x-hls", {"application/vnd.apple.mpegurl", "application/x-mpegurl"}}
+            {Demuxer, "application/x-hls", {"application/vnd.apple.mpegurl", "application/x-mpegurl"}},
+            {Demuxer, "application/dash+xml", { }}
         };
 
         for (auto& current : mapping) {
