@@ -515,9 +515,9 @@ inline void StyleBuilderCustom::applyValueTextIndent(StyleResolver& styleResolve
         if (!primitiveValue.valueID())
             lengthOrPercentageValue = primitiveValue.convertToLength<FixedIntegerConversion | PercentConversion | CalculatedConversion>(styleResolver.state().cssToLengthConversionData());
 #if ENABLE(CSS3_TEXT)
-        else if (primitiveValue.valueID() == CSSValueWebkitEachLine)
+        else if (primitiveValue.valueID() == CSSValueEachLine)
             textIndentLineValue = TextIndentLine::EachLine;
-        else if (primitiveValue.valueID() == CSSValueWebkitHanging)
+        else if (primitiveValue.valueID() == CSSValueHanging)
             textIndentTypeValue = TextIndentType::Hanging;
 #endif
     }
