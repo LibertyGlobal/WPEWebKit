@@ -84,7 +84,7 @@ void CacheStorageEngineConnection::caches(PAL::SessionID sessionID, uint64_t req
 {
     RELEASE_LOG_IF_ALLOWED("caches (%" PRIu64 ")", requestIdentifier);
     Engine::retrieveCaches(sessionID, WTFMove(origin), updateCounter, [connection = makeRef(m_connection.connection()), sessionID, origin, requestIdentifier](CacheInfosOrError&& result) {
-        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("caches", "caches size is %lu", [](const auto& value) { return value.infos.size(); });
+        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("caches", "caches size is %u", [](const auto& value) { return value.infos.size(); });
         connection->send(Messages::WebCacheStorageConnection::UpdateCaches(requestIdentifier, result), sessionID.sessionID());
     });
 }
@@ -93,7 +93,7 @@ void CacheStorageEngineConnection::retrieveRecords(PAL::SessionID sessionID, uin
 {
     RELEASE_LOG_IF_ALLOWED("retrieveRecords (%" PRIu64 ") in cache %" PRIu64, requestIdentifier, cacheIdentifier);
     Engine::retrieveRecords(sessionID, cacheIdentifier, WTFMove(url), [connection = makeRef(m_connection.connection()), sessionID, requestIdentifier](RecordsOrError&& result) {
-        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("retrieveRecords", "records size is %lu", [](const auto& value) { return value.size(); });
+        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("retrieveRecords", "records size is %u", [](const auto& value) { return value.size(); });
         connection->send(Messages::WebCacheStorageConnection::UpdateRecords(requestIdentifier, result), sessionID.sessionID());
     });
 }
@@ -102,16 +102,16 @@ void CacheStorageEngineConnection::deleteMatchingRecords(PAL::SessionID sessionI
 {
     RELEASE_LOG_IF_ALLOWED("deleteMatchingRecords (%" PRIu64 ") in cache %" PRIu64, requestIdentifier, cacheIdentifier);
     Engine::deleteMatchingRecords(sessionID, cacheIdentifier, WTFMove(request), WTFMove(options), [connection = makeRef(m_connection.connection()), sessionID, requestIdentifier](RecordIdentifiersOrError&& result) {
-        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("deleteMatchingRecords", "deleted %lu records",  [](const auto& value) { return value.size(); });
+        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("deleteMatchingRecords", "deleted %u records",  [](const auto& value) { return value.size(); });
         connection->send(Messages::WebCacheStorageConnection::DeleteRecordsCompleted(requestIdentifier, result), sessionID.sessionID());
     });
 }
 
 void CacheStorageEngineConnection::putRecords(PAL::SessionID sessionID, uint64_t requestIdentifier, uint64_t cacheIdentifier, Vector<Record>&& records)
 {
-    RELEASE_LOG_IF_ALLOWED("putRecords (%" PRIu64 ") in cache %" PRIu64 ", %lu records", requestIdentifier, cacheIdentifier, records.size());
+    RELEASE_LOG_IF_ALLOWED("putRecords (%" PRIu64 ") in cache %" PRIu64 ", %zu records", requestIdentifier, cacheIdentifier, records.size());
     Engine::putRecords(sessionID, cacheIdentifier, WTFMove(records), [connection = makeRef(m_connection.connection()), sessionID, requestIdentifier](RecordIdentifiersOrError&& result) {
-        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("putRecords", "put %lu records",  [](const auto& value) { return value.size(); });
+        RELEASE_LOG_FUNCTION_IF_ALLOWED_IN_CALLBACK("putRecords", "put %zu records",  [](const auto& value) { return value.size(); });
         connection->send(Messages::WebCacheStorageConnection::PutRecordsCompleted(requestIdentifier, result), sessionID.sessionID());
     });
 }

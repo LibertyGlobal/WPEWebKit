@@ -239,7 +239,7 @@ void ResourceLoadStatisticsMemoryStore::removeDataRecords(CompletionHandler<void
     }
 
 #if !RELEASE_LOG_DISABLED
-    RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "About to remove data records for %{public}s.", domainsToString(prevalentResourceDomains).utf8().data());
+    RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "About to remove data records for %s.", domainsToString(prevalentResourceDomains).utf8().data());
 #endif
 
     setDataRecordsBeingRemoved(true);
@@ -403,7 +403,7 @@ void ResourceLoadStatisticsMemoryStore::requestStorageAccess(String&& subFramePr
     auto& subFrameStatistic = ensureResourceStatisticsForPrimaryDomain(subFramePrimaryDomain);
     if (shouldBlockAndPurgeCookies(subFrameStatistic)) {
 #if !RELEASE_LOG_DISABLED
-        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "Cannot grant storage access to %{public}s since its cookies are blocked in third-party contexts and it has not received user interaction as first-party.", subFramePrimaryDomain.utf8().data());
+        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "Cannot grant storage access to %s since its cookies are blocked in third-party contexts and it has not received user interaction as first-party.", subFramePrimaryDomain.utf8().data());
 #endif
         completionHandler(StorageAccessStatus::CannotRequestAccess);
         return;
@@ -411,7 +411,7 @@ void ResourceLoadStatisticsMemoryStore::requestStorageAccess(String&& subFramePr
 
     if (!shouldBlockAndKeepCookies(subFrameStatistic)) {
 #if !RELEASE_LOG_DISABLED
-        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "No need to grant storage access to %{public}s since its cookies are not blocked in third-party contexts.", subFramePrimaryDomain.utf8().data());
+        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "No need to grant storage access to %s since its cookies are not blocked in third-party contexts.", subFramePrimaryDomain.utf8().data());
 #endif
         completionHandler(StorageAccessStatus::HasAccess);
         return;
@@ -420,13 +420,13 @@ void ResourceLoadStatisticsMemoryStore::requestStorageAccess(String&& subFramePr
     auto userWasPromptedEarlier = promptEnabled && hasUserGrantedStorageAccessThroughPrompt(subFrameStatistic, topFramePrimaryDomain);
     if (promptEnabled && !userWasPromptedEarlier) {
 #if !RELEASE_LOG_DISABLED
-        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "About to ask the user whether they want to grant storage access to %{public}s under %{public}s or not.", subFramePrimaryDomain.utf8().data(), topFramePrimaryDomain.utf8().data());
+        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "About to ask the user whether they want to grant storage access to %s under %s or not.", subFramePrimaryDomain.utf8().data(), topFramePrimaryDomain.utf8().data());
 #endif
         completionHandler(StorageAccessStatus::RequiresUserPrompt);
         return;
     } else if (userWasPromptedEarlier) {
 #if !RELEASE_LOG_DISABLED
-        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "Storage access was granted to %{public}s under %{public}s.", subFramePrimaryDomain.utf8().data(), topFramePrimaryDomain.utf8().data());
+        RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "Storage access was granted to %s under %s.", subFramePrimaryDomain.utf8().data(), topFramePrimaryDomain.utf8().data());
 #endif
     }
 
@@ -457,7 +457,7 @@ void ResourceLoadStatisticsMemoryStore::requestStorageAccessUnderOpener(String&&
         return;
 
 #if !RELEASE_LOG_DISABLED
-    RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "[Temporary combatibility fix] Storage access was granted for %{public}s under opener page from %{public}s, %{public}s user interaction in the opened window.", primaryDomainInNeedOfStorageAccess.utf8().data(), openerPrimaryDomain.utf8().data(), (isTriggeredByUserGesture ? "with" : "without"));
+    RELEASE_LOG_INFO_IF(m_debugLoggingEnabled, ResourceLoadStatisticsDebug, "[Temporary combatibility fix] Storage access was granted for %s under opener page from %s, %s user interaction in the opened window.", primaryDomainInNeedOfStorageAccess.utf8().data(), openerPrimaryDomain.utf8().data(), (isTriggeredByUserGesture ? "with" : "without"));
 #endif
     grantStorageAccessInternal(WTFMove(primaryDomainInNeedOfStorageAccess), WTFMove(openerPrimaryDomain), std::nullopt, openerPageID, false, [](bool) { });
 }
@@ -571,7 +571,7 @@ void ResourceLoadStatisticsMemoryStore::setPrevalentResourceForDebugMode(const S
     setPrevalentResource(resourceStatistic, ResourceLoadPrevalence::High);
 
 #if !RELEASE_LOG_DISABLED
-    RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "Did set %{public}s as prevalent resource for the purposes of ITP Debug Mode.", domain.utf8().data());
+    RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "Did set %s as prevalent resource for the purposes of ITP Debug Mode.", domain.utf8().data());
 #endif
 }
 
@@ -983,7 +983,7 @@ static void debugLogDomainsInBatches(const char* action, const Vector<String>& d
         return;
 
     if (domains.size() <= maxNumberOfDomainsInOneLogStatement) {
-        RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %{public}s cookies in third-party contexts for: %{public}s.", action, domainsToString(domains).utf8().data());
+        RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %s cookies in third-party contexts for: %s.", action, domainsToString(domains).utf8().data());
         return;
     }
     
@@ -994,14 +994,14 @@ static void debugLogDomainsInBatches(const char* action, const Vector<String>& d
 
     for (auto& domain : domains) {
         if (batch.size() == maxNumberOfDomainsInOneLogStatement) {
-            RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %{public}s cookies in third-party contexts for (%{public}d of %u): %{public}s.", action, batchNumber, numberOfBatches, domainsToString(batch).utf8().data());
+            RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %s cookies in third-party contexts for (%d of %u): %s.", action, batchNumber, numberOfBatches, domainsToString(batch).utf8().data());
             batch.shrink(0);
             ++batchNumber;
         }
         batch.append(domain);
     }
     if (!batch.isEmpty())
-        RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %{public}s cookies in third-party contexts for (%{public}d of %u): %{public}s.", action, batchNumber, numberOfBatches, domainsToString(batch).utf8().data());
+        RELEASE_LOG_INFO(ResourceLoadStatisticsDebug, "About to %s cookies in third-party contexts for (%d of %u): %s.", action, batchNumber, numberOfBatches, domainsToString(batch).utf8().data());
 #else
     UNUSED_PARAM(action);
     UNUSED_PARAM(domains);

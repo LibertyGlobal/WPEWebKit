@@ -44,9 +44,11 @@ class PlatformMediaSessionClient;
 class PlatformMediaSession
 #if ENABLE(WIRELESS_PLAYBACK_TARGET)
     : public MediaPlaybackTargetClient
-#endif
 #if !RELEASE_LOG_DISABLED
     , private LoggerHelper
+#endif
+#elif !RELEASE_LOG_DISABLED
+    : private LoggerHelper
 #endif
 {
     WTF_MAKE_FAST_ALLOCATED;
