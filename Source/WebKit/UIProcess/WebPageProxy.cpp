@@ -5947,7 +5947,7 @@ String WebPageProxy::currentURL() const
 void WebPageProxy::processDidTerminate(ProcessTerminationReason reason)
 {
     if (reason != ProcessTerminationReason::NavigationSwap)
-        RELEASE_LOG_IF_ALLOWED(Process, "%p - WebPageProxy::processDidTerminate (pid %d), reason %d", this, processIdentifier(), reason);
+        RELEASE_LOG_IF_ALLOWED(Process, "%p - WebPageProxy::processDidTerminate (pid %d), reason %d", this, processIdentifier(), (int)reason);
 
     ASSERT(m_isValid);
 

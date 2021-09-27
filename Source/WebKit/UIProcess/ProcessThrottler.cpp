@@ -60,7 +60,7 @@ void ProcessThrottler::updateAssertionNow()
         auto newState = assertionState();
         if (m_assertion->state() == newState)
             return;
-        RELEASE_LOG(ProcessSuspension, "%p - ProcessThrottler::updateAssertionNow() updating process assertion state to %u (foregroundActivities: %lu, backgroundActivities: %lu)", this, newState, m_foregroundCounter.value(), m_backgroundCounter.value());
+        RELEASE_LOG(ProcessSuspension, "%p - ProcessThrottler::updateAssertionNow() updating process assertion state to %u (foregroundActivities: %zu, backgroundActivities: %zu)", this, (int)newState, m_foregroundCounter.value(), m_backgroundCounter.value());
         m_assertion->setState(newState);
         m_process.didSetAssertionState(newState);
     }

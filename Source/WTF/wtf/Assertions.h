@@ -99,7 +99,7 @@ extern "C" void _ReadWriteBarrier(void);
 #endif
 
 #ifndef RELEASE_LOG_DISABLED
-#define RELEASE_LOG_DISABLED !(USE(OS_LOG))
+#define RELEASE_LOG_DISABLED !(USE(OS_LOG) || USE(DEBUG_LOGGER))
 #endif
 
 #if COMPILER(GCC_OR_CLANG)
@@ -156,6 +156,8 @@ typedef struct {
     WTFLogLevel level;
 #if !RELEASE_LOG_DISABLED
     const char* subsystem;
+#endif
+#if USE(OS_LOG) && !RELEASE_LOG_DISABLED
     __unsafe_unretained os_log_t osLogChannel;
 #endif
 } WTFLogChannel;
@@ -165,7 +167,13 @@ typedef struct {
 #define JOIN_LOG_CHANNEL_WITH_PREFIX(prefix, channel) JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel)
 #define JOIN_LOG_CHANNEL_WITH_PREFIX_LEVEL_2(prefix, channel) prefix ## channel
 
+#if PLATFORM(GTK)
+#define LOG_CHANNEL_WEBKIT_SUBSYSTEM "WebKitGTK"
+#elif PLATFORM(WPE)
+#define LOG_CHANNEL_WEBKIT_SUBSYSTEM "WPEWebKit"
+#else
 #define LOG_CHANNEL_WEBKIT_SUBSYSTEM "com.apple.WebKit"
+#endif
 
 #define DECLARE_LOG_CHANNEL(name) \
     extern WTFLogChannel LOG_CHANNEL(name);
@@ -174,9 +182,14 @@ typedef struct {
 #if RELEASE_LOG_DISABLED
 #define DEFINE_LOG_CHANNEL(name, subsystem) \
     WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError };
-#else
+#endif
+#if USE(OS_LOG) && !RELEASE_LOG_DISABLED
 #define DEFINE_LOG_CHANNEL(name, subsystem) \
     WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError, subsystem, OS_LOG_DEFAULT };
+#endif
+#if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
+#define DEFINE_LOG_CHANNEL(name, subsystem) \
+    WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError, subsystem };
 #endif
 #endif
 
@@ -489,15 +502,13 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 #define RELEASE_LOG_WITH_LEVEL_IF(isAllowed, channel, level, ...) do { if (isAllowed) RELEASE_LOG_WITH_LEVEL(channel, level, __VA_ARGS__); } while (0)
 
 #define RELEASE_LOG_STACKTRACE(channel) ((void)0)
-#else
+#endif
+
+#if USE(OS_LOG) && !RELEASE_LOG_DISABLED
 #define RELEASE_LOG(channel, ...) os_log(LOG_CHANNEL(channel).osLogChannel, __VA_ARGS__)
 #define RELEASE_LOG_ERROR(channel, ...) os_log_error(LOG_CHANNEL(channel).osLogChannel, __VA_ARGS__)
 #define RELEASE_LOG_FAULT(channel, ...) os_log_fault(LOG_CHANNEL(channel).osLogChannel, __VA_ARGS__)
 #define RELEASE_LOG_INFO(channel, ...) os_log_info(LOG_CHANNEL(channel).osLogChannel, __VA_ARGS__)
-
-#define RELEASE_LOG_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG(      channel, __VA_ARGS__); } while (0)
-#define RELEASE_LOG_ERROR_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG_ERROR(channel, __VA_ARGS__); } while (0)
-#define RELEASE_LOG_INFO_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG_INFO(channel, __VA_ARGS__); } while (0)
 
 #define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...) do { \
     if (LOG_CHANNEL(channel).level >= (logLevel)) \
@@ -509,9 +520,31 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
         os_log(LOG_CHANNEL(channel).osLogChannel, __VA_ARGS__); \
 } while (0)
 
-#define RELEASE_LOG_STACKTRACE(channel) WTFReleaseLogStackTrace(&LOG_CHANNEL(channel))
 #endif
 
+#if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
+#define RELEASE_LOG(channel, ...) LOG(channel, __VA_ARGS__)
+#define RELEASE_LOG_ERROR(channel, ...) LOG_WITH_LEVEL(channel, WTFLogLevelError, __VA_ARGS__)
+#define RELEASE_LOG_FAULT(channel, ...) LOG_FATAL(__VA_ARGS__)
+#define RELEASE_LOG_INFO(channel, ...) LOG_WITH_LEVEL(channel, WTFLogLevelInfo, __VA_ARGS__)
+
+#define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...) do { \
+    if (LOG_CHANNEL(channel).level >= (logLevel)) \
+        LOG(channel, __VA_ARGS__); \
+} while (0)
+
+#define RELEASE_LOG_WITH_LEVEL_IF(isAllowed, channel, logLevel, ...) do { \
+    if ((isAllowed) && LOG_CHANNEL(channel).level >= (logLevel)) \
+        LOG(channel, __VA_ARGS__); \
+} while (0)
+#endif
+
+#if !RELEASE_LOG_DISABLED
+#define RELEASE_LOG_STACKTRACE(channel) WTFReleaseLogStackTrace(&LOG_CHANNEL(channel))
+#define RELEASE_LOG_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG(      channel, __VA_ARGS__); } while (0)
+#define RELEASE_LOG_ERROR_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG_ERROR(channel, __VA_ARGS__); } while (0)
+#define RELEASE_LOG_INFO_IF(isAllowed, channel, ...) do { if (isAllowed) RELEASE_LOG_INFO(channel, __VA_ARGS__); } while (0)
+#endif
 
 /* RELEASE_ASSERT */
 
