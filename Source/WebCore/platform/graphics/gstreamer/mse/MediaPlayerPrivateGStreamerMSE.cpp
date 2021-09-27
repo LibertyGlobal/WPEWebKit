@@ -960,7 +960,7 @@ const static HashSet<AtomicString>& codecSet()
             { VideoDecoder, "video/x-vp9", { "vp9", "x-vp9" } },
             { AudioDecoder, "audio/x-vorbis", { "vorbis", "x-vorbis" } },
             { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } },
-            { AudioDecoder, "audio/x-ac3", {"x-ac3", "ac3" } },
+            { AudioDecoder, "audio/x-ac3", {"x-ac3", "ac3", "ac-3" } },
             { AudioDecoder, "audio/x-eac3", {"x-eac3", "ec3", "ec-3", "eac3"} }
         } };
 #else
