@@ -41,7 +41,11 @@ WTFLogChannel LogMemoryPressure = { WTFLogChannelOn, "MemoryPressure", WTFLogLev
 WTFLogChannel LogMemoryPressure = { WTFLogChannelOn, "MemoryPressure", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM, OS_LOG_DEFAULT };
 #endif
 #if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
+#if USE(RDK_LOGGER)
+WTFLogChannel LogMemoryPressure = { WTFLogChannelOn, "MemoryPressure", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM, RDK_LOG_CHANNEL(MemoryPressure)};
+#else
 WTFLogChannel LogMemoryPressure = { WTFLogChannelOn, "MemoryPressure", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM};
+#endif
 #endif
 
 WTF_EXPORT_PRIVATE bool MemoryPressureHandler::ReliefLogger::s_loggingEnabled = false;
