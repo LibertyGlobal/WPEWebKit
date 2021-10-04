@@ -51,6 +51,10 @@
 #include <os/log.h>
 #endif
 
+#if USE(RDK_LOGGER)
+#include "rdk_debug.h"
+#endif
+
 #ifdef __cplusplus
 #include <type_traits>
 
@@ -159,6 +163,8 @@ typedef struct {
 #endif
 #if USE(OS_LOG) && !RELEASE_LOG_DISABLED
     __unsafe_unretained os_log_t osLogChannel;
+#elif USE(RDK_LOGGER) && !RELEASE_LOG_DISABLED
+    const char* rdkChannel;
 #endif
 } WTFLogChannel;
 
@@ -188,8 +194,13 @@ typedef struct {
     WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError, subsystem, OS_LOG_DEFAULT };
 #endif
 #if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
+#if USE(RDK_LOGGER)
+#define DEFINE_LOG_CHANNEL(name, subsystem) \
+    WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError, subsystem, RDK_LOG_CHANNEL(name) };
+#else
 #define DEFINE_LOG_CHANNEL(name, subsystem) \
     WTFLogChannel LOG_CHANNEL(name) = { WTFLogChannelOff, #name, WTFLogLevelError, subsystem };
+#endif
 #endif
 #endif
 
@@ -441,10 +452,23 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 #endif
 #endif
 
+#if USE(RDK_LOGGER)
+#define RDK_LOG_CHANNEL_PREFIX              "LOG.RDK.WEBKIT."
+#define RDK_LOG_DEFAULT_CHANNEL             "LOG.RDK.WEBKIT"
+#define RDK_LOG_CHANNEL(channel)            RDK_LOG_CHANNEL_PREFIX #channel
+#define RDK_LOG_VERBOSE(level, channel)     RDK_LOG(level, channel, "%s(%d) : %s\n", __FILE__, __LINE__, WTF_PRETTY_FUNCTION)
+#endif
+
 /* FATAL */
 
 #if FATAL_DISABLED
 #define FATAL(...) ((void)0)
+#elif USE(RDK_LOGGER)
+#define FATAL(...) do { \
+    RDK_LOG_VERBOSE(RDK_LOG_FATAL, RDK_LOG_DEFAULT_CHANNEL); \
+    RDK_LOG(RDK_LOG_FATAL, RDK_LOG_DEFAULT_CHANNEL, __VA_ARGS__); \
+    CRASH(); \
+} while (0)
 #else
 #define FATAL(...) do { \
     WTFReportFatalError(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, __VA_ARGS__); \
@@ -456,6 +480,11 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 
 #if ERROR_DISABLED
 #define LOG_ERROR(...) ((void)0)
+#elif USE(RDK_LOGGER)
+#define LOG_ERROR(...) do { \
+    RDK_LOG_VERBOSE(RDK_LOG_ERROR, RDK_LOG_DEFAULT_CHANNEL); \
+    RDK_LOG(RDK_LOG_ERROR, RDK_LOG_DEFAULT_CHANNEL, __VA_ARGS__); \
+} while (0)
 #else
 #define LOG_ERROR(...) WTFReportError(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, __VA_ARGS__)
 #endif
@@ -464,6 +493,8 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 
 #if LOG_DISABLED
 #define LOG(channel, ...) ((void)0)
+#elif USE(RDK_LOGGER)
+#define LOG(channel, ...) RDK_LOG(RDK_LOG_INFO, RDK_LOG_CHANNEL(channel), __VA_ARGS__)
 #else
 #define LOG(channel, ...)                                       \
     do {                                                        \
@@ -476,6 +507,11 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 
 #if LOG_DISABLED
 #define LOG_VERBOSE(channel, ...) ((void)0)
+#elif USE(RDK_LOGGER)
+#define LOG_VERBOSE(channel, ...) do { \
+    RDK_LOG_VERBOSE(RDK_LOG_INFO, RDK_LOG_DEFAULT_CHANNEL); \
+    RDK_LOG(RDK_LOG_INFO, RDK_LOG_CHANNEL(channel), __VA_ARGS__); \
+} while (0)
 #else
 #define LOG_VERBOSE(channel, ...) WTFLogVerbose(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, &LOG_CHANNEL(channel), __VA_ARGS__)
 #endif
@@ -484,6 +520,10 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 
 #if LOG_DISABLED
 #define LOG_WITH_LEVEL(channel, level, ...) ((void)0)
+#elif USE(RDK_LOGGER)
+extern rdk_LogLevel rdkLevelMap[];
+#define LOG_WITH_LEVEL_STRING(channel, level, ...) RDK_LOG(rdkLevelMap[level], channel, __VA_ARGS__)
+#define LOG_WITH_LEVEL(channel, level, ...) RDK_LOG(rdkLevelMap[level], RDK_LOG_CHANNEL(channel), __VA_ARGS__)
 #else
 #define LOG_WITH_LEVEL(channel, level, ...) WTFLogWithLevel(&LOG_CHANNEL(channel), level, __VA_ARGS__)
 #endif
@@ -524,18 +564,13 @@ WTF_EXPORT_PRIVATE NO_RETURN_DUE_TO_CRASH void WTFCrashWithSecurityImplication(v
 
 #if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
 #define RELEASE_LOG(channel, ...) LOG(channel, __VA_ARGS__)
-#define RELEASE_LOG_ERROR(channel, ...) LOG_WITH_LEVEL(channel, WTFLogLevelError, __VA_ARGS__)
-#define RELEASE_LOG_FAULT(channel, ...) LOG_FATAL(__VA_ARGS__)
+#define RELEASE_LOG_ERROR(channel, ...) LOG_ERROR(__VA_ARGS__)
+#define RELEASE_LOG_FAULT(channel, ...) FATAL(__VA_ARGS__)
 #define RELEASE_LOG_INFO(channel, ...) LOG_WITH_LEVEL(channel, WTFLogLevelInfo, __VA_ARGS__)
-
-#define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...) do { \
-    if (LOG_CHANNEL(channel).level >= (logLevel)) \
-        LOG(channel, __VA_ARGS__); \
-} while (0)
-
+#define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...)  LOG_WITH_LEVEL(channel, logLevel, ...)
 #define RELEASE_LOG_WITH_LEVEL_IF(isAllowed, channel, logLevel, ...) do { \
-    if ((isAllowed) && LOG_CHANNEL(channel).level >= (logLevel)) \
-        LOG(channel, __VA_ARGS__); \
+    if (isAllowed) \
+        LOG_WITH_LEVEL(channel, logLevel,__VA_ARGS__); \
 } while (0)
 #endif
 

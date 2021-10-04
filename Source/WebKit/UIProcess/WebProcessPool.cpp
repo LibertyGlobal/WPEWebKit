@@ -293,6 +293,9 @@ WebProcessPool::WebProcessPool(API::ProcessPoolConfiguration& configuration)
     resolvePathsForSandboxExtensions();
 
 #if !LOG_DISABLED || !RELEASE_LOG_DISABLED
+#if USE(RDK_LOGGER)
+    rdk_logger_init("/etc/debug.ini");
+#endif
     WebCore::initializeLogChannelsIfNecessary();
     WebKit::initializeLogChannelsIfNecessary();
 #endif // !LOG_DISABLED || !RELEASE_LOG_DISABLED

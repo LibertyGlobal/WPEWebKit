@@ -46,7 +46,11 @@ static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks", 
 static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM, OS_LOG_DEFAULT };
 #endif
 #if USE(DEBUG_LOGGER) && !RELEASE_LOG_DISABLED
+#if USE(RDK_LOGGER)
+static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM, RDK_LOG_CHANNEL(RefCountLeaks) };
+#else
 static WTFLogChannel LogRefCountedLeaks = { WTFLogChannelOn, "RefCountedLeaks", WTFLogLevelError, LOG_CHANNEL_WEBKIT_SUBSYSTEM };
+#endif
 #endif
 
 typedef HashCountedSet<const char*, PtrHash<const char*>> ReasonSet;
