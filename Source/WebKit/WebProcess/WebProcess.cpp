@@ -1352,6 +1352,9 @@ void WebProcess::initializeSandbox(const ChildProcessInitializationParameters&, 
 
 void WebProcess::platformInitializeProcess(const ChildProcessInitializationParameters&)
 {
+#if USE(RDK_LOGGER)
+    rdk_logger_init("/etc/debug.ini");
+#endif
 }
 
 void WebProcess::updateActivePages()

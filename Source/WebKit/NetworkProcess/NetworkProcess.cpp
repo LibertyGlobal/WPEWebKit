@@ -939,6 +939,9 @@ void NetworkProcess::didSyncAllCookies()
 #if !PLATFORM(COCOA)
 void NetworkProcess::initializeProcess(const ChildProcessInitializationParameters&)
 {
+#if USE(RDK_LOGGER)
+    rdk_logger_init("/etc/debug.ini");
+#endif
 }
 
 void NetworkProcess::initializeProcessName(const ChildProcessInitializationParameters&)

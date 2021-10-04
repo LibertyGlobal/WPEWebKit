@@ -176,6 +176,10 @@ public:
 
     inline bool willLog(const WTFLogChannel& channel, WTFLogLevel level) const
     {
+#if USE(RDK_LOGGER)
+        UNUSED_PARAM(channel);
+        UNUSED_PARAM(level);
+#else
         if (!m_enabled)
             return false;
 
@@ -184,7 +188,7 @@ public:
 
         if (channel.state == WTFLogChannelOff || level > channel.level)
             return false;
-
+#endif
         return m_enabled;
     }
 
@@ -239,6 +243,8 @@ private:
 
 #if USE(OS_LOG) && !RELEASE_LOG_DISABLED
         os_log(channel.osLogChannel, "%{public}s", logMessage.utf8().data());
+#elif USE(RDK_LOGGER)
+        LOG_WITH_LEVEL_STRING(channel.rdkChannel, level, "%s", logMessage.utf8().data());
 #else
         WTFLog(&channel, "%s", logMessage.utf8().data());
 #endif

@@ -605,6 +605,9 @@ void StorageProcess::initializeProcess(const ChildProcessInitializationParameter
     });
     memoryPressureHandler.install();
 #endif
+#if USE(RDK_LOGGER)
+    rdk_logger_init("/etc/debug.ini");
+#endif
 }
 
 void StorageProcess::initializeProcessName(const ChildProcessInitializationParameters&)

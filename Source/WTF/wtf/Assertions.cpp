@@ -578,6 +578,10 @@ void WTFReleaseLogStackTrace(WTFLogChannel* channel)
 
 } // extern "C"
 
+#if USE(RDK_LOGGER) && !LOG_DISABLED
+rdk_LogLevel rdkLevelMap[] = { RDK_LOG_NOTICE, RDK_LOG_ERROR, RDK_LOG_WARN, RDK_LOG_INFO, RDK_LOG_DEBUG};
+#endif
+
 #if OS(DARWIN) && (CPU(X86_64) || CPU(ARM64))
 #if CPU(X86_64)
 
