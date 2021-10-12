@@ -164,6 +164,8 @@ static bool initializeProcessMemoryLimits(size_t &criticalLimit, size_t &nonCrit
             if (!fnmatch(key.utf8().data(), processName.utf8().data(), 0)) {
                 criticalLimit = size * units;
                 nonCriticalLimit = criticalLimit * 0.95; //0.75;
+                LOG(MemoryPressure, "Setting memory limits for process %s: criticalLimit = %dMB, nonCriticalLimit = %dMB\n",
+                        processName.utf8().data(), criticalLimit / MB, nonCriticalLimit / MB);
                 success = true;
                 return true;
             }
@@ -257,6 +259,13 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
                         underMemoryPressure = true;
                         critical = value > s_pollMaximumProcessMemoryCriticalLimit;
                         synchronous = value > s_pollMaximumProcessMemoryCriticalLimit * 1.05;
+                        // Report memory pressure event to ODH
+                        if (value > s_pollMaximumProcessMemoryCriticalLimit * 1.15) {
+                            LOG_ERROR("WPE memory exceeded: process = %s, criticalLimit = %dmb, memoryUsed = %dmb",
+                                        getProcessName().utf8().data(),
+                                        s_pollMaximumProcessMemoryCriticalLimit / MB,
+                                        value / MB);
+                        }
                     }
                 }
             }
