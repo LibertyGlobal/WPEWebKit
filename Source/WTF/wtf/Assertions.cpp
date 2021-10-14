@@ -317,7 +317,27 @@ void WTFReportFatalError(const char* file, int line, const char* function, const
     printCallSite(file, line, function);
 }
 
-static void report_odh_error(const char* format, va_list args)
+void WTFReportError(const char* file, int line, const char* function, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vprintf_stderr_with_prefix("ERROR: ", format, args);
+    // report error to ODH
+    WTFReportOdhErrorV(format, args);
+    va_end(args);
+    printf_stderr_common("\n");
+    printCallSite(file, line, function);
+}
+
+void WTFReportOdhError(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    WTFReportOdhErrorV(format, args);
+    va_end(args);
+}
+
+void WTFReportOdhErrorV(const char* format, va_list args)
 {
     int length = vsnprintf(NULL, 0, format, args);
     if (length < 0) return;
@@ -328,18 +348,6 @@ static void report_odh_error(const char* format, va_list args)
     vsnprintf(msg, length + 1, format, args);
     ODH_ERROR_REPORT_SRC_ERROR_V3("0", NULL, msg, NULL,   NULL);
     free(msg);
-}
-
-void WTFReportError(const char* file, int line, const char* function, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    vprintf_stderr_with_prefix("ERROR: ", format, args);
-    // report error to ODH
-    report_odh_error(format, args);
-    va_end(args);
-    printf_stderr_common("\n");
-    printCallSite(file, line, function);
 }
 
 class WTFLoggingAccumulator {
