@@ -243,7 +243,7 @@ private:
 
 #if USE(OS_LOG) && !RELEASE_LOG_DISABLED
         os_log(channel.osLogChannel, "%{public}s", logMessage.utf8().data());
-#elif USE(RDK_LOGGER)
+#elif USE(RDK_LOGGER) && !RELEASE_LOG_DISABLED
         LOG_WITH_LEVEL_STRING(channel.rdkChannel, level, "%s", logMessage.utf8().data());
 #else
         WTFLog(&channel, "%s", logMessage.utf8().data());
