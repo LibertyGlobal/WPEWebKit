@@ -1679,6 +1679,14 @@ void WebProcessPool::terminateServiceWorkerProcesses()
 #endif
 }
 
+void WebProcessPool::setGnuTlsCipherPriority(const String& gnuTlsCipherPriority)
+{
+    if (!m_networkProcess)
+        return;
+
+    m_networkProcess->setGnuTlsCipherPriority(gnuTlsCipherPriority);
+}
+
 void WebProcessPool::syncNetworkProcessCookies()
 {
     ensureNetworkProcess().syncAllCookies();

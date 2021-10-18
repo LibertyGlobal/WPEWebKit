@@ -290,6 +290,8 @@ public:
     void terminateServiceWorkerProcesses();
     void disableServiceWorkerProcessTerminationDelay();
 
+    void setGnuTlsCipherPriority(const String& gnuTlsCipherPriority);
+
     void syncNetworkProcessCookies();
 
     void setShouldMakeNextWebProcessLaunchFailForTesting(bool value) { m_shouldMakeNextWebProcessLaunchFailForTesting = value; }
