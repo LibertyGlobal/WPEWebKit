@@ -100,4 +100,5 @@ messages -> NetworkProcess LegacyReceiver {
     RegisterURLSchemeAsCanDisplayOnlyIfCanRequest(String scheme)
 
     SetCacheStorageParameters(PAL::SessionID sessionID, uint64_t quota, String cacheStorageDirectory, WebKit::SandboxExtension::Handle handle);
+    SetGnuTlsCipherPriority(String gnuTlsCipherPriority)
 }
