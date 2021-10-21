@@ -103,7 +103,9 @@ public:
     void fillTimerFired();
 
     std::unique_ptr<PlatformTimeRanges> buffered() const override;
-    MediaTime maxMediaTimeSeekable() const override;
+    MediaTime maxMediaTimeSeekable() const override { return seekableTimeRange().second; }
+    MediaTime minMediaTimeSeekable() const override { return seekableTimeRange().first; }
+    std::pair<MediaTime, MediaTime> seekableTimeRange() const;
     bool didLoadingProgress() const override;
     unsigned long long totalBytes() const override;
     MediaTime maxTimeLoaded() const override;
