@@ -40,7 +40,31 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
+#include <sstream>
+#include <vector>
+
 namespace WebCore {
+
+namespace {
+
+bool isUrlWhitelisted(const URL &url) {
+    static std::vector<URL> whitelisted_urls;
+    if (whitelisted_urls.empty() && getenv("WPE_MIXEDCONTENT_WHITELIST")) {
+        std::stringstream wl_env(getenv("WPE_MIXEDCONTENT_WHITELIST"));
+        std::string wl_item;
+        while (std::getline(wl_env, wl_item, ',')) {
+            URL wl_url(URL(), wl_item.c_str());
+            whitelisted_urls.push_back(wl_url);
+        }
+    }
+
+    for (auto &wl_url : whitelisted_urls) {
+        if (protocolHostAndPortAreEqual(wl_url, url)) return true;
+    }
+    return false;
+}
+
+} // namespace
 
 MixedContentChecker::MixedContentChecker(Frame& frame)
     : m_frame(frame)
@@ -95,8 +119,12 @@ bool MixedContentChecker::canRunInsecureContent(SecurityOrigin& securityOrigin, 
         return false;
 
     bool allowed = !m_frame.document()->isStrictMixedContentMode() && m_frame.settings().allowRunningOfInsecureContent() && !m_frame.document()->geolocationAccessed() && !m_frame.document()->secureCookiesAccessed();
+
+    // When mixed content is enabled check if URL is whitelisted
+    if (!allowed && isUrlWhitelisted(url)) allowed = true;
+
     if (!allowed)
-       logWarning(allowed, "run", url);
+        logWarning(allowed, "run", url);
 
     if (allowed) {
         m_frame.document()->setFoundMixedContent(SecurityContext::MixedContentType::Active);
