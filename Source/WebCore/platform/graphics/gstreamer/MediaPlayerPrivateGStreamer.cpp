@@ -1799,18 +1799,33 @@ void MediaPlayerPrivateGStreamer::fillTimerFired()
     updateStates();
 }
 
-MediaTime MediaPlayerPrivateGStreamer::maxMediaTimeSeekable() const
+std::pair<MediaTime, MediaTime> MediaPlayerPrivateGStreamer::seekableTimeRange() const
 {
-    if (m_errorOccured)
-        return MediaTime::zeroTime();
+    auto query = adoptGRef(gst_query_new_seeking(GST_FORMAT_TIME));
 
-    MediaTime duration = durationMediaTime();
-    GST_DEBUG("maxMediaTimeSeekable, duration: %s", toString(duration).utf8().data());
-    // infinite duration means live stream
-    if (duration.isPositiveInfinite())
-        return MediaTime::zeroTime();
+    if (gst_element_query(m_pipeline.get(), query.get()))
+    {
+        gboolean seekable;
+        gint64 start, end;
 
-    return duration;
+        gst_query_parse_seeking(query.get(), NULL, &seekable, &start, &end);
+
+        if (seekable)
+        {
+            const auto range =
+                std::make_pair(MediaTime{start, GST_SECOND}, MediaTime{end, GST_SECOND});
+
+            GST_DEBUG_OBJECT(
+                m_pipeline.get(),
+                "seekable range <%f, %f)s",
+                range.first.toDouble(), range.second.toDouble());
+            return range;
+        } else
+            GST_WARNING_OBJECT(m_pipeline.get(), "not seekable stream");
+    } else
+        GST_ERROR_OBJECT(m_pipeline.get(), "seeking query failed");
+
+    return {MediaTime::zeroTime(), MediaTime::zeroTime()};
 }
 
 MediaTime MediaPlayerPrivateGStreamer::maxTimeLoaded() const
