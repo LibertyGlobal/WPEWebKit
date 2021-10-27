@@ -111,7 +111,8 @@ void AudioFileReader::deinterleaveReadyCallback(AudioFileReader* reader)
 #if PLATFORM(BCM_NEXUS)
 GstAutoplugSelectResult AudioFileReader::decodebinAutoplugSelectCallback(GstElement*, GstPad*, GstCaps*, GstElementFactory* factory)
 {
-    return !g_strcmp0(gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory)), "brcmaudfilter") ? GST_AUTOPLUG_SELECT_SKIP : GST_AUTOPLUG_SELECT_TRY;
+	GST_INFO("%s", GST_OBJECT_NAME(factory));
+	return (0 == strncmp(GST_OBJECT_NAME(factory), "brcm", 4)) ? GST_AUTOPLUG_SELECT_SKIP : GST_AUTOPLUG_SELECT_TRY;
 }
 #endif
 
@@ -182,15 +183,18 @@ GstFlowReturn AudioFileReader::handleSample(GstAppSink* sink)
     case GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT:
     case GST_AUDIO_CHANNEL_POSITION_MONO:
         gst_buffer_list_add(m_frontLeftBuffers.get(), gst_buffer_ref(buffer));
-        m_channelSize += frames;
         break;
     case GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT:
         gst_buffer_list_add(m_frontRightBuffers.get(), gst_buffer_ref(buffer));
         break;
     default:
-        break;
+        {
+            GST_ERROR("unsuported position %d", GST_AUDIO_INFO_POSITION(&info, 0));
+            return GST_FLOW_ERROR;
+        }
     }
 
+    m_channelSize += frames;
     return GST_FLOW_OK;
 }
 
@@ -246,9 +250,9 @@ void AudioFileReader::handleNewDeinterleavePad(GstPad* pad)
     gst_bin_add_many(GST_BIN(m_pipeline.get()), queue, sink, nullptr);
 
     GRefPtr<GstPad> sinkPad = adoptGRef(gst_element_get_static_pad(queue, "sink"));
-    gst_pad_link_full(pad, sinkPad.get(), GST_PAD_LINK_CHECK_NOTHING);
+    gst_pad_link_full(pad, sinkPad.get(), GST_PAD_LINK_CHECK_CAPS);
 
-    gst_element_link_pads_full(queue, "src", sink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full(queue, "src", sink, "sink", GST_PAD_LINK_CHECK_CAPS);
 
     gst_element_sync_state_with_parent(queue);
     gst_element_sync_state_with_parent(sink);
@@ -289,20 +293,21 @@ void AudioFileReader::plugDeinterleave(GstPad* pad)
     gst_bin_add_many(GST_BIN(m_pipeline.get()), audioConvert, audioResample, capsFilter, m_deInterleave.get(), nullptr);
 #if PLATFORM(BROADCOM)
     UNUSED_PARAM(pad);
-    gst_element_link_pads_full(m_decodebin.get(), "brcm-mp3-src", audioConvert, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full(m_decodebin.get(), "brcm-mp3-src", audioConvert, "sink", GST_PAD_LINK_CHECK_CAPS);
 #else
     GRefPtr<GstPad> sinkPad = adoptGRef(gst_element_get_static_pad(audioConvert, "sink"));
     gst_pad_link_full(pad, sinkPad.get(), GST_PAD_LINK_CHECK_NOTHING);
 #endif
 
-    gst_element_link_pads_full(audioConvert, "src", audioResample, "sink", GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full(audioResample, "src", capsFilter, "sink", GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full(capsFilter, "src", m_deInterleave.get(), "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full(audioConvert, "src", audioResample, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full(audioResample, "src", capsFilter, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full(capsFilter, "src", m_deInterleave.get(), "sink", GST_PAD_LINK_CHECK_CAPS);
 
     gst_element_sync_state_with_parent(audioConvert);
     gst_element_sync_state_with_parent(audioResample);
     gst_element_sync_state_with_parent(capsFilter);
     gst_element_sync_state_with_parent(m_deInterleave.get());
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline.get()), GST_DEBUG_GRAPH_SHOW_ALL, "AudioFileReaderGStremer_decode");
 }
 
 void AudioFileReader::decodeAudioForBusCreation()
@@ -348,7 +353,7 @@ void AudioFileReader::decodeAudioForBusCreation()
     gst_bin_add_many(GST_BIN(m_pipeline.get()), source, parse, WTF::refGPtr(m_decodebin.get()), NULL);
 
     gst_element_link_pads_full(source, "src", parse, "sink", GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full(parse, "src", m_decodebin.get(), "brcm-mp3-sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full(parse, "src", m_decodebin.get(), "brcm-mp3-sink", GST_PAD_LINK_CHECK_CAPS);
 
     plugDeinterleave(nullptr);
 #else
@@ -389,7 +394,7 @@ RefPtr<AudioBus> AudioFileReader::createBus(float sampleRate, bool mixToMono)
     if (m_errorOccurred)
         return nullptr;
 
-    RefPtr<AudioBus> audioBus = AudioBus::create(m_channels, m_channelSize, true);
+    RefPtr<AudioBus> audioBus = AudioBus::create(m_channels, m_channelSize / m_channels, true);
     audioBus->setSampleRate(m_sampleRate);
 
     copyGstreamerBuffersToAudioChannel(m_frontLeftBuffers.get(), audioBus->channel(0));

@@ -96,7 +96,7 @@ AudioDestinationGStreamer::AudioDestinationGStreamer(AudioIOCallback& callback, 
                                                                             "frames", framesToPull, nullptr));
 
     GRefPtr<GstElement> audioSink;
-    audioSink = gst_element_factory_make("autoaudiosink", nullptr);
+    audioSink = gst_element_factory_make("brcmpcmsink", nullptr);
     m_audioSinkAvailable = audioSink;
     if (!audioSink) {
         LOG_ERROR("Failed to create GStreamer autoaudiosink element");
@@ -121,9 +121,9 @@ AudioDestinationGStreamer::AudioDestinationGStreamer(AudioIOCallback& callback, 
     gst_bin_add_many(GST_BIN(m_pipeline), webkitAudioSrc, audioConvert, audioResample, audioSink.get(), nullptr);
 
     // Link src pads from webkitAudioSrc to audioConvert ! audioResample ! autoaudiosink.
-    gst_element_link_pads_full(webkitAudioSrc, "src", audioConvert, "sink", GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full(audioConvert, "src", audioResample, "sink", GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full(audioResample, "src", audioSink.get(), "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full(webkitAudioSrc, "src", audioConvert, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full(audioConvert, "src", audioResample, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full(audioResample, "src", audioSink.get(), "sink", GST_PAD_LINK_CHECK_CAPS);
 }
 
 AudioDestinationGStreamer::~AudioDestinationGStreamer()
@@ -161,6 +161,7 @@ gboolean AudioDestinationGStreamer::handleMessage(GstMessage* message)
 
 void AudioDestinationGStreamer::start()
 {
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "AudioDestinationGStreamer_start");
     ASSERT(m_audioSinkAvailable);
     if (!m_audioSinkAvailable)
         return;
