@@ -192,6 +192,7 @@ static void webkit_web_audio_src_init(WebKitWebAudioSrc* src)
 
     priv->provider = nullptr;
     priv->bus = nullptr;
+    priv->numberOfSamples = 0;
     priv->silentStartTime = 0;
 
     g_rec_mutex_init(&priv->mutex);
@@ -243,7 +244,7 @@ static void webKitWebAudioSrcConstructed(GObject* object)
         priv->sources.append(appsrc);
 
         gst_bin_add(GST_BIN(src), appsrc.get());
-        gst_element_link_pads_full(appsrc.get(), "src", priv->interleave.get(), "sink_%u", GST_PAD_LINK_CHECK_NOTHING);
+        gst_element_link_pads_full(appsrc.get(), "src", priv->interleave.get(), "sink_%u", GST_PAD_LINK_CHECK_CAPS);
     }
 
     // interleave's src pad is the only visible pad of our element.
