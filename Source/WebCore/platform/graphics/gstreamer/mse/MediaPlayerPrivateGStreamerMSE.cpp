@@ -608,6 +608,22 @@ void MediaPlayerPrivateGStreamerMSE::setRate(float rate)
     m_playbackRate = rate;
     m_player->rateChanged();
 
+    GstState state, pending;
+    gst_element_get_state(m_pipeline.get(), &state, &pending, 0);
+    if (!rate && lastPlaybackRate == 1.0f) {
+        m_playbackRatePause = true;
+        if (state != GST_STATE_PAUSED && pending != GST_STATE_PAUSED)
+            changePipelineState(GST_STATE_PAUSED);
+        return;
+    }
+    if (!lastPlaybackRate) {
+        m_playbackRatePause = false;
+        if (state != GST_STATE_PLAYING && pending != GST_STATE_PLAYING)
+            changePipelineState(GST_STATE_PLAYING);
+        if (rate == 1.0f)
+            return;
+    }
+
     m_seekTime = currentMediaTime();
     if (!doSeek()) {
         m_playbackRate = lastPlaybackRate;
