@@ -92,6 +92,29 @@ GST_DEBUG_CATEGORY_EXTERN(webkit_media_player_debug);
 #include "CDMInstance.h"
 #endif
 
+namespace {
+
+bool isMediaDiskCacheDisabled()
+{
+    static bool result = false;
+    static bool computed = false;
+
+    if (computed)
+        return result;
+
+    String s(std::getenv("WPE_SHELL_DISABLE_MEDIA_DISK_CACHE"));
+    if (!s.isEmpty()) {
+        String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
+        result = (value=="1" || value=="t" || value=="true");
+    }
+
+    GST_DEBUG("Media on-disk cache is %s", (result)?"disabled":"enabled");
+
+    computed = true;
+    return result;
+}
+}
+
 namespace WebCore {
 using namespace std;
 
@@ -1489,6 +1512,26 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
                 GstClockTime time;
                 gst_structure_get(structure, "uri", G_TYPE_STRING, &uri.outPtr(), "fragment-download-time", GST_TYPE_CLOCK_TIME, &time, nullptr);
                 GST_TRACE("Fragment %s download time %" GST_TIME_FORMAT, uri.get(), GST_TIME_ARGS(time));
+            } else if (isMediaDiskCacheDisabled() && gst_structure_has_name(structure, "webkit-network-statistics")) {
+                guint64 networkReadPosition = 0;
+                guint64 httpResponseTotalSize = 0;
+
+                if (gst_structure_get(structure, "read-position", G_TYPE_UINT64, &networkReadPosition, "size", G_TYPE_UINT64, &httpResponseTotalSize, nullptr)) {
+                    GST_DEBUG_OBJECT(pipeline(), "Updated network read position %" G_GUINT64_FORMAT ", size: %" G_GUINT64_FORMAT, networkReadPosition, httpResponseTotalSize);
+
+                    MediaTime mediaDuration = durationMediaTime();
+                    // Update maxTimeLoaded only if the media duration is
+                    // available. Otherwise we can't compute it.
+                    if (mediaDuration && httpResponseTotalSize) {
+                        double fillStatus = 100.0 * (static_cast<double>(networkReadPosition) / static_cast<double>(httpResponseTotalSize));
+
+                        if (fillStatus == 100.0)
+                            m_maxTimeLoaded = mediaDuration;
+                        else
+                            m_maxTimeLoaded = MediaTime(fillStatus * static_cast<double>(toGstUnsigned64Time(mediaDuration)) / 100, GST_SECOND);
+                        GST_DEBUG("Updated maxTimeLoaded base on network read position: %s", toString(m_maxTimeLoaded).utf8().data());
+                    }
+                }
             } else if (gst_structure_has_name(structure, "GstCacheDownloadComplete")) {
                 m_downloadFinished = true;
                 m_buffering = false;
@@ -2708,26 +2751,6 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamer::supportsType(const MediaE
 #endif
 
     return extendedSupportsType(parameters, result);
-}
-
-bool isMediaDiskCacheDisabled()
-{
-    static bool result = false;
-    static bool computed = false;
-
-    if (computed)
-        return result;
-
-    String s(std::getenv("WPE_SHELL_DISABLE_MEDIA_DISK_CACHE"));
-    if (!s.isEmpty()) {
-        String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
-        result = (value=="1" || value=="t" || value=="true");
-    }
-
-    GST_DEBUG("Media on-disk cache is %s", (result)?"disabled":"enabled");
-
-    computed = true;
-    return result;
 }
 
 void MediaPlayerPrivateGStreamer::setDownloadBuffering()

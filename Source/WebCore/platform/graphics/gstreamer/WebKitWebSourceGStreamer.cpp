@@ -1010,6 +1010,9 @@ void CachedResourceStreamingClient::dataReceived(PlatformMediaResource&, const c
         priv->size = priv->offset;
     }
 
+    gst_element_post_message(GST_ELEMENT_CAST(src), gst_message_new_element(GST_OBJECT_CAST(src),
+        gst_structure_new("webkit-network-statistics", "read-position", G_TYPE_UINT64, priv->offset, "size", G_TYPE_UINT64, priv->size, nullptr)));
+
     // Now split the recv'd buffer into buffers that are of a size basesrc suggests. It is important not
     // to push buffers that are too large, otherwise incorrect buffering messages can be sent from the
     // pipeline.
