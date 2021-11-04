@@ -1523,12 +1523,9 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
                     // Update maxTimeLoaded only if the media duration is
                     // available. Otherwise we can't compute it.
                     if (mediaDuration && httpResponseTotalSize) {
-                        double fillStatus = 100.0 * (static_cast<double>(networkReadPosition) / static_cast<double>(httpResponseTotalSize));
+                        const double fillStatus = static_cast<double>(networkReadPosition) / static_cast<double>(httpResponseTotalSize);
 
-                        if (fillStatus == 100.0)
-                            m_maxTimeLoaded = mediaDuration;
-                        else
-                            m_maxTimeLoaded = MediaTime(fillStatus * static_cast<double>(toGstUnsigned64Time(mediaDuration)) / 100, GST_SECOND);
+                        m_maxTimeLoaded = MediaTime(fillStatus * static_cast<double>(toGstUnsigned64Time(mediaDuration)), GST_SECOND);
                         GST_DEBUG("Updated maxTimeLoaded base on network read position: %s", toString(m_maxTimeLoaded).utf8().data());
                     }
                 }
