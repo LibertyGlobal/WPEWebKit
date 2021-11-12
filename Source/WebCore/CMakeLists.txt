@@ -1598,10 +1598,6 @@ if (USE_LIBWEBRTC)
       )
 endif ()
 
-if (ENABLE_MEMCHECK)
-    list(APPEND WebCore_LIBRARIES memcheck)
-endif()
-
 set(WebCoreTestSupport_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/mock"
     "${WEBCORE_DIR}/testing"
