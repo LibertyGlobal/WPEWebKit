@@ -1203,6 +1203,31 @@ CachedResourceLoader::RevalidationPolicy CachedResourceLoader::determineRevalida
     return Use;
 }
 
+void CachedResourceLoader::destroyImagesDecodedData()
+{
+    int64_t sizeBefore = 0;
+    int64_t sizeAfter = 0;
+
+    for(auto& resource : m_documentResources)
+    {
+        if(CachedResource::Type::ImageResource == resource.value->type())
+        {
+            sizeBefore += resource.value->size();
+            resource.value->destroyDecodedData();
+            sizeAfter += resource.value->size();
+        }
+    }
+
+    LOG(
+        ResourceLoading,
+        "%s:%d %s"
+        " totalSize=%" PRId64
+        ", reducedBy=%" PRId64,
+        ::basename(__FILE__), __LINE__, __FUNCTION__,
+        sizeBefore,
+        sizeBefore - sizeAfter);
+}
+
 void CachedResourceLoader::printAccessDeniedMessage(const URL& url) const
 {
     if (url.isNull())
@@ -1331,9 +1356,18 @@ void CachedResourceLoader::garbageCollectDocumentResources()
 {
     typedef Vector<String, 10> StringVector;
     StringVector resourcesToDelete;
+    int64_t totalSize = 0;
+    int64_t imgSize = 0;
+    int64_t deleteSize = 0;
 
     for (auto& resource : m_documentResources) {
+
+        totalSize +=  resource.value->size();
+
+        if(CachedResource::Type::ImageResource == resource.value->type()) imgSize += resource.value->size();
+
         if (resource.value->hasOneHandle()) {
+            deleteSize += resource.value->size();
             resourcesToDelete.append(resource.key);
             resource.value->setOwningCachedResourceLoader(nullptr);
         }
@@ -1341,6 +1375,18 @@ void CachedResourceLoader::garbageCollectDocumentResources()
 
     for (auto& resource : resourcesToDelete)
         m_documentResources.remove(resource);
+
+    LOG(
+        ResourceLoading,
+        "%s:%d %s"
+        " totalSize=%" PRId64
+        ", imgSize=%" PRId64
+        ", deleteSize=%" PRId64,
+        ::basename(__FILE__), __LINE__, __FUNCTION__,
+        totalSize,
+        imgSize,
+        deleteSize);
+
 }
 
 void CachedResourceLoader::performPostLoadActions()
