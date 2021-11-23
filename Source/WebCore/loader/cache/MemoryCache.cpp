@@ -122,7 +122,7 @@ bool MemoryCache::add(CachedResource& resource)
     resource.setInCache(true);
     
     resourceAccessed(resource);
-    
+
     LOG(ResourceLoading, "MemoryCache::add Added '%s', resource %p\n", resource.url().string().latin1().data(), &resource);
     return true;
 }

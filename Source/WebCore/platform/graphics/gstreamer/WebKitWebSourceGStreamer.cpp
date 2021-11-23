@@ -524,7 +524,7 @@ static void webKitWebSrcStart(WebKitWebSrc* src)
             priv->cookies = GUniquePtr<gchar>(g_strdup(cookies.utf8().data()));
         }
 
-        PlatformMediaResourceLoader::LoadOptions loadOptions = 0;
+        PlatformMediaResourceLoader::LoadOptions loadOptions = PlatformMediaResourceLoader::LoadOption::DisallowCaching;
         if (request.url().protocolIsBlob())
             loadOptions |= PlatformMediaResourceLoader::LoadOption::BufferData;
         priv->resource = priv->loader->requestResource(ResourceRequest(request), loadOptions);

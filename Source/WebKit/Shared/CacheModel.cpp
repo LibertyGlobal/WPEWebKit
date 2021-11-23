@@ -127,6 +127,16 @@ void calculateMemoryCacheSizes(CacheModel cacheModel, unsigned& cacheTotalCapaci
     default:
         ASSERT_NOT_REACHED();
     };
+
+    String s(std::getenv("WPE_MEM_CACHE_LAZY"));
+    if (!s.isEmpty()) {
+        String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
+        bool ok = false;
+        size_t size = (size_t)value.toUInt64(&ok);
+        cacheMaxDeadCapacity = cacheTotalCapacity / ( ( ok && ( size == 2 ) ) ? 2 : 4 );
+        cacheMinDeadCapacity = cacheMaxDeadCapacity / 2;
+    }
+
 }
 
 void calculateURLCacheSizes(CacheModel cacheModel, uint64_t diskFreeSize, unsigned& urlCacheMemoryCapacity, uint64_t& urlCacheDiskCapacity)
