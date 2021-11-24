@@ -795,7 +795,20 @@ bool MediaKeySession::canSuspendForDocumentSuspension() const
 
 void MediaKeySession::stop()
 {
-    notImplemented();
+    if (m_closed || !m_callable) return;
+    // Stop CDM session to free CDM resources for other components,
+    // otherwise it will be freed when Garbage Collector will be triggered which usually happens with some delay
+    m_taskQueue.enqueueTask([this] () mutable {
+        // Close CDM session
+        LOG(EME, "EME - stopping CDM session with id [%s]", m_sessionId.utf8().data());
+        m_instance->closeSession(m_sessionId, [this, weakThis = makeWeakPtr(*this)] () mutable {
+            if (!weakThis)
+                return;
+            m_taskQueue.enqueueTask([this] () mutable {
+                sessionClosed();
+            });
+        });
+    });
 }
 
 } // namespace WebCore
