@@ -243,7 +243,7 @@ private:
     void setNetworkProxySettings(const WebCore::SoupNetworkProxySettings&);
 #endif
 
-    void setGnuTlsCipherPriority(String gnuTlsCipherPriority);
+    void setEnv(const String& env, const String& value);
 
 #if PLATFORM(MAC)
     static void setSharedHTTPCookieStorage(const Vector<uint8_t>& identifier);

@@ -172,7 +172,7 @@ WK_EXPORT void WKContextSetAutomationClient(WKContextRef contextRef, const WKCon
 WK_EXPORT void WKContextSetAutomationSession(WKContextRef contextRef, WKWebAutomationSessionRef sessionRef);
 
 WK_EXPORT void WKContextReleaseMemory(WKContextRef contextRef);
-WK_EXPORT void WKContextSetGnuTlsCipherPriority(WKContextRef context, WKStringRef gnuTlsCipherPriority);
+WK_EXPORT void WKContextSetEnv(WKContextRef context, WKStringRef env, WKStringRef value, bool webProcess = true, bool networkProcess = true);
 
 #ifdef __cplusplus
 }

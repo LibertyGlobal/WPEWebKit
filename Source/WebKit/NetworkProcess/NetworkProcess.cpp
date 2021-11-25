@@ -365,16 +365,9 @@ void NetworkProcess::createNetworkConnectionToWebProcess()
         m_webProcessConnections.last()->setOnLineState(NetworkStateNotifier::singleton().onLine());
 }
 
-void NetworkProcess::setGnuTlsCipherPriority(String gnuTlsCipherPriority)
+void NetworkProcess::setEnv(const String& env, const String& value)
 {
-    const char *requestedPrio = gnuTlsCipherPriority.utf8().data();
-    char *currentPrio = getenv("G_TLS_GNUTLS_PRIORITY");
-
-    // In case env variable is not set, getenv() will return a NULL pointer which crashes strcmp()
-    if (currentPrio && strcmp(currentPrio, requestedPrio)) {
-        LOG(Network, "Setting GNU TLS cipher priority to: %s\n", requestedPrio);
-        setenv("G_TLS_GNUTLS_PRIORITY", requestedPrio, 1);
-    }
+    setenv(env.utf8().data(), value.utf8().data(), 1);
 }
 
 void NetworkProcess::clearCachedCredentials()

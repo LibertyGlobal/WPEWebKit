@@ -1679,12 +1679,16 @@ void WebProcessPool::terminateServiceWorkerProcesses()
 #endif
 }
 
-void WebProcessPool::setGnuTlsCipherPriority(const String& gnuTlsCipherPriority)
+void WebProcessPool::setEnv(const String& env, const String& value, bool webProcess, bool networkProcess)
 {
-    if (!m_networkProcess)
+    if (env.isEmpty())
         return;
 
-    m_networkProcess->setGnuTlsCipherPriority(gnuTlsCipherPriority);
+    if (webProcess)
+        sendToAllProcesses(Messages::WebProcess::SetEnv(env, value));
+
+    if (networkProcess)
+        sendToNetworkingProcess(Messages::NetworkProcess::SetEnv(env, value));
 }
 
 void WebProcessPool::syncNetworkProcessCookies()

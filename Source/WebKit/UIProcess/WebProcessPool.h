@@ -290,7 +290,7 @@ public:
     void terminateServiceWorkerProcesses();
     void disableServiceWorkerProcessTerminationDelay();
 
-    void setGnuTlsCipherPriority(const String& gnuTlsCipherPriority);
+    void setEnv(const String& env, const String& value, bool webProcess, bool networkProcess);
 
     void syncNetworkProcessCookies();
 
