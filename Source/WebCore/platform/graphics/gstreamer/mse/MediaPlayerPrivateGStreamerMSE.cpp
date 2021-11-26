@@ -677,6 +677,10 @@ void MediaPlayerPrivateGStreamerMSE::updateStates()
         case GST_STATE_PAUSED:
         case GST_STATE_PLAYING:
             if (seeking()) {
+              GST_DEBUG("early seek check");
+              maybeFinishSeek();
+            }
+            if (seeking()) {
                 m_readyState = MediaPlayer::HaveMetadata;
                 // FIXME: Should we manage NetworkState too?
                 GST_DEBUG("m_readyState=%s", dumpReadyState(m_readyState));
@@ -801,6 +805,7 @@ void MediaPlayerPrivateGStreamerMSE::updateStates()
 }
 void MediaPlayerPrivateGStreamerMSE::asyncStateChangeDone()
 {
+    GST_DEBUG("async state change done");
     if (UNLIKELY(!m_pipeline || m_errorOccured))
         return;
 
