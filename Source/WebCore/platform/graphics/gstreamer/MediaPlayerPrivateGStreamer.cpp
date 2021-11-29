@@ -1376,6 +1376,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
     case GST_MESSAGE_ASYNC_DONE:
         if (!messageSourceIsPlaybin || m_delayingLoad)
             break;
+        GST_DEBUG("handle async done");
         asyncStateChangeDone();
         break;
     case GST_MESSAGE_STATE_CHANGED: {
@@ -1403,6 +1404,13 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
 
         if (!messageSourceIsPlaybin || m_delayingLoad)
             break;
+
+        if (m_seeking)
+        {
+            GST_DEBUG("attempt opportunistic seek completion");
+            asyncStateChangeDone();
+        }
+
         updateStates();
 
         // Construct a filename for the graphviz dot file output.
@@ -2095,6 +2103,14 @@ void MediaPlayerPrivateGStreamer::asyncStateChangeDone()
         if (m_seekIsPending)
             updateStates();
         else {
+            GstState state, newState;
+            GstStateChangeReturn getStateResult = gst_element_get_state(m_pipeline.get(), &state, &newState, 0);
+            if (getStateResult == GST_STATE_CHANGE_ASYNC
+                && !(state == GST_STATE_PLAYING && newState == GST_STATE_PAUSED)) {
+                GST_DEBUG("[Seek] Delaying seek finish");
+                return;
+            }
+
             GST_DEBUG("[Seek] seeked to %s", toString(m_seekTime).utf8().data());
             m_seeking = false;
             m_cachedPosition = MediaTime::invalidTime();
