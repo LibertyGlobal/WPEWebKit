@@ -1116,6 +1116,7 @@ void HTMLMediaElement::mediaPlayerActiveSourceBuffersChanged(const MediaPlayer*)
 void HTMLMediaElement::scheduleEvent(const AtomicString& eventName)
 {
     RefPtr<Event> event = Event::create(eventName, Event::CanBubble::No, Event::IsCancelable::Yes);
+    DEBUG_LOG(LOGIDENTIFIER, "scheduleEvent: ", eventName);
 
     // Don't set the event target, the event queue will set it in GenericEventQueue::timerFired and setting it here
     // will trigger an ASSERT if this element has been marked for deletion.
