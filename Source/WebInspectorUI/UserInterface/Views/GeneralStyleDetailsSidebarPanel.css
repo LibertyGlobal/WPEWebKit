@@ -63,7 +63,7 @@
     white-space: nowrap;
 }
 
-.sidebar > .panel.details.css-style > .content ~ :matches(.options-container, .class-list-container) {
+.sidebar > .panel.details.css-style > .content ~ :is(.options-container, .class-list-container) {
     display: flex;
     align-items: center;
     position: absolute;
@@ -79,7 +79,7 @@
     padding-top: 1px;
 }
 
-.sidebar > .panel.details.css-style > .content:not(.supports-new-rule, .has-filter-bar) ~ :matches(.options-container, .class-list-container) {
+.sidebar > .panel.details.css-style > .content:not(.supports-new-rule, .has-filter-bar) ~ :is(.options-container, .class-list-container) {
     display: none;
 }
 
@@ -176,7 +176,7 @@ body[dir=rtl] .sidebar > .panel.details.css-style > .content ~ .class-list-conta
     margin-right: var(--panel-details-css-style-content-class-list-container-new-class-class-name-input-margin-start);
 }
 
-.sidebar > .panel.details.css-style > .content ~ .class-list-container > *:matches(.new-class, .class-toggle) {
+.sidebar > .panel.details.css-style > .content ~ .class-list-container > *:is(.new-class, .class-toggle) {
     margin: 1px 3px;
 }
 
