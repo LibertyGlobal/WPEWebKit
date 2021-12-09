@@ -372,7 +372,7 @@ PropertyTable* Structure::materializePropertyTable(VM& vm, bool setPropertyTable
         this->setPropertyTable(vm, table);
 
     for (size_t i = structures.size(); i--;) {
-        structure = structures[i];
+        Structure* structure = structures[i];
         if (!structure->m_nameInPrevious)
             continue;
         PropertyMapEntry entry(structure->m_nameInPrevious.get(), structure->m_offset, structure->attributesInPrevious());
