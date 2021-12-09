@@ -150,6 +150,60 @@ static float cpuUsage()
     return clampTo<float>(usage, 0, 100);
 }
 
+static size_t calculateGraphicsMemoryUsage()
+{
+    FILE *file = fopen("/proc/brcm/core", "r");
+    if (!file)
+        return 1;
+
+    char *buffer;
+    size_t size = 0;
+    static const unsigned maxAppPerLength = 5;
+    static const unsigned maxRowLength = 75;
+    ssize_t len=0;
+
+    while((len=getline(&buffer, &size, file)) != -1)
+    {
+        if(strstr(buffer,"APP") || strstr(buffer,"GFX"))
+        {
+            char appUsedPercentage[maxAppPerLength];
+            char appRow[maxRowLength];
+            char *token;
+            char *ptr;
+            int pos = 0;
+
+            strncpy(appRow,buffer,len);
+
+            for ( token = strtok_r(appRow, " ", &ptr);
+                  token;
+                  token = strtok_r(NULL," ", &ptr) )
+            {
+                if(pos==6)
+                {
+                    ssize_t length = strlen(token);
+                    strncpy(appUsedPercentage,token,length);
+                }
+
+                if((pos==8) && ((!strncmp(token,"APP",3)) || (!strncmp(token,"GFX",3))))
+                {
+                    char *savePtr;
+                    char *val=strtok_r(appUsedPercentage,"%",&savePtr);
+                    size_t i=atoi(val);
+                    free(buffer);
+                    fclose(file);
+                    return i;
+                }
+                pos++;
+            }
+        }
+    }
+
+    free(buffer);
+    fclose(file);
+    return -1;
+}
+
+
 void ResourceUsageThread::platformThreadBody(JSC::VM* vm, ResourceUsageData& data)
 {
     data.cpu = cpuUsage();
@@ -177,6 +231,8 @@ void ResourceUsageThread::platformThreadBody(JSC::VM* vm, ResourceUsageData& dat
     auto now = MonotonicTime::now();
     data.timeOfNextEdenCollection = now + vm->heap.edenActivityCallback()->timeUntilFire().value_or(Seconds(std::numeric_limits<double>::infinity()));
     data.timeOfNextFullCollection = now + vm->heap.fullActivityCallback()->timeUntilFire().value_or(Seconds(std::numeric_limits<double>::infinity()));
+
+    data.gpu = calculateGraphicsMemoryUsage();
 }
 
 } // namespace WebCore
