@@ -496,7 +496,7 @@ static void webkitMediaCommonEncryptionDecryptProcessProtectionEvents(WebKitMedi
             GST_TRACE_OBJECT(self, "init data MD5 %s", WebCore::GStreamerEMEUtilities::initDataMD5(initData).utf8().data());
             GST_MEMDUMP_OBJECT(self, "init data", mappedBuffer.data(), mappedBuffer.size());
             if (isCDMInstanceAvailable)
-                priv->m_initDatas.set(priv->m_cdmInstance->keySystem(), initData);
+                priv->m_initDatas.set(priv->m_cdmInstance->keySystem().isolatedCopy(), initData);
             else
                 priv->m_initDatas.set(eventKeySystem, initData);
             GST_MEMDUMP_OBJECT(self, "key ID", reinterpret_cast<const uint8_t*>(kid->data()), kid->size());

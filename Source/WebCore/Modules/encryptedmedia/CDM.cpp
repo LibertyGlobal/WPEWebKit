@@ -65,7 +65,7 @@ CDM::CDM(Document& document, const String& keySystem)
     , m_keySystem(keySystem)
 {
     // append the origin domain to the keysystem string
-    String keysystemDomain = keySystem + ";origin=" + document.securityOrigin().domain();
+    String keysystemDomain = makeString(keySystem, ";origin="_s, document.securityOrigin().domain());
 
     for (auto* factory : CDMFactory::registeredFactories()) {
         if (factory->supportsKeySystem(keySystem)) {

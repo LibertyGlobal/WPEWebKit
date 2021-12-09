@@ -665,7 +665,7 @@ String CDMInstanceOpenCDM::sessionIdByKeyId(const SharedBuffer& keyId) const
         const String& sessionId = pair.key;
         const RefPtr<Session>& session = pair.value;
         if (session->containsKeyId(keyId)) {
-            result = sessionId;
+            result = sessionId.isolatedCopy();
             break;
         }
     }
