@@ -1183,6 +1183,9 @@ size_t SourceBuffer::maximumBufferSize() const
     if (!maxBufferSizeVideo)
         maximumBufferSizeDefaults(maxBufferSizeVideo, maxBufferSizeAudio, maxBufferSizeText);
 
+    if (m_source && m_source->sourceBuffers() && m_source->sourceBuffers()->length() == 1)
+        return maxBufferSizeVideo;
+
     if (m_videoTracks && m_videoTracks->length() > 0)
         return maxBufferSizeVideo;
     if (m_audioTracks && m_audioTracks->length() > 0)
