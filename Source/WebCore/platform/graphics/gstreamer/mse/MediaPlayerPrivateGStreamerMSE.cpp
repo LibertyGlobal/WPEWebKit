@@ -253,6 +253,7 @@ void MediaPlayerPrivateGStreamerMSE::seek(const MediaTime& time)
                               toString(current).utf8().data(), toString(time).utf8().data(),
                               m_url.string().utf8().data());
 
+    MediaPlayer::ReadyState oldReadyState = m_readyState;
     MediaTime previousSeekTime = m_seekTime;
     m_seekTime = time;
 
@@ -263,6 +264,12 @@ void MediaPlayerPrivateGStreamerMSE::seek(const MediaTime& time)
     }
 
     m_isEndReached = false;
+    if (m_seeking && oldReadyState > MediaPlayer::HaveMetadata) {
+        m_readyState = MediaPlayer::HaveMetadata;
+        GST_DEBUG("changing readyState while seeking: %s -> %s", dumpReadyState(oldReadyState), dumpReadyState(m_readyState));
+        m_player->readyStateChanged();
+    }
+
     GST_DEBUG("m_seeking=%s, m_seekTime=%s", boolForPrinting(m_seeking), toString(m_seekTime).utf8().data());
 }
 

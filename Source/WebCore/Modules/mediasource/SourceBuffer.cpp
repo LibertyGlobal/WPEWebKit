@@ -806,6 +806,7 @@ void SourceBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& en
     // 1. Let start be the starting presentation timestamp for the removal range.
     MediaTime durationMediaTime = m_source->duration();
     MediaTime currentMediaTime = m_source->currentTime();
+    bool shouldStallPlayback = false;
 
     // 2. Let end be the end presentation timestamp for the removal range.
     // 3. For each track buffer in this source buffer, run the following steps:
@@ -903,10 +904,12 @@ void SourceBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& en
         // and less than the remove end timestamp, and HTMLMediaElement.readyState is greater than HAVE_METADATA, then set
         // the HTMLMediaElement.readyState attribute to HAVE_METADATA and stall playback.
         if (m_active && currentMediaTime >= start && currentMediaTime < end && m_private->readyState() > MediaPlayer::HaveMetadata)
-            m_private->setReadyState(MediaPlayer::HaveMetadata);
+            shouldStallPlayback = true;
     }
     
     updateBufferedFromTrackBuffers();
+    if (shouldStallPlayback)
+       m_private->setReadyState(MediaPlayer::HaveMetadata);
 
     // 4. If buffer full flag equals true and this object is ready to accept more bytes, then set the buffer full flag to false.
     // No-op
@@ -2263,6 +2266,7 @@ void SourceBuffer::updateBufferedFromTrackBuffers()
     // a single range of {0, 0}.
     if (highestEndTime.isNegativeInfinite()) {
         m_buffered->ranges() = PlatformTimeRanges();
+        setBufferedDirty(true);
         return;
     }
 
