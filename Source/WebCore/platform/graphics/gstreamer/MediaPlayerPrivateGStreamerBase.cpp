@@ -668,7 +668,7 @@ void MediaPlayerPrivateGStreamerBase::setVolume(float volume)
         return;
 
     GST_DEBUG_OBJECT(pipeline(), "Setting volume: %f", volume);
-    gst_stream_volume_set_volume(m_volumeElement.get(), GST_STREAM_VOLUME_FORMAT_CUBIC, static_cast<double>(volume));
+    gst_stream_volume_set_volume(m_volumeElement.get(), volumeFormat, static_cast<double>(volume));
 }
 
 float MediaPlayerPrivateGStreamerBase::volume() const
