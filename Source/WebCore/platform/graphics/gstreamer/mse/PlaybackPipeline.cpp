@@ -380,14 +380,6 @@ void PlaybackPipeline::flush(AtomicString trackId)
         return;
     }
 
-    if (!gst_element_send_event(GST_ELEMENT(appsrc), gst_event_new_flush_stop(false))) {
-        GST_WARNING("Failed to send flush-stop event for trackId=%s", trackId.string().utf8().data());
-        return;
-    }
-
-    if (static_cast<guint64>(position) == GST_CLOCK_TIME_NONE || static_cast<guint64>(start) == GST_CLOCK_TIME_NONE)
-        return;
-
     GUniquePtr<GstSegment> segment(gst_segment_new());
     gst_segment_init(segment.get(), GST_FORMAT_TIME);
     gst_segment_do_seek(segment.get(), rate, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
@@ -403,6 +395,10 @@ void PlaybackPipeline::flush(AtomicString trackId)
 
     if (!gst_base_src_new_seamless_segment(GST_BASE_SRC(appsrc), segment->start, segment->stop, segment->start)) {
         GST_WARNING("Failed to send seamless segment event for trackId=%s", trackId.string().utf8().data());
+    }
+
+    if (!gst_element_send_event(GST_ELEMENT(appsrc), gst_event_new_flush_stop(false))) {
+        GST_WARNING("Failed to send flush-stop event for trackId=%s", trackId.string().utf8().data());
         return;
     }
 

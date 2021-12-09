@@ -246,8 +246,10 @@ static void webkit_media_src_class_init(WebKitMediaSrcClass* klass)
 static GstFlowReturn webkitMediaSrcChain(GstPad* pad, GstObject* parent, GstBuffer* buffer)
 {
     GRefPtr<WebKitMediaSrc> self = adoptGRef(WEBKIT_MEDIA_SRC(gst_object_get_parent(parent)));
-
-    return gst_flow_combiner_update_pad_flow(self->priv->flowCombiner.get(), pad, gst_proxy_pad_chain_default(pad, GST_OBJECT(self.get()), buffer));
+    GstFlowReturn ret = gst_proxy_pad_chain_default(pad, GST_OBJECT(self.get()), buffer);
+    if (ret != GST_FLOW_FLUSHING)
+        return gst_flow_combiner_update_pad_flow(self->priv->flowCombiner.get(), pad, ret);
+    return ret;
 }
 
 static void webkit_media_src_init(WebKitMediaSrc* source)
