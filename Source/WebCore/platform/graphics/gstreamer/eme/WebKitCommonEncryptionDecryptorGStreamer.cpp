@@ -258,15 +258,14 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
 
     const GValue* value;
     value = gst_structure_get_value(protectionMeta->info, "kid");
-    GstBuffer* keyIDBuffer = nullptr;
     if (!value) {
         GST_ELEMENT_ERROR (self, STREAM, DECRYPT_NOKEY, ("No key ID available for encrypted sample"), (NULL));
         return GST_FLOW_NOT_SUPPORTED;
     }
 
-    keyIDBuffer = gst_value_get_buffer(value);
+    GRefPtr<GstBuffer> keyIDBuffer = gst_value_get_buffer(value);
 
-    GstMappedBuffer mappedKeyID(keyIDBuffer, GST_MAP_READ);
+    GstMappedBuffer mappedKeyID(keyIDBuffer.get(), GST_MAP_READ);
     if (!mappedKeyID) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to map key ID buffer."), (NULL));
         return GST_FLOW_NOT_SUPPORTED;
@@ -358,7 +357,7 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
 
     GST_MEMDUMP_OBJECT(self, "key ID for sample", mappedKeyID.data(), mappedKeyID.size());
 
-    if (!klass->setupCipher(self, keyIDBuffer)) {
+    if (!klass->setupCipher(self, keyIDBuffer.get())) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to configure cipher"), (NULL));
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
         return GST_FLOW_NOT_SUPPORTED;
@@ -375,7 +374,7 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
 
     GstBuffer* ivBuffer = gst_value_get_buffer(value);
     GST_TRACE_OBJECT(self, "decrypting");
-    if (!klass->decrypt(self, keyIDBuffer, ivBuffer, buffer, subSampleCount, subSamplesBuffer)) {
+    if (!klass->decrypt(self, keyIDBuffer.get(), ivBuffer, buffer, subSampleCount, subSamplesBuffer)) {
         GST_ELEMENT_ERROR (self, STREAM, DECRYPT, ("Decryption failed"), (NULL));
         klass->releaseCipher(self);
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
