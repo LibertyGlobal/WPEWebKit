@@ -409,6 +409,8 @@ MediaTime MediaPlayerPrivateGStreamer::playbackPosition() const
             return m_seekTime;
 
         MediaTime duration = durationMediaTime();
+        if (m_cachedPosition.isValid() && duration.isValid() && m_cachedPosition > duration)
+            return m_cachedPosition;
         return duration.isInvalid() ? MediaTime::zeroTime() : duration;
     }
 
@@ -449,6 +451,8 @@ MediaTime MediaPlayerPrivateGStreamer::playbackPosition() const
         playbackPosition = MediaTime(gstreamerPosition, GST_SECOND);
     else if (m_canFallBackToLastFinishedSeekPosition)
         playbackPosition = m_seekTime;
+    else if (m_cachedPosition.isValid())
+        playbackPosition = m_cachedPosition;
 
     m_playbackProgress = m_cachedPosition.isValid() ? abs(playbackPosition - m_cachedPosition) : playbackPosition;
     m_cachedPosition = playbackPosition;
@@ -2398,7 +2402,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
     // Synchronize position and duration values to not confuse the
     // HTMLMediaElement. In some cases like reverse playback the
     // position is not always reported as 0 for instance.
-    m_cachedPosition = MediaTime::invalidTime();
+    m_lastQueryTime.reset();
     MediaTime now = currentMediaTime();
     if (now > MediaTime { } && now <= durationMediaTime())
         m_player->durationChanged();
