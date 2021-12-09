@@ -210,7 +210,7 @@ void ResourceUsageThread::platformThreadBody(JSC::VM* vm, ResourceUsageData& dat
 
     ProcessMemoryStatus memoryStatus;
     currentProcessMemoryStatus(memoryStatus);
-    data.totalDirtySize = memoryStatus.resident - memoryStatus.shared;
+    data.totalDirtySize = memoryStatus.resident; // - memoryStatus.shared;
 
     size_t currentGCHeapCapacity = vm->heap.blockBytesAllocated();
     size_t currentGCOwnedExtra = vm->heap.extraMemorySize();
@@ -221,10 +221,17 @@ void ResourceUsageThread::platformThreadBody(JSC::VM* vm, ResourceUsageData& dat
     data.categories[MemoryCategory::GCOwned].dirtySize = currentGCOwnedExtra - currentGCOwnedExternal;
     data.categories[MemoryCategory::GCOwned].externalSize = currentGCOwnedExternal;
 
-    data.categories[MemoryCategory::Images].dirtySize = MemoryCache::singleton().getStatistics().images.decodedSize;
-
-    data.categories[MemoryCategory::LibcMalloc].dirtySize = WTF::fastMallocStatistics().committedVMBytes;
+    data.categories[MemoryCategory::Images].dirtySize = MemoryCache::singleton().getStatistics().images.size;
     data.categories[MemoryCategory::Layers].dirtySize = totalLayerBackingStoreBytes;
+
+    auto& mallocBucket = isFastMallocEnabled() ? data.categories[MemoryCategory::bmalloc] : data.categories[MemoryCategory::LibcMalloc];
+    mallocBucket.dirtySize = data.totalDirtySize;
+
+    // Account for GC owned Same as in ResourceUsageThreadCocoa.mm
+    mallocBucket.dirtySize -= currentGCHeapCapacity;
+    size_t currentGCOwnedGenerallyInMalloc = currentGCOwnedExtra - currentGCOwnedExternal;
+    if (currentGCOwnedGenerallyInMalloc < mallocBucket.dirtySize)
+        mallocBucket.dirtySize -= currentGCOwnedGenerallyInMalloc;
 
     data.totalExternalSize = currentGCOwnedExternal;
 
