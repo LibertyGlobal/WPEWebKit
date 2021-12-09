@@ -612,11 +612,12 @@ void AppendPipeline::setAppendState(AppendState newAppendState)
         case AppendState::DataStarve:
             ok = true;
             GST_DEBUG("received all pending samples");
-            m_sourceBufferPrivate->didReceiveAllPendingSamples();
             if (m_abortPending)
                 nextAppendState = AppendState::Aborting;
-            else
+            else{
+                m_sourceBufferPrivate->didReceiveAllPendingSamples();
                 nextAppendState = AppendState::NotStarted;
+            }
             break;
         default:
             break;
@@ -645,11 +646,12 @@ void AppendPipeline::setAppendState(AppendState newAppendState)
         case AppendState::LastSample:
             ok = true;
             GST_DEBUG("received all pending samples");
-            m_sourceBufferPrivate->didReceiveAllPendingSamples();
             if (m_abortPending)
                 nextAppendState = AppendState::Aborting;
-            else
+            else {
+                m_sourceBufferPrivate->didReceiveAllPendingSamples();
                 nextAppendState = AppendState::NotStarted;
+            }
             break;
         default:
             break;
@@ -867,6 +869,8 @@ void AppendPipeline::appsinkEOS()
 void AppendPipeline::didReceiveInitializationSegment()
 {
     ASSERT(WTF::isMainThread());
+    if (m_abortPending)
+        return;
 
     WebCore::SourceBufferPrivateClient::InitializationSegment initializationSegment;
 
@@ -953,7 +957,22 @@ void AppendPipeline::abort()
     m_abortPending = true;
     if (m_appendState == AppendState::NotStarted)
         setAppendState(AppendState::Aborting);
-    // Else, the automatic state transitions will take care when the ongoing append finishes.
+    else {
+        // Wait for append state change
+        for (int i = 0; m_appendState == AppendState::Ongoing && i < 100; ++i) {
+            drainBusIfNeeded();
+            WTF::sleep(10_ms);
+        }
+        // Drain samples before source buffer state is reset
+        if (m_appendState == AppendState::Sampling) {
+            GRefPtr<GstPad> appsrcPad = adoptGRef(gst_element_get_static_pad(m_appsrc.get(), "src"));
+            if (appsrcPad) {
+                GRefPtr<GstQuery> query = adoptGRef(gst_query_new_drain());
+                gst_pad_peer_query(appsrcPad.get(), query.get());
+            }
+            drainBusIfNeeded();
+        }
+    }
 }
 
 GstFlowReturn AppendPipeline::pushNewBuffer(GstBuffer* buffer)
@@ -1302,6 +1321,24 @@ void AppendPipeline::appendPipelineDemuxerNoMorePadsFromAnyThread()
     GstMessage* message = gst_message_new_application(GST_OBJECT(m_appsrc.get()), structure);
     gst_bus_post(m_bus.get(), message);
     GST_TRACE("appendPipelineDemuxerNoMorePadsFromAnyThread - posted to bus");
+}
+
+void AppendPipeline::drainBusIfNeeded()
+{
+    if (m_appendState == AppendState::Invalid || m_appendState == AppendState::NotStarted)
+        return;
+
+    GstBus *bus = m_bus.get();
+    if (UNLIKELY (bus == nullptr))
+        return;
+
+    while(gst_bus_have_pending(bus)) {
+        GstMessage *message = gst_bus_pop(bus);
+        if (UNLIKELY (message == nullptr))
+            break;
+        gst_bus_async_signal_func(bus, message, nullptr);
+        gst_message_unref (message);
+    }
 }
 
 static void appendPipelineAppsinkCapsChanged(GObject* appsinkPad, GParamSpec*, AppendPipeline* appendPipeline)
