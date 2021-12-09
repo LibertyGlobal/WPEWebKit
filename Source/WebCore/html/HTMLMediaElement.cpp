@@ -371,6 +371,15 @@ HashSet<HTMLMediaElement*>& HTMLMediaElement::allMediaElements()
     return elements;
 }
 
+void ForceStopMediaElements()
+{
+    for (auto* mediaElement : HTMLMediaElement::allMediaElements()) {
+        WTFLogAlways("Force stop '%s'", mediaElement->currentSrc().string().utf8().data());
+        ActiveDOMObject* obj = mediaElement;
+        obj->stop();
+    }
+}
+
 #if ENABLE(MEDIA_SESSION)
 typedef HashMap<uint64_t, HTMLMediaElement*> IDToElementMap;
 
