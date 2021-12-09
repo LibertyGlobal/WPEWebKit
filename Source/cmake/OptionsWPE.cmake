@@ -157,6 +157,16 @@ if (ENABLE_XSLT)
     find_package(LibXslt 1.1.7 REQUIRED)
 endif ()
 
+if ( ENABLE_ENCRYPTED_MEDIA )
+    if (ENABLE_SVP)
+        add_definitions(-DUSE_SVP=1)
+    endif()
+endif()
+
+if (ENABLE_HEVC)
+  add_definitions(-DENABLE_HEVC=1)
+endif()
+
 add_definitions(-DBUILDING_WPE__=1)
 add_definitions(-DGETTEXT_PACKAGE="WPE")
 add_definitions(-DJSC_GLIB_API_ENABLED)

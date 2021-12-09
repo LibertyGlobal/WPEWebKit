@@ -880,6 +880,22 @@ const static HashSet<AtomicString>& codecSet()
             Vector<AtomicString> webkitCodecs;
         };
 
+#if USE(SVP) || ENABLE(HEVC)
+        std::array<GstCapsWebKitMapping, 11> mapping = { {
+            { VideoDecoder, "video/x-h264,  profile=(string){ constrained-baseline, baseline }", { "x-h264" } },
+            { VideoDecoder, "video/x-h264, stream-format=avc", { "avc*"} },
+            // An autoplugged h264parse in decodebin can convert from byte-stream to avc.
+            { VideoDecoder, "video/x-h264, stream-format=byte-stream", { "avc*"} },
+            { VideoDecoder, "video/x-h265", { "hev1*", "hvc1*", "x-h265"} },
+            { VideoDecoder, "video/mpeg, mpegversion=(int){1,2}, systemstream=(boolean)false", { "mpeg" } },
+            { VideoDecoder, "video/x-vp8", { "vp8", "x-vp8" } },
+            { VideoDecoder, "video/x-vp9", { "vp9", "x-vp9" } },
+            { AudioDecoder, "audio/x-vorbis", { "vorbis", "x-vorbis" } },
+            { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } },
+            { AudioDecoder, "audio/x-ac3", { } },
+            { AudioDecoder, "audio/x-eac3", {"audio/x-ac3"} }
+        } };
+#else
         std::array<GstCapsWebKitMapping, 9> mapping = { {
             { VideoDecoder, "video/x-h264,  profile=(string){ constrained-baseline, baseline }", { "x-h264" } },
             { VideoDecoder, "video/x-h264, stream-format=avc", { "avc*"} },
@@ -892,7 +908,7 @@ const static HashSet<AtomicString>& codecSet()
             { AudioDecoder, "audio/x-vorbis", { "vorbis", "x-vorbis" } },
             { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } }
         } };
-
+#endif
         for (auto& current : mapping) {
             GList* factories = nullptr;
             switch (current.elementType) {

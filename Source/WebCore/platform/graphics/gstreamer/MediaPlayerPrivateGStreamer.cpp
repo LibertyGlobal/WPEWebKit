@@ -2816,6 +2816,11 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, con
 #endif
 
 #if USE(WESTEROS_SINK)
+#if USE(SVP)
+    if (m_videoSink)
+        g_object_set(G_OBJECT(m_videoSink.get()), "secure-video",true, nullptr);
+#endif
+
     if (m_videoSink)
         g_signal_connect_swapped(m_videoSink.get(), "first-video-frame-callback", G_CALLBACK(onFirstVideoFrameCallback), this);
 #endif
