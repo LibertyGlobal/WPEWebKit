@@ -2192,7 +2192,11 @@ void MediaPlayerPrivateGStreamer::updateStates()
         if (m_currentState == GST_STATE_READY)
             m_readyState = MediaPlayer::HaveNothing;
         else if (m_currentState == GST_STATE_PAUSED) {
-            m_readyState = MediaPlayer::HaveCurrentData;
+            #if ENABLE(MEDIA_STREAM)
+            m_readyState = m_streamPrivate ? MediaPlayer::HaveCurrentData : MediaPlayer::HaveEnoughData;
+            #else
+            m_readyState = MediaPlayer::HaveEnoughData;
+            #endif
             m_paused = true;
         } else if (m_currentState == GST_STATE_PLAYING)
             m_paused = false;
@@ -2486,6 +2490,7 @@ static HashSet<String, ASCIICaseInsensitiveHash>& mimeTypeSet()
             {VideoDecoder, "video/mpeg, mpegversion=(int){1,2}, systemstream=(boolean)false", {"video/mpeg"}},
             {VideoDecoder, "video/x-dirac", { }},
             {VideoDecoder, "video/x-flash-video", {"video/flv", "video/x-flv"}},
+            {VideoDecoder, "video/x-ext-dvb", { "video/x-dvb" }},
             {Demuxer, "video/quicktime", { }},
             {Demuxer, "video/quicktime, variant=(string)3gpp", {"video/3gpp"}},
             {Demuxer, "video/mpegts", {"video/mp2t"}},
@@ -2889,7 +2894,15 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, con
     g_object_set(m_pipeline.get(), "text-sink", m_textAppSink.get(), nullptr);
 #endif
 
-    g_object_set(m_pipeline.get(), "video-sink", createVideoSink(), nullptr);
+    bool shouldSetVideoSink = (m_player->contentMIMEType() != "video/x-dvb" && m_player->url().protocol() != "rec");
+    if (shouldSetVideoSink) {
+        g_object_set(m_pipeline.get(), "video-sink", createVideoSink(), nullptr);
+    } else {
+#if USE(GSTREAMER_HOLEPUNCH)
+        acceleratedRenderingStateChanged();
+        pushNextHolePunchBuffer();
+#endif
+    }
 #if !USE(GSTREAMER_HOLEPUNCH)
     GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_videoSink.get(), "sink"));
     if (videoSinkPad)

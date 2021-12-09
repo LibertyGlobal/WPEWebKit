@@ -587,6 +587,8 @@ public:
 
     String errorMessage() const;
 
+    URL url() const { return m_url; }
+
 private:
     MediaPlayer(MediaPlayerClient&);
 
