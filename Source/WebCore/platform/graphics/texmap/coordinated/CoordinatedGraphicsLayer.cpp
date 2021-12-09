@@ -1169,7 +1169,8 @@ void CoordinatedGraphicsLayer::setCoordinatorIncludingSubLayersIfNeeded(Coordina
     // We need to update here the layer changeMask so the scene gets all the current values.
     m_layerState.changeMask = UINT_MAX;
 
-    coordinator->attachLayer(this);
+    if (coordinator)
+        coordinator->attachLayer(this);
     for (auto& child : children())
         downcast<CoordinatedGraphicsLayer>(*child).setCoordinatorIncludingSubLayersIfNeeded(coordinator);
 }

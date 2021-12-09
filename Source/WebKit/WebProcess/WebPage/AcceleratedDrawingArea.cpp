@@ -42,6 +42,10 @@
 #include <wtf/glib/RunLoopSourcePriority.h>
 #endif
 
+namespace WebCore {
+void looseGLContext();
+}
+
 namespace WebKit {
 using namespace WebCore;
 
@@ -164,6 +168,7 @@ void AcceleratedDrawingArea::updatePreferences(const WebPreferencesStore& store)
     bool nonCompositedWebGLEnabled = store.getBoolValueForKey(WebPreferencesKey::nonCompositedWebGLEnabledKey());
     if (nonCompositedWebGLEnabled != m_nonCompositedWebGLEnabled) {
         if (m_layerTreeHost) {
+            looseGLContext();
             exitAcceleratedCompositingModeNow();
             discardPreviousLayerTreeHost();
         }
