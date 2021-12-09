@@ -471,7 +471,7 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document& docum
     , m_playbackControlsManagerBehaviorRestrictionsTimer(*this, &HTMLMediaElement::playbackControlsManagerBehaviorRestrictionsTimerFired)
     , m_seekToPlaybackPositionEndedTimer(*this, &HTMLMediaElement::seekToPlaybackPositionEndedTimerFired)
     , m_asyncEventQueue(*this)
-    , m_lastTimeUpdateEventMovieTime(MediaTime::positiveInfiniteTime())
+    , m_lastTimeUpdateEventMovieTime(MediaTime::zeroTime())
     , m_firstTimePlaying(true)
     , m_playing(false)
     , m_isWaitingUntilMediaCanStart(false)
@@ -3081,7 +3081,8 @@ void HTMLMediaElement::seekTask()
         clearSeeking();
         return;
     }
-    time = seekableRanges->ranges().nearest(time);
+    if (seekableRanges->length())
+        time = seekableRanges->ranges().nearest(time);
 
     m_sentEndEvent = false;
     m_lastSeekTime = time;

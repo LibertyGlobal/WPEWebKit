@@ -273,7 +273,7 @@ static void webkit_web_src_init(WebKitWebSrc* src)
     // here to not pause/unpause the SoupMessage too often and
     // to make sure there's always some data available for
     // GStreamer to handle.
-    gst_app_src_set_max_bytes(priv->appsrc, 512 * 1024);
+    gst_app_src_set_max_bytes(priv->appsrc, 4 * 1024 * 1024);
 
     // Emit the need-data signal if the queue contains less
     // than 20% of data. Without this the need-data signal
@@ -286,7 +286,7 @@ static void webkit_web_src_init(WebKitWebSrc* src)
     // likely that libsoup already provides new data before
     // the queue is really empty.
     // This might need tweaking for ports not using libsoup.
-    g_object_set(priv->appsrc, "min-percent", 20, nullptr);
+    g_object_set(priv->appsrc, "min-percent", 2, nullptr);
 
     gst_base_src_set_automatic_eos(GST_BASE_SRC(priv->appsrc), FALSE);
 
