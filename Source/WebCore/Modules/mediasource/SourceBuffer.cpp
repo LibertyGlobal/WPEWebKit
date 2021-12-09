@@ -1152,13 +1152,19 @@ static void maximumBufferSizeDefaults(size_t& maxBufferSizeVideo, size_t& maxBuf
                 maxBufferSizeText = size * units;
         }
     }
-
+#if USE(SVP)
+    if (maxBufferSizeAudio == 0)
+        maxBufferSizeAudio = 6 * 1024 * 1024;
+    if (maxBufferSizeVideo == 0)
+        maxBufferSizeVideo = 45 * 1024 * 1024;
+#else
     if (!maxBufferSizeAudio)
         maxBufferSizeAudio = 2 * 1024 * 1024;
     if (!maxBufferSizeVideo)
         maxBufferSizeVideo = 15 * 1024 * 1024;
     if (!maxBufferSizeText)
         maxBufferSizeText = 1 * 1024 * 1024;
+#endif
 }
 
 size_t SourceBuffer::maximumBufferSize() const
