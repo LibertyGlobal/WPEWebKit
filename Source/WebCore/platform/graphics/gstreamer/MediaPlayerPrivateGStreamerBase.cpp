@@ -155,7 +155,7 @@ using namespace std;
 static const FloatSize s_holePunchDefaultFrameSize(1280, 720);
 #endif
 
-#if ENABLE(NATIVE_AUDIO)
+#if 1 // ENABLE(NATIVE_AUDIO)
 static const GstStreamVolumeFormat volumeFormat = GST_STREAM_VOLUME_FORMAT_LINEAR;
 #else
 static const GstStreamVolumeFormat volumeFormat = GST_STREAM_VOLUME_FORMAT_CUBIC;
@@ -1362,7 +1362,7 @@ void MediaPlayerPrivateGStreamerBase::setStreamVolumeElement(GstStreamVolume* vo
 
     // We don't set the initial volume because we trust the sink to keep it for us. See
     // https://bugs.webkit.org/show_bug.cgi?id=118974 for more information.
-    if (!m_player->platformVolumeConfigurationRequired()) {
+    if (!m_player->platformVolumeConfigurationRequired() || true) {
         GST_DEBUG_OBJECT(pipeline(), "Setting stream volume to %f", m_player->volume());
         g_object_set(m_volumeElement.get(), "volume", m_player->volume(), nullptr);
     } else
