@@ -27,4 +27,10 @@ PASS Test bounds point of step-end easing with iterationStart and delay
 PASS Test bounds point of step-end easing with iterationStart not at a transition point 
 PASS Test bounds point of frames easing 
 PASS Test bounds point of frames easing with iterationStart and delay 
+PASS Test bounds point of steps(jump-both) easing 
+PASS Test bounds point of steps(jump-both) easing with iterationStart and delay 
+PASS Test bounds point of steps(jump-both) easing with iterationStart not at a transition point 
+PASS Test bounds point of steps(jump-none) easing 
+PASS Test bounds point of steps(jump-none) easing with iterationStart and delay 
+PASS Test bounds point of steps(jump-none) easing with iterationStart not at a transition point 
 
