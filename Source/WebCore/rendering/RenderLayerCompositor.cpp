@@ -286,6 +286,8 @@ RenderLayerCompositor::RenderLayerCompositor(RenderView& renderView)
     , m_updateCompositingLayersTimer(*this, &RenderLayerCompositor::updateCompositingLayersTimerFired)
     , m_layerFlushTimer(*this, &RenderLayerCompositor::layerFlushTimerFired)
 {
+    Document *doc = renderView.frameView().frame().document();
+    m_enableYoutubeWorkarounds = doc && doc->origin().contains("www.youtube.com");
 }
 
 RenderLayerCompositor::~RenderLayerCompositor()
@@ -2553,6 +2555,9 @@ bool RenderLayerCompositor::requiresCompositingForAnimation(RenderLayerModelObje
 {
     if (!(m_compositingTriggers & ChromeClient::AnimationTrigger))
         return false;
+
+    if (m_enableYoutubeWorkarounds && renderer.style().hasAnimationsOrTransitions() && renderer.hasTransform())
+        return true;
 
     if (auto* element = renderer.element()) {
         if (auto* timeline = element->document().existingTimeline()) {

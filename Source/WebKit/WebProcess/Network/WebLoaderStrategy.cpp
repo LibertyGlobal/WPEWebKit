@@ -79,6 +79,8 @@
 namespace WebKit {
 using namespace WebCore;
 
+void throttleUpdatesForNextThreeSeconds();
+
 WebLoaderStrategy::WebLoaderStrategy()
     : m_internallyFailedLoadTimer(RunLoop::main(), this, &WebLoaderStrategy::internallyFailedLoadTimerFired)
 {
@@ -204,6 +206,16 @@ void WebLoaderStrategy::scheduleLoad(ResourceLoader& resourceLoader, CachedResou
         return;
     }
 #endif
+
+    static bool enableThrottleHack = false;
+    if (resource->type() == CachedResource::Type::MainResource)
+    {
+        enableThrottleHack = resourceLoader.request().url().string().contains("youtube.com");
+    }
+    if (enableThrottleHack && resourceLoader.request().url().string().contains("get_video_info"))
+    {
+        throttleUpdatesForNextThreeSeconds();
+    }
 
 #if ENABLE(SERVICE_WORKER)
     WebServiceWorkerProvider::singleton().handleFetch(resourceLoader, resource, sessionID, shouldClearReferrerOnHTTPSToHTTPRedirect, [trackingParameters, sessionID, shouldClearReferrerOnHTTPSToHTTPRedirect, maximumBufferingTime = maximumBufferingTime(resource), resourceLoader = makeRef(resourceLoader)] (ServiceWorkerClientFetch::Result result) mutable {

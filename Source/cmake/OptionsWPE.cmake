@@ -210,12 +210,14 @@ if (COMPILER_IS_GCC_OR_CLANG AND UNIX AND NOT APPLE)
     # The GCC documentation is poor in that it says the option is target dependent,
     # but fails to decribe on which targets it is supported. I didn't fancy reading
     # the source to find out.
-    if (CMAKE_COMPILER_IS_GNUCC AND (WTF_CPU_ARM64 OR WTF_CPU_ARM))
+    if (CMAKE_COMPILER_IS_GNUCC AND (WTF_CPU_ARM64 OR WTF_CPU_ARM OR WTF_CPU_MIPS))
         set(CMAKE_COMPILER_SIZE_OPT_FLAGS " -finline-limit=90 -fsection-anchors")
     endif ()
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}${CMAKE_COMPILER_SIZE_OPT_FLAGS} -ffunction-sections -fdata-sections -Wformat=1 -Wno-pragmas")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}${CMAKE_COMPILER_SIZE_OPT_FLAGS} -ffunction-sections -fdata-sections -fno-rtti -Wformat=1 -Wno-pragmas")
     set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,--gc-sections")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-stack-protector")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-stack-protector")
 endif ()
 
 include(GStreamerChecks)

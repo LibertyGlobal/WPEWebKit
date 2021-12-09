@@ -45,6 +45,11 @@
 GST_DEBUG_CATEGORY_EXTERN(webkit_mse_debug);
 #define GST_CAT_DEFAULT webkit_mse_debug
 
+#if defined(NDEBUG)
+#undef LOG_DISABLED
+#define LOG_DISABLED 1
+#endif
+
 namespace WebCore {
 
 GType AppendPipeline::s_endOfAppendMetaType = 0;

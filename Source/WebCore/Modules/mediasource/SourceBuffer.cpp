@@ -1084,13 +1084,15 @@ void SourceBuffer::evictCodedFrames(size_t newDataSize)
 
     const auto safeToRemoveRange = PlatformTimeRanges(minimumRangeStart, rangeEnd);
     while (rangeStart > minimumRangeStart) {
-        LOG(MediaSource, "SourceBuffer::evictCodedFrames(%p) - evicting: extraMemoryCost: %zu, rangeStart: %f, rangeEnd: %f",
-                this, extraMemoryCost(), rangeStart.toDouble(), rangeEnd.toDouble());
-
         auto removalRange = PlatformTimeRanges(rangeStart, rangeEnd);
         removalRange.intersectWith(safeToRemoveRange);
         auto intersectedRanges = removalRange;
         intersectedRanges.intersectWith(buffered);
+
+        if (intersectedRanges.length() > 0) {
+            LOG(MediaSource, "SourceBuffer::evictCodedFrames(%p) - evicting: extraMemoryCost: %zu, rangeStart: %f, rangeEnd: %f",
+                this, extraMemoryCost(), rangeStart.toDouble(), rangeEnd.toDouble());
+        }
 
         removeFramesWhileFull(intersectedRanges);
 
@@ -1152,9 +1154,9 @@ static void maximumBufferSizeDefaults(size_t& maxBufferSizeVideo, size_t& maxBuf
     }
 
     if (!maxBufferSizeAudio)
-        maxBufferSizeAudio = 3 * 1024 * 1024;
+        maxBufferSizeAudio = 2 * 1024 * 1024;
     if (!maxBufferSizeVideo)
-        maxBufferSizeVideo = 30 * 1024 * 1024;
+        maxBufferSizeVideo = 15 * 1024 * 1024;
     if (!maxBufferSizeText)
         maxBufferSizeText = 1 * 1024 * 1024;
 }
@@ -1642,7 +1644,7 @@ void SourceBuffer::sourceBufferPrivateDidReceiveSample(MediaSample& sample)
         // ↳ If last decode timestamp for track buffer is set and the difference between decode timestamp and
         // last decode timestamp is greater than 2 times last frame duration:
         if (trackBuffer.lastDecodeTimestamp.isValid() && (decodeTimestamp < trackBuffer.lastDecodeTimestamp
-            || (trackBuffer.greatestDecodeDuration.isValid() && abs(decodeTimestamp - trackBuffer.lastDecodeTimestamp) > (trackBuffer.greatestDecodeDuration * 2)))) {
+            || (trackBuffer.greatestDecodeDuration.isValid() && (decodeTimestamp - trackBuffer.lastDecodeTimestamp) > (trackBuffer.greatestDecodeDuration * 2)))) {
 
             // 1.6.1:
             if (m_mode == AppendMode::Segments) {

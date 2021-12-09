@@ -221,7 +221,7 @@ void CompositingRunLoop::compositionCompleted(LockHolder& stateLocker)
             m_state.pendingUpdate = false;
             m_state.update = UpdateState::Scheduled;
             if (!m_state.isSuspended)
-                m_updateTimer.startOneShot(0_s);
+               startUpdateTimer();
             return;
         }
 
@@ -254,7 +254,7 @@ void CompositingRunLoop::updateCompleted(LockHolder& stateLocker)
             m_state.pendingUpdate = false;
             m_state.update = UpdateState::Scheduled;
             if (!m_state.isSuspended)
-                m_updateTimer.startOneShot(0_s);
+                 startUpdateTimer();
             return;
         }
 
@@ -276,6 +276,31 @@ void CompositingRunLoop::updateTimerFired()
         m_state.update = UpdateState::InProgress;
     }
     m_updateFunction();
+    m_updateTime = MonotonicTime::now();
+}
+
+static MonotonicTime g_throttleEndTime = MonotonicTime::nan();
+
+void throttleUpdatesForNextThreeSeconds()
+{
+    g_throttleEndTime = MonotonicTime::now() + Seconds(3.0);
+}
+
+void CompositingRunLoop::startUpdateTimer()
+{
+    if (m_updateTimer.isActive())
+        return;
+
+    static const bool disableUpdateThrottling = !!getenv("WPE_DISABLE_COMPOSITOR_THROTTLING");
+    if ( !disableUpdateThrottling && !std::isnan(g_throttleEndTime) ) {
+        if (MonotonicTime::now() < g_throttleEndTime)  {
+           m_updateTimer.startOneShot(0.25_s);
+           return;
+         }
+         g_throttleEndTime = MonotonicTime::nan();
+    }
+
+    m_updateTimer.startOneShot(0_s);
 }
 
 } // namespace WebKit

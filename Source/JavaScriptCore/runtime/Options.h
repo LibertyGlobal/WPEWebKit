@@ -478,6 +478,8 @@ constexpr bool enableWebAssemblyStreamingApi = false;
     \
     v(bool, useWebAssembly, true, Normal, "Expose the WebAssembly global object.") \
     \
+    v(bool, disableStackTrace, false, Normal, "Disable stack trace generatoin for errors/exceptions.") \
+    \
     v(bool, enableSpectreMitigations, true, Restricted, "Enable Spectre mitigations.") \
     v(bool, enableSpectreGadgets, false, Restricted, "enable gadgets to test Spectre mitigations.") \
     v(bool, usePoisoning, true, Normal, "Poison is randomized at load time when true, and initialized to 0 if false which defeats some Spectre and type confusion mitigations, but allows tools such as leak detectors to function better.") \
