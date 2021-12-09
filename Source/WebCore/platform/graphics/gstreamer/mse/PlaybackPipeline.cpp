@@ -121,12 +121,7 @@ MediaSourcePrivate::AddStatus PlaybackPipeline::addSourceBuffer(RefPtr<SourceBuf
     // No track has been attached yet.
     stream->type = Invalid;
 #if ENABLE(ENCRYPTED_MEDIA)
-    stream->decryptor = nullptr;
-    stream->decryptorAttached = false;
     stream->decryptorProbeId = 0;
-    stream->payloader = nullptr;
-    stream->didTryCreatePayloader = false;
-    stream->payloaderAttached = false;
 #endif
     stream->caps = nullptr;
     stream->audioTrack = nullptr;

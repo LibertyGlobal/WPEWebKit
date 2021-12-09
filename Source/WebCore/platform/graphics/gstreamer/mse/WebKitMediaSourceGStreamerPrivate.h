@@ -60,12 +60,7 @@ struct _Stream {
     WebCore::MediaSourceStreamTypeGStreamer type;
 
 #if ENABLE(ENCRYPTED_MEDIA)
-    GRefPtr<GstElement> decryptor;
-    bool decryptorAttached;
     gulong decryptorProbeId;
-    bool didTryCreatePayloader;
-    bool payloaderAttached;
-    GRefPtr<GstElement> payloader;
 #endif
 
     GRefPtr<GstCaps> caps;
