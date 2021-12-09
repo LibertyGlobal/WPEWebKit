@@ -1064,6 +1064,12 @@ const static HashSet<AtomicString>& codecSet()
             set.add(AtomicString("vp9.2"));
         }
 #endif
+#if PLATFORM(BROADCOM) && USE(SVP)
+        if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-dvav"))
+            set.add(AtomicString("dvav*"));
+        if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-dvhe"))
+            set.add(AtomicString("dvhe*"));
+#endif
         gst_plugin_feature_list_free(audioDecoderFactories);
         gst_plugin_feature_list_free(videoDecoderFactories);
 
