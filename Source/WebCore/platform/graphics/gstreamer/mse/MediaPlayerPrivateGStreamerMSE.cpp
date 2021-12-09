@@ -564,7 +564,6 @@ void MediaPlayerPrivateGStreamerMSE::waitForSeekCompleted()
 
 void MediaPlayerPrivateGStreamerMSE::seekCompleted()
 {
-    m_eosMarked = false;
     if (m_mseSeekCompleted)
         return;
 
