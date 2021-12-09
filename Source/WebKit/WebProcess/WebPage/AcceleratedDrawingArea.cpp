@@ -218,7 +218,10 @@ GraphicsLayerFactory* AcceleratedDrawingArea::graphicsLayerFactory()
 
 void AcceleratedDrawingArea::setRootCompositingLayer(GraphicsLayer* graphicsLayer)
 {
-    ASSERT(m_layerTreeHost);
+    if (m_layerTreeHost == nullptr && graphicsLayer == nullptr)
+        return;
+
+    RELEASE_ASSERT(m_layerTreeHost);
 
     // FIXME: Instead of using nested if statements, we should keep a compositing state
     // enum in the AcceleratedDrawingArea object and have a changeAcceleratedCompositingState function
