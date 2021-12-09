@@ -2966,6 +2966,10 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
     if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink")) {
         g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
     }
+    else if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiodecoder")) {
+        g_object_set(G_OBJECT(element), "audio_pts_disco_threshold", G_MAXUINT, nullptr);
+    }
+
 #endif
 
 #if USE(WESTEROS_SINK)
