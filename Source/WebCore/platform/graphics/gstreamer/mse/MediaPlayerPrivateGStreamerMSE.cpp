@@ -553,6 +553,15 @@ void MediaPlayerPrivateGStreamerMSE::setReadyState(MediaPlayer::ReadyState ready
     GstStateChangeReturn getStateResult = gst_element_get_state(m_pipeline.get(), &pipelineState, nullptr, 250 * GST_NSECOND);
     bool isPlaying = (getStateResult == GST_STATE_CHANGE_SUCCESS && pipelineState == GST_STATE_PLAYING);
 
+    if (!m_didLogRebufferingOnce && oldReadyState > MediaPlayer::HaveMetadata && m_readyState == MediaPlayer::HaveMetadata
+        && !m_eosPending && !m_eosMarked && !m_player->client().mediaPlayerHasSeekPending()) {
+        WTFLogAlways("MSE is likely re-buffering, url = '%s', position = %s, duration = %s"
+                     , m_url.string().utf8().data()
+                     , toString(currentMediaTime()).utf8().data()
+                     , toString(durationMediaTime()).utf8().data());
+        m_didLogRebufferingOnce = true;
+    }
+
     if (m_readyState == MediaPlayer::HaveMetadata && oldReadyState > MediaPlayer::HaveMetadata && isPlaying && !playbackPipelineHasFutureData()) {
         GST_TRACE("Changing pipeline to PAUSED...");
         bool ok = changePipelineState(GST_STATE_PAUSED);

@@ -595,14 +595,15 @@ ExceptionOr<void> SourceBuffer::appendBufferInternal(const unsigned char* data, 
     m_updating = true;
 
     // 5. Queue a task to fire a simple event named updatestart at this SourceBuffer object.
-    scheduleEvent(eventNames().updatestartEvent);
+    if (hasEventListeners(eventNames().updatestartEvent))
+        scheduleEvent(eventNames().updatestartEvent);
 
     // 6. Asynchronously run the buffer append algorithm.
     m_appendBufferTimer.startOneShot(0_s);
 
     // Add microtask to start append right after leaving current script context. Keep the timer active to check if append was aborted.
     auto microtask = std::make_unique<ActiveDOMCallbackMicrotask>(MicrotaskQueue::mainThreadQueue(), *scriptExecutionContext(), [protectedThis = makeRef(*this)]() mutable {
-        if (!protectedThis->m_asyncEventQueue.hasPendingEvents() && protectedThis->m_appendBufferTimer.isActive()) {
+        if (!protectedThis->m_asyncEventQueue.hasPendingEventsListeners() && protectedThis->m_appendBufferTimer.isActive()) {
             protectedThis->m_appendBufferTimer.stop();
             protectedThis->appendBufferTimerFired();
         }

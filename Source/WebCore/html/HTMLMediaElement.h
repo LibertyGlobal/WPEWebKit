@@ -900,6 +900,7 @@ private:
     void updateMediaState(UpdateState updateState = UpdateState::Synchronously);
     bool hasPlaybackTargetAvailabilityListeners() const { return m_hasPlaybackTargetAvailabilityListeners; }
 #endif
+    bool mediaPlayerHasSeekPending() const final { return m_seeking && m_pendingSeek; }
 
     bool isVideoTooSmallForInlinePlayback();
     void updateShouldAutoplay();

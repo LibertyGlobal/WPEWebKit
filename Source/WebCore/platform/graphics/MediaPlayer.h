@@ -241,6 +241,8 @@ public:
     virtual const void* mediaPlayerLogIdentifier() { return nullptr; }
     virtual const Logger& mediaPlayerLogger() = 0;
 #endif
+
+    virtual bool mediaPlayerHasSeekPending() const { return false; }
 };
 
 class MediaPlayer : public MediaPlayerEnums, public RefCounted<MediaPlayer> {
