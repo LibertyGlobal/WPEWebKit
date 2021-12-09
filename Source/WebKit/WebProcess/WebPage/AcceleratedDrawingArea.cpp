@@ -160,7 +160,17 @@ void AcceleratedDrawingArea::updatePreferences(const WebPreferencesStore& store)
     bool forceCompositiongMode = store.getBoolValueForKey(WebPreferencesKey::forceCompositingModeKey());
     settings.setForceCompositingMode(forceCompositiongMode);
     settings.setAcceleratedCompositingForFixedPositionEnabled(forceCompositiongMode);
-    settings.setNonCompositedWebGLEnabled(store.getBoolValueForKey(WebPreferencesKey::nonCompositedWebGLEnabledKey()));
+    
+    bool nonCompositedWebGLEnabled = store.getBoolValueForKey(WebPreferencesKey::nonCompositedWebGLEnabledKey());
+    if (nonCompositedWebGLEnabled != m_nonCompositedWebGLEnabled) {
+        if (m_layerTreeHost) {
+            exitAcceleratedCompositingModeNow();
+            discardPreviousLayerTreeHost();
+        }
+        m_nonCompositedWebGLEnabled = nonCompositedWebGLEnabled;
+        settings.setNonCompositedWebGLEnabled(nonCompositedWebGLEnabled);
+    }
+
     if (!m_layerTreeHost)
         enterAcceleratedCompositingMode(nullptr);
 }
