@@ -1117,6 +1117,8 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamerMSE::supportsType(const Med
         return result;
     }
 
+    GST_DEBUG("supportsType() %s", parameters.type.raw().utf8().data());
+
     bool ok;
     int channels = parameters.type.parameter("channels"_s).toInt(&ok);
     if (ok && (channels > MEDIA_MAX_AAC_CHANNELS || channels <= 0))
@@ -1141,6 +1143,34 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamerMSE::supportsType(const Med
     if (ok && framerate > MEDIA_MAX_FRAMERATE)
         return result;
 
+    // YT check for  electro-optic transfer function (EOTF) support
+    // Possible values:
+    // bt709 (SDR)
+    // smpte2084 HDR10
+    // arib-std-b67 HLG
+
+    String eotf = parameters.type.parameter("eotf"_s);
+    if (!eotf.isEmpty())
+    {
+#if ENABLE(VP9_HDR)
+        if(eotf == "bt709"){
+            GST_DEBUG("eotf = bt709");
+        }else if(eotf == "smpte2084"){
+            GST_DEBUG("eotf = smpte2084");
+        }else if(eotf == "arib-std-b67"){
+            GST_DEBUG("eotf = arib-std-b67");
+        }else{
+            GST_WARNING("unsupported eotf: %s", eotf.utf8().data());
+            return result;
+        }
+#else
+        if(eotf != "bt709"){
+            GST_WARNING("unsupported eotf: %s", eotf.utf8().data());
+            return result;
+        }
+#endif
+    }
+
     // Spec says we should not return "probably" if the codecs string is empty.
     if (MediaPlayerPrivateGStreamerMSE::mimeTypeCache().contains(containerType)) {
         Vector<String> codecs = parameters.type.codecs();
@@ -1149,6 +1179,7 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamerMSE::supportsType(const Med
         else
             result = supportsAllCodecs(codecs) ? MediaPlayer::IsSupported : MediaPlayer::IsNotSupported;
     }
+    GST_DEBUG("supportsType() result: %d", result);
 
     return extendedSupportsType(parameters, result);
 }
