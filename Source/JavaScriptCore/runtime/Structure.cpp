@@ -389,6 +389,7 @@ PropertyTable* Structure::materializePropertyTable(VM& vm, bool setPropertyTable
             for (Structure* structure : structures)
                 dataLog(comma, RawPointer(structure));
             dataLog("\n");
+            dataLog("IsLive", this->isLive() ,", IsZappped = ", this->isZapped(), "\n");
         });
     
     return table;
