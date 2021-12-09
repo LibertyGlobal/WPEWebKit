@@ -150,10 +150,10 @@ SourceBuffer::~SourceBuffer()
     m_private->setClient(nullptr);
 }
 
-// Allow hasCurrentTime() to be off by as much as the length of two 24fps video frames
+// Allow hasCurrentTime() to be off by as much as the length of three 24fps video frames
 MediaTime& SourceBuffer::currentTimeFudgeFactor() const
 {
-    static NeverDestroyed<MediaTime> fudgeFactorVideo(2002, 24000);
+    static NeverDestroyed<MediaTime> fudgeFactorVideo(3003, 24000);
     static NeverDestroyed<MediaTime> fudgeFactorAudio(299999, 10000000); // "Almost" 0.03 in integer form.
 
     return (hasAudio())?fudgeFactorAudio:fudgeFactorVideo;
