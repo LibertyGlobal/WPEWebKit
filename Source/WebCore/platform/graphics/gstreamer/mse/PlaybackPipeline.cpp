@@ -489,9 +489,9 @@ bool PlaybackPipeline::hasFutureData(const MediaTime& start)
     GST_OBJECT_LOCK(m_webKitMediaSrc.get());
     WebKitMediaSrcPrivate* priv = m_webKitMediaSrc->priv;
     for (Stream* stream : priv->streams) {
-        if (lastEnqueuedTime > stream->lastEnqueuedTime)
+        if (stream->lastEnqueuedTime.isValid() && lastEnqueuedTime > stream->lastEnqueuedTime)
             lastEnqueuedTime = stream->lastEnqueuedTime;
-        if (firstEnqueuedTime < stream->firstEnqueuedTime)
+        if (stream->firstEnqueuedTime.isValid() && firstEnqueuedTime < stream->firstEnqueuedTime)
             firstEnqueuedTime = stream->firstEnqueuedTime;
     }
     GST_OBJECT_UNLOCK(m_webKitMediaSrc.get());

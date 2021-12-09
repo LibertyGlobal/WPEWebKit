@@ -2214,7 +2214,6 @@ void SourceBuffer::trySignalAllSamplesEnqueued()
 
 void SourceBuffer::reenqueueMediaForTime(TrackBuffer& trackBuffer, const AtomicString& trackID, const MediaTime& time)
 {
-    m_private->flush(trackID);
     trackBuffer.decodeQueue.clear();
 
     // Find the sample which contains the current presentation time.
@@ -2256,6 +2255,8 @@ void SourceBuffer::reenqueueMediaForTime(TrackBuffer& trackBuffer, const AtomicS
         trackBuffer.lastEnqueuedDecodeKey = {MediaTime::invalidTime(), MediaTime::invalidTime()};
         trackBuffer.lastEnqueuedDecodeDuration = MediaTime::invalidTime();
     }
+
+    m_private->flush(trackID);
 
     // Fill the decode queue with the remaining samples.
     for (auto iter = currentSampleDTSIterator; iter != trackBuffer.samples.decodeOrder().end(); ++iter)

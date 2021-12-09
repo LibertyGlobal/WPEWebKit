@@ -885,8 +885,7 @@ void webKitMediaSrcPrepareSeek(WebKitMediaSrc* source, const MediaTime& time)
 
     for (Stream* stream : source->priv->streams) {
         stream->appsrcNeedDataFlag = false;
-        // Don't allow samples away from the seekTime to be enqueued.
-        stream->lastEnqueuedTime = time;
+        stream->lastEnqueuedTime = MediaTime::invalidTime();
     }
 
     // The pending action will be performed in enabledAppsrcSeekData().
