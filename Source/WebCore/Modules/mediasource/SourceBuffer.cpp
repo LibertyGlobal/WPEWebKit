@@ -596,7 +596,7 @@ ExceptionOr<void> SourceBuffer::appendBufferInternal(const unsigned char* data, 
 
     // Add microtask to start append right after leaving current script context. Keep the timer active to check if append was aborted.
     auto microtask = std::make_unique<ActiveDOMCallbackMicrotask>(MicrotaskQueue::mainThreadQueue(), *scriptExecutionContext(), [protectedThis = makeRef(*this)]() mutable {
-        if (protectedThis->m_appendBufferTimer.isActive()) {
+        if (!protectedThis->m_asyncEventQueue.hasPendingEvents() && protectedThis->m_appendBufferTimer.isActive()) {
             protectedThis->m_appendBufferTimer.stop();
             protectedThis->appendBufferTimerFired();
         }
