@@ -565,6 +565,8 @@ ExceptionOr<void> SourceBuffer::appendBufferInternal(const unsigned char* data, 
     if (isRemoved() || m_updating)
         return Exception { InvalidStateError };
 
+    LOG(Media, "SourceBuffer::appendBufferInternal(%p) - append size = %u, buffered = %s", this, size, toString(m_buffered->ranges()).utf8().data());
+
     // 3. If the readyState attribute of the parent media source is in the "ended" state then run the following steps:
     // 3.1. Set the readyState attribute of the parent media source to "open"
     // 3.2. Queue a task to fire a simple event named sourceopen at the parent media source .
@@ -595,20 +597,28 @@ ExceptionOr<void> SourceBuffer::appendBufferInternal(const unsigned char* data, 
     m_updating = true;
 
     // 5. Queue a task to fire a simple event named updatestart at this SourceBuffer object.
+    bool canFireMicrotask = false;
     if (hasEventListeners(eventNames().updatestartEvent))
         scheduleEvent(eventNames().updatestartEvent);
+    else
+        canFireMicrotask = true;
 
     // 6. Asynchronously run the buffer append algorithm.
     m_appendBufferTimer.startOneShot(0_s);
 
-    // Add microtask to start append right after leaving current script context. Keep the timer active to check if append was aborted.
-    auto microtask = std::make_unique<ActiveDOMCallbackMicrotask>(MicrotaskQueue::mainThreadQueue(), *scriptExecutionContext(), [protectedThis = makeRef(*this)]() mutable {
-        if (!protectedThis->m_asyncEventQueue.hasPendingEventsListeners() && protectedThis->m_appendBufferTimer.isActive()) {
-            protectedThis->m_appendBufferTimer.stop();
-            protectedThis->appendBufferTimerFired();
-        }
-    });
-    MicrotaskQueue::mainThreadQueue().append(WTFMove(microtask));
+    if (canFireMicrotask) {
+        // Add microtask to start append right after leaving current script context. Keep the timer active to check if append was aborted.
+        auto microtask = std::make_unique<ActiveDOMCallbackMicrotask>(MicrotaskQueue::mainThreadQueue(), *scriptExecutionContext(), [this, protectedThis = makeRef(*this)]() mutable {
+            // check if page added updatestart event listener
+            if (hasEventListeners(eventNames().updatestartEvent))
+                scheduleEvent(eventNames().updatestartEvent);
+            else if (!m_asyncEventQueue.hasPendingEventsListeners() && m_appendBufferTimer.isActive()) {
+                m_appendBufferTimer.stop();
+                appendBufferTimerFired();
+            }
+        });
+        MicrotaskQueue::mainThreadQueue().append(WTFMove(microtask));
+    }
 
     reportExtraMemoryAllocated();
 
