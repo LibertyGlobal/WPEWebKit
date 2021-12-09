@@ -1072,6 +1072,13 @@ const static HashSet<AtomicString>& codecSet()
         if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-dvhe"))
             set.add(AtomicString("dvhe*"));
 #endif
+#if ENABLE(DV) && ENABLE(HEVC)
+        if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-h265")) {
+            set.add(AtomicString("dvav*"));
+            set.add(AtomicString("dvhe*"));
+            set.add(AtomicString("dvh1*"));
+        }
+#endif
         gst_plugin_feature_list_free(audioDecoderFactories);
         gst_plugin_feature_list_free(videoDecoderFactories);
 
