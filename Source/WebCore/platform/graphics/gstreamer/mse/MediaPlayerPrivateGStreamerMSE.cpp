@@ -146,7 +146,7 @@ MediaPlayerPrivateGStreamerMSE::MediaPlayerPrivateGStreamerMSE(MediaPlayer* play
     ++gActivePlayerNum;
     if (gActivePlayerNum > 1)
         GCController::singleton().garbageCollectOnNextRunLoop();
-
+    fprintf(stderr, "HTML5 video: Player constructed [%p]\n",this);
     GST_TRACE("creating the player (%p)", this);
 }
 
@@ -154,6 +154,9 @@ MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()
 {
     --gActivePlayerNum;
     GST_TRACE("destroying the player (%p)", this);
+
+    if (m_reportedPlaybackStarted && !(m_reportedPlaybackEOS || m_reportedPlaybackFailed))
+        fprintf(stderr, "HTML5 video: Playback terminated [%s]\n",m_url.string().utf8().data());
 
     for (auto iterator : m_appendPipelinesMap)
         iterator.value->clearPlayerPrivate();
@@ -168,6 +171,7 @@ MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()
 
     if (m_playbackPipeline)
         m_playbackPipeline->setWebKitMediaSrc(nullptr);
+    fprintf(stderr, "HTML5 video: Player Destroyed [%p]\n",this);
 }
 
 void MediaPlayerPrivateGStreamerMSE::load(const String& urlString)
@@ -186,6 +190,12 @@ void MediaPlayerPrivateGStreamerMSE::load(const String& urlString)
 
     if (!m_playbackPipeline)
         m_playbackPipeline = PlaybackPipeline::create();
+    fprintf(stderr, "HTML5 video: Loading [%s]\n", urlString.utf8().data());
+    m_reportedPlaybackStarted = false; // Clean up the flags
+    m_reportedPlaybackFailed = false;
+    m_reportedPlaybackEOS = false;
+    URL url(URL(), urlString);
+    m_url = url;
 
     MediaPlayerPrivateGStreamer::load(urlString);
 }
@@ -234,6 +244,9 @@ void MediaPlayerPrivateGStreamerMSE::seek(const MediaTime& time)
     }
 
     GST_DEBUG("Seeking from %s to %s seconds", toString(current).utf8().data(), toString(time).utf8().data());
+    fprintf(stderr,"HTML5 video: Seeking from %s to %s seconds [%s]\n",
+                              toString(current).utf8().data(), toString(time).utf8().data(),
+                              m_url.string().utf8().data());
 
     MediaTime previousSeekTime = m_seekTime;
     m_seekTime = time;
@@ -267,6 +280,23 @@ bool MediaPlayerPrivateGStreamerMSE::changePipelineState(GstState newState)
             gst_element_state_get_name(newState));
         return true;
     }
+
+  if(newState == GST_STATE_PLAYING)
+   {
+       fprintf(stderr,"HTML5 video: Play [%s]\n",
+               m_url.string().utf8().data());
+   }
+   else if(newState == GST_STATE_PAUSED)
+   {
+       fprintf(stderr,"HTML5 video: Pause [%s]\n",
+               m_url.string().utf8().data());
+   }
+
+   if (GST_STATE_PLAYING == newState && !m_reportedPlaybackStarted)
+   {
+       fprintf(stderr, "HTML5 video: Playback started [%s]\n",m_url.string().utf8().data());
+       m_reportedPlaybackStarted = true;
+   }
 
     return MediaPlayerPrivateGStreamer::changePipelineState(newState);
 }

@@ -133,6 +133,9 @@ public:
     void enableTrack(TrackPrivateBaseGStreamer::TrackType, unsigned index);
 
     bool handleSyncMessage(GstMessage*) override;
+    bool m_reportedPlaybackStarted;
+    bool m_reportedPlaybackFailed;
+    bool m_reportedPlaybackEOS;
 
     String errorMessage() const override { return m_errorMessage; }
 
