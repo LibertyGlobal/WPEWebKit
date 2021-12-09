@@ -2771,6 +2771,16 @@ AudioSourceProvider* MediaPlayerPrivateGStreamer::audioSourceProvider()
 }
 #endif
 
+unsigned getEssMgrFlag(const char* nick)
+{
+    static GFlagsClass* flagsClass = static_cast<GFlagsClass*>(g_type_class_ref(g_type_from_name("EssRMgrVideoUsage")));
+    ASSERT(flagsClass);
+    GFlagsValue* flag = g_flags_get_value_by_nick(flagsClass, nick);
+    if (!flag)
+        return 0;
+    return flag->value;
+}
+
 void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, const String& pipelineName)
 {
     if (m_pipeline) {
@@ -2886,6 +2896,26 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, con
     // configure westeros sink before it allocates resources
     if (m_videoSink)
         elementSetupCallback(this, m_videoSink.get(), m_pipeline.get());
+
+#if ENABLE(MEDIA_STREAM)
+    static const bool enableSWDecoderForWebRTC = getenv("WPE_ENABLE_SW_DECODER_FOR_WEBRTC");
+    AtomicString val;
+    bool isPIPContent = false;
+
+    if (m_videoSink && enableSWDecoderForWebRTC)
+    {
+        if (m_player->doesHaveAttribute("pip", &val))
+            isPIPContent = equalLettersIgnoringASCIICase(val.string(), "true");
+
+        if(isPIPContent){
+            unsigned flagFullResolution = getEssMgrFlag("fullResolution");
+            unsigned flagFullQuality = getEssMgrFlag("fullQuality");
+            GST_WARNING("Setting res-usage property to use SW decoder for webrtc stream (%d) (%d)",flagFullResolution, flagFullQuality);
+            g_object_set(G_OBJECT(m_videoSink.get()), "res-usage", flagFullResolution | flagFullQuality, nullptr);
+        }
+    }
+#endif
+
 #endif
 
 #if USE(WESTEROS_SINK)
