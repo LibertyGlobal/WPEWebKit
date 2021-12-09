@@ -3015,8 +3015,11 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
     }
     else if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiodecoder")) {
         g_object_set(G_OBJECT(element), "audio_pts_disco_threshold", G_MAXUINT, nullptr);
+        if (player->isLiveStream() && !player->m_hasVideo) {
+            /* if iHeart, reduce audio buffering to 500ms, impacts start up */
+            g_object_set(G_OBJECT(element), "limit_buffering_ms", 500, "limit_buffering", 1, NULL);
+        }
     }
-
 #endif
 
 #if USE(WESTEROS_SINK)
