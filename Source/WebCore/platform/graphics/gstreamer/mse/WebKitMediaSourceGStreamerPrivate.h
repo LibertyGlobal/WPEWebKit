@@ -63,6 +63,9 @@ struct _Stream {
     GRefPtr<GstElement> decryptor;
     bool decryptorAttached;
     gulong decryptorProbeId;
+    bool didTryCreatePayloader;
+    bool payloaderAttached;
+    GRefPtr<GstElement> payloader;
 #endif
 
     GRefPtr<GstCaps> caps;

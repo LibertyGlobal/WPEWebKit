@@ -551,6 +551,17 @@ GstPadProbeReturn onAppSrcPadEvent(GstPad* pad, GstPadProbeInfo* info, gpointer 
         Stream* stream = reinterpret_cast<Stream*>(data);
         GstElement* decryptor = stream->decryptor.get();
         bool decryptorAttached = decryptor && stream->decryptorAttached;
+        GstElement* payloader = stream->payloader.get();
+        bool payloaderAttached = payloader && stream->payloaderAttached;
+
+        if (stream->type == WebCore::Video && stream->didTryCreatePayloader == false)
+        {
+            stream->didTryCreatePayloader = true;
+            stream->payloader = gst_element_factory_make("svppay", nullptr);
+            payloader = stream->payloader.get();
+            if (payloader)
+                gst_bin_add(GST_BIN(stream->parent), payloader);
+        }
 
         if(!decryptorAttached && WebCore::areEncryptedCaps(caps))
         {
@@ -576,15 +587,36 @@ GstPadProbeReturn onAppSrcPadEvent(GstPad* pad, GstPadProbeInfo* info, gpointer 
             GRefPtr<GstPad> decryptorSinkPad = adoptGRef(gst_element_get_static_pad(decryptor, "sink"));
             GRefPtr<GstPad> decryptorSrcPad = adoptGRef(gst_element_get_static_pad(decryptor, "src"));
             GstPad *srcPad = pad;
-            GRefPtr<GstPad> peerPad = adoptGRef(gst_pad_get_peer(srcPad));
             GstPadLinkReturn rc;
 
-            if (!gst_pad_unlink(srcPad, peerPad.get()))
-                GST_ERROR("Failed to unlink '%s' src pad", padName.get());
-            else if (GST_PAD_LINK_OK != (rc = gst_pad_link(srcPad, decryptorSinkPad.get())))
-                GST_ERROR("Failed to link pad to decryptorSinkPad, rc = %d", rc);
-            else if (GST_PAD_LINK_OK != (rc = gst_pad_link(decryptorSrcPad.get(), peerPad.get())))
-                GST_ERROR("Failed to link decryptorSrcPad to app sink, rc = %d", rc);
+            GRefPtr<GstPad> peerPad = adoptGRef(gst_pad_get_peer(srcPad));
+
+            if(payloader && !payloaderAttached){
+                GRefPtr<GstPad> payloaderSinkPad = adoptGRef(gst_element_get_static_pad(payloader, "sink"));
+                GRefPtr<GstPad> payloaderSrcPad = adoptGRef(gst_element_get_static_pad(payloader, "src"));
+
+                // Insert decryptor and payloader between appsrc and the decodebin 
+                gst_element_sync_state_with_parent(payloader);
+
+                if (!gst_pad_unlink(srcPad, peerPad.get()))
+                    GST_ERROR("Failed to unlink '%s' src pad", padName.get());
+                else if (GST_PAD_LINK_OK != (rc = gst_pad_link(srcPad, decryptorSinkPad.get())))
+                    GST_ERROR("Failed to link pad to decryptorSinkPad, rc = %d", rc);
+                else if (GST_PAD_LINK_OK != (rc = gst_pad_link(decryptorSrcPad.get(), payloaderSinkPad.get())))
+                    GST_ERROR("Failed to link decryptorSrcPad to payloader sinkpad, rc = %d", rc);
+                else if (GST_PAD_LINK_OK != (rc = gst_pad_link(payloaderSrcPad.get(), peerPad.get())))
+                    GST_ERROR("Failed to link payloaderSrcPad to app sink, rc = %d", rc);
+
+                stream->payloaderAttached = true;
+            } else {
+                // Insert decryptor between appsrc and the decodebin or the payloader
+                if (!gst_pad_unlink(srcPad, peerPad.get()))
+                    GST_ERROR("Failed to unlink '%s' src pad", padName.get());
+                else if (GST_PAD_LINK_OK != (rc = gst_pad_link(srcPad, decryptorSinkPad.get())))
+                    GST_ERROR("Failed to link pad to decryptorSinkPad, rc = %d", rc);
+                else if (GST_PAD_LINK_OK != (rc = gst_pad_link(decryptorSrcPad.get(), peerPad.get())))
+                    GST_ERROR("Failed to link decryptorSrcPad to app sink, rc = %d", rc);
+            }
 
             stream->decryptorAttached = true;
         }
@@ -607,10 +639,31 @@ GstPadProbeReturn onAppSrcPadEvent(GstPad* pad, GstPadProbeInfo* info, gpointer 
 
             stream->decryptorAttached = false;
         }
+        else if (payloader && !payloaderAttached && !WebCore::areEncryptedCaps(caps))
+        {
+            GST_DEBUG("padname: %s Got CAPS=%" GST_PTR_FORMAT ", Attach payloader %" GST_PTR_FORMAT, padName.get(), caps, payloader);
+
+            gst_element_sync_state_with_parent(payloader);
+
+            GRefPtr<GstPad> payloaderSinkPad = adoptGRef(gst_element_get_static_pad(payloader, "sink"));
+            GRefPtr<GstPad> payloaderSrcPad = adoptGRef(gst_element_get_static_pad(payloader, "src"));
+            GstPad *srcPad = pad;
+            GRefPtr<GstPad> peerPad = adoptGRef(gst_pad_get_peer(srcPad));
+            GstPadLinkReturn rc;
+
+            if (!gst_pad_unlink(srcPad, peerPad.get()))
+                GST_ERROR("Failed to unlink '%s' src pad", padName.get());
+            else if (GST_PAD_LINK_OK != (rc = gst_pad_link(srcPad, payloaderSinkPad.get())))
+                GST_ERROR("Failed to link pad to payloaderSinkPad, rc = %d", rc);
+            else if (GST_PAD_LINK_OK != (rc = gst_pad_link(payloaderSrcPad.get(), peerPad.get())))
+                GST_ERROR("Failed to link payloaderSrcPad to app sink, rc = %d", rc);
+
+            stream->payloaderAttached = true;
+        }
         else
         {
-            GST_DEBUG("padname: %s Got CAPS %" GST_PTR_FORMAT ", decryptorAttached = %s, caps are encrypted= %s",
-                    padName.get(), caps, decryptorAttached ? "yes" : "no",
+            GST_DEBUG("padname: %s Got CAPS %" GST_PTR_FORMAT ", decryptorAttached = %s, payloaderAttached = %s, caps are encrypted= %s",
+                    padName.get(), caps, decryptorAttached ? "yes" : "no", payloaderAttached ? "yes" : "no",
                     WebCore::areEncryptedCaps(caps) ? "yes" : "no");
         }
     }
@@ -728,6 +781,8 @@ void webKitMediaSrcFreeStream(WebKitMediaSrc* source, Stream* stream)
 #if ENABLE(ENCRYPTED_MEDIA)
     if (stream->decryptor)
         stream->decryptor = nullptr;
+    if (stream->payloader)
+        stream->payloader = nullptr;
 #endif
 
     GST_DEBUG("Releasing stream: %p", stream);

@@ -124,6 +124,9 @@ MediaSourcePrivate::AddStatus PlaybackPipeline::addSourceBuffer(RefPtr<SourceBuf
     stream->decryptor = nullptr;
     stream->decryptorAttached = false;
     stream->decryptorProbeId = 0;
+    stream->payloader = nullptr;
+    stream->didTryCreatePayloader = false;
+    stream->payloaderAttached = false;
 #endif
     stream->caps = nullptr;
     stream->audioTrack = nullptr;
