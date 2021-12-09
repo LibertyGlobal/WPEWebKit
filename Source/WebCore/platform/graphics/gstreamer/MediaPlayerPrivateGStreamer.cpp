@@ -88,6 +88,9 @@
 GST_DEBUG_CATEGORY_EXTERN(webkit_media_player_debug);
 #define GST_CAT_DEFAULT webkit_media_player_debug
 
+#if ENABLE(ENCRYPTED_MEDIA)
+#include "CDMInstance.h"
+#endif
 
 namespace WebCore {
 using namespace std;
@@ -202,6 +205,14 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
 MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
 {
     GST_DEBUG("Disposing player");
+
+#if ENABLE(ENCRYPTED_MEDIA)
+        if(m_cdmInstance && !m_lastReportedUrl.isEmpty()) {
+            fprintf(stderr, "Stopped playing Encrypted Content, url=%s, keySystem=%s\n",
+                    m_lastReportedUrl.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
+            m_lastReportedUrl = URL();
+        }
+#endif
 
 #if ENABLE(VIDEO_TRACK)
     for (auto& track : m_audioTracks.values())
@@ -1333,6 +1344,13 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         didEnd();
         fprintf(stderr, "HTML5 video: End of Stream [%s]\n",m_url.string().utf8().data());
         m_reportedPlaybackEOS = true;
+#if ENABLE(ENCRYPTED_MEDIA)
+        if(m_cdmInstance && !m_lastReportedUrl.isEmpty()) {
+            fprintf(stderr, "Completed playing Encrypted Content, url=%s, keySystem=%s\n",
+                    m_lastReportedUrl.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
+            m_lastReportedUrl = URL();
+        }
+#endif
         break;
     case GST_MESSAGE_ASYNC_DONE:
         if (!messageSourceIsPlaybin || m_delayingLoad)
@@ -1373,6 +1391,15 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
             gst_element_state_get_name(currentState), gst_element_state_get_name(newState)).utf8();
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline.get()), GST_DEBUG_GRAPH_SHOW_ALL, dotFileName.data());
         GST_INFO("Playbin changed %s --> %s", gst_element_state_get_name(currentState), gst_element_state_get_name(newState));
+#if ENABLE(ENCRYPTED_MEDIA)
+        if(newState == GST_STATE_PLAYING) {
+            if(m_cdmInstance && !m_url.isEmpty() && m_url != m_lastReportedUrl) {
+                fprintf(stderr, "Started playing Encrypted Content, url=%s, keySystem=%s\n",
+                        m_url.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
+                m_lastReportedUrl = m_url;
+            }
+        }
+#endif
         break;
     }
     case GST_MESSAGE_BUFFERING:

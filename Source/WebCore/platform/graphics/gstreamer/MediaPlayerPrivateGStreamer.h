@@ -270,6 +270,9 @@ private:
     RunLoop::Timer<MediaPlayerPrivateGStreamer> m_readyTimerHandler;
     mutable long long m_totalBytes;
     URL m_url;
+#if ENABLE(ENCRYPTED_MEDIA)
+    URL m_lastReportedUrl;
+#endif
     bool m_preservesPitch;
     mutable std::optional<Seconds> m_lastQueryTime;
     bool m_isLegacyPlaybin;
