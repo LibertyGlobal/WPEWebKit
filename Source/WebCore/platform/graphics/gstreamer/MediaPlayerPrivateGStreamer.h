@@ -203,6 +203,7 @@ protected:
     int m_bufferingPercentage;
     mutable MediaTime m_cachedPosition;
     mutable MediaTime m_playbackProgress;
+    mutable std::optional<Seconds> m_lastQueryTime;
     bool m_canFallBackToLastFinishedSeekPosition;
     bool m_changingRate;
     bool m_downloadFinished;
@@ -277,7 +278,6 @@ private:
     RefPtr<MediaPlayerGStreamerEncryptedPlayTracker> m_tracker;
 #endif
     bool m_preservesPitch;
-    mutable std::optional<Seconds> m_lastQueryTime;
     bool m_isLegacyPlaybin;
 #if GST_CHECK_VERSION(1, 10, 0)
     GRefPtr<GstStreamCollection> m_streamCollection;

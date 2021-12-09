@@ -141,6 +141,7 @@ private:
     RefPtr<PlaybackPipeline> m_playbackPipeline;
     bool m_didLogRebufferingOnce { false };
     URL m_url;
+    bool m_didFirstSeek = false;
 };
 
 } // namespace WebCore

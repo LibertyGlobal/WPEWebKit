@@ -452,8 +452,11 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek()
 
     // This will call notifySeekNeedsData() after some time to tell that the pipeline is ready for sample enqueuing.
     webKitMediaSrcPrepareSeek(WEBKIT_MEDIA_SRC(m_source.get()), seekTime);
-
     m_gstSeekCompleted = false;
+    if (!m_didFirstSeek) {
+        m_didFirstSeek = true;
+        g_usleep(10 * 1000);
+    }
     if (!gst_element_seek(m_pipeline.get(), rate, GST_FORMAT_TIME, seekType, GST_SEEK_TYPE_SET, toGstClockTime(startTime), GST_SEEK_TYPE_SET, toGstClockTime(endTime))) {
         webKitMediaSrcSetReadyForSamples(WEBKIT_MEDIA_SRC(m_source.get()), true);
         m_seeking = false;
@@ -495,7 +498,8 @@ void MediaPlayerPrivateGStreamerMSE::maybeFinishSeek()
 
     webKitMediaSrcSetReadyForSamples(WEBKIT_MEDIA_SRC(m_source.get()), true);
     m_seeking = false;
-    m_cachedPosition = MediaTime::invalidTime();
+    m_lastQueryTime = WTF::WallTime::now().secondsSinceEpoch();
+    m_cachedPosition = m_seekTime;
     // The pipeline can still have a pending state. In this case a position query will fail.
     // Right now we can use m_seekTime as a fallback.
     m_canFallBackToLastFinishedSeekPosition = true;
