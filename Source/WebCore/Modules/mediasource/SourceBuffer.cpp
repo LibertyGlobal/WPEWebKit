@@ -2166,7 +2166,8 @@ void SourceBuffer::provideMediaData(TrackBuffer& trackBuffer, const AtomicString
         // Remove the sample from the decode queue now.
         trackBuffer.decodeQueue.erase(trackBuffer.decodeQueue.begin());
 
-        trackBuffer.lastEnqueuedPresentationTime = sample->presentationTime();
+        if (trackBuffer.lastEnqueuedPresentationTime.isInvalid() || sample->presentationTime() > trackBuffer.lastEnqueuedPresentationTime)
+            trackBuffer.lastEnqueuedPresentationTime = sample->presentationTime();
         trackBuffer.lastEnqueuedDecodeKey = {sample->decodeTime(), sample->presentationTime()};
         trackBuffer.lastEnqueuedDecodeDuration = sample->duration();
         m_private->enqueueSample(sample.releaseNonNull(), trackID);
