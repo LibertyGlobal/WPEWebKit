@@ -34,6 +34,7 @@
 #include <wtf/Forward.h>
 #include <wtf/Optional.h>
 #include <wtf/RefCounted.h>
+#include <wtf/ThreadSafeRefCounted.h>
 #include <wtf/TypeCasts.h>
 #include <wtf/Vector.h>
 
@@ -56,7 +57,7 @@ public:
     virtual void issueMessage(MessageType, Ref<SharedBuffer>&&) = 0;
 };
 
-class CDMInstance : public RefCounted<CDMInstance> {
+class CDMInstance : public ThreadSafeRefCounted<CDMInstance> {
 public:
     virtual ~CDMInstance() = default;
 
