@@ -180,9 +180,13 @@ void View::willStartLoad()
 
 void View::setSize(const WebCore::IntSize& size)
 {
-    m_size = size;
+    if (m_ignoreResize)
+        m_size = WebCore::IntSize(1280, 720);
+    else
+        m_size = size;
+
     if (m_pageProxy->drawingArea())
-        m_pageProxy->drawingArea()->setSize(size);
+        m_pageProxy->drawingArea()->setSize(m_size);
 }
 
 void View::setViewState(OptionSet<WebCore::ActivityState::Flag> flags)
@@ -194,6 +198,12 @@ void View::setViewState(OptionSet<WebCore::ActivityState::Flag> flags)
 
     if (changedFlags)
         m_pageProxy->activityStateDidChange(changedFlags);
+}
+
+void View::setIgnoreResize(bool ignoreResize)
+{
+    m_ignoreResize = ignoreResize;
+    fprintf(stderr, "WPEView will %s view port resize\n", ignoreResize ? "ignore" : "respect");
 }
 
 void View::close()
