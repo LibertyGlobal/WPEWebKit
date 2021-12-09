@@ -78,6 +78,7 @@ public:
 
     virtual void pauseRendering();
     virtual void resumeRendering();
+    virtual void pageVisibilityChanged(bool);
 
     virtual WebCore::GraphicsLayerFactory* graphicsLayerFactory() { return nullptr; }
 

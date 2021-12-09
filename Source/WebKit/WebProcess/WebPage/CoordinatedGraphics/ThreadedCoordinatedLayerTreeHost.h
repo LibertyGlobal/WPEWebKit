@@ -72,6 +72,8 @@ private:
 
     void setIsDiscardable(bool) override;
 
+    void pageVisibilityChanged(bool) override;
+
 #if PLATFORM(GTK) && PLATFORM(X11) &&  !USE(REDIRECTED_XCOMPOSITE_WINDOW)
     void setNativeSurfaceHandleForCompositing(uint64_t) override;
 #endif

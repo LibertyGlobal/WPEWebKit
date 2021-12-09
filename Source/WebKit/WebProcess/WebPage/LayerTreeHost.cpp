@@ -83,6 +83,12 @@ void LayerTreeHost::resumeRendering()
     scheduleLayerFlush();
 }
 
+void LayerTreeHost::pageVisibilityChanged(bool isVisible)
+{
+    if (isVisible)
+        scheduleLayerFlush();
+}
+
 void LayerTreeHost::invalidate()
 {
     ASSERT(m_isValid);

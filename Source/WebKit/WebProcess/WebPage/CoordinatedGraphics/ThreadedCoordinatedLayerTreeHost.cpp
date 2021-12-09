@@ -321,6 +321,13 @@ RefPtr<WebCore::DisplayRefreshMonitor> ThreadedCoordinatedLayerTreeHost::createD
 }
 #endif
 
+void ThreadedCoordinatedLayerTreeHost::pageVisibilityChanged(bool v)
+{
+    CoordinatedLayerTreeHost::pageVisibilityChanged(v);
+    if (m_compositor)
+        m_compositor->setIsVisible(v);
+}
+
 } // namespace WebKit
 
 #endif // USE(COORDINATED_GRAPHICS)

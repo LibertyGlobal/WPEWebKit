@@ -88,6 +88,8 @@ public:
     void suspend();
     void resume();
 
+    void setIsVisible(bool v);
+
 private:
     ThreadedCompositor(Client&, ThreadedDisplayRefreshMonitor::Client&, WebCore::PlatformDisplayID, WebPage&, const WebCore::IntSize&, float scaleFactor, ShouldDoFrameSync, WebCore::TextureMapper::PaintFlags);
 
@@ -125,6 +127,7 @@ private:
 
         bool clientRendersNextFrame { false };
         bool coordinateUpdateCompletionWithClient { false };
+        bool isVisbile { true };
     } m_attributes;
 
 #if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)

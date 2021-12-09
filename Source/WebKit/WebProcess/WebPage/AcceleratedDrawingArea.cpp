@@ -497,6 +497,10 @@ void AcceleratedDrawingArea::activityStateDidChange(OptionSet<ActivityState::Fla
 {
     if (changed & ActivityState::IsInWindow)
         handleIsInWindowChanged();
+
+    if (changed & ActivityState::IsVisible && m_layerTreeHost) {
+        m_layerTreeHost->pageVisibilityChanged(m_webPage.isVisible());
+    }
 }
 
 void AcceleratedDrawingArea::attachViewOverlayGraphicsLayer(Frame* frame, GraphicsLayer* viewOverlayRootLayer)
