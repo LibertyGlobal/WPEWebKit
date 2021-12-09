@@ -58,6 +58,13 @@ struct _Stream {
 
     // Fields filled when the track is attached.
     WebCore::MediaSourceStreamTypeGStreamer type;
+
+#if ENABLE(ENCRYPTED_MEDIA)
+    GRefPtr<GstElement> decryptor;
+    bool decryptorAttached;
+    gulong decryptorProbeId;
+#endif
+
     GRefPtr<GstCaps> caps;
 
     // Only audio, video or nothing at a given time.

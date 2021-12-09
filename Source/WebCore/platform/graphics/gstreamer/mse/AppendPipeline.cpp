@@ -181,7 +181,7 @@ public:
             }
 
             // If the first sample (DTS=0) doesn't start with PTS=0, compute a negative offset.
-            if (!GST_BUFFER_DTS(buffer) && GST_BUFFER_PTS(buffer) && !m_ptsOffset.isValid()) {
+            if (!GST_BUFFER_DTS(buffer) && GST_BUFFER_PTS(buffer) /*&& !m_ptsOffset.isValid()*/) {
                 m_ptsOffset = MediaTime(GST_BUFFER_DTS(buffer), GST_SECOND) - MediaTime(GST_BUFFER_PTS(buffer), GST_SECOND);
                 GST_TRACE("Setting an offset of %s\n", m_ptsOffset.toString().utf8().data());
             }
