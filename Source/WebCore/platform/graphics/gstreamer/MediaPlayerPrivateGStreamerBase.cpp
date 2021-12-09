@@ -1538,6 +1538,12 @@ void MediaPlayerPrivateGStreamerBase::cdmInstanceDetached(CDMInstance& instance)
 void MediaPlayerPrivateGStreamerBase::attemptToDecryptWithInstance(CDMInstance& instance)
 {
     ASSERT(isMainThread());
+
+    if(!m_cdmInstance) {
+        cdmInstanceAttached(instance);
+        return;
+    }
+
     ASSERT(m_cdmInstance.get() == &instance);
     GST_TRACE("instance %p, current stored %p", &instance, m_cdmInstance.get());
     attemptToDecryptWithLocalInstance();
