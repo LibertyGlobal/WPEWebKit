@@ -1481,7 +1481,9 @@ void MediaPlayerPrivateGStreamerBase::initializationDataEncountered(const String
 
     GST_TRACE("init data encountered of size %" G_GSIZE_FORMAT " with MD5 %s", initData.sizeInBytes(), GStreamerEMEUtilities::initDataMD5(initData).utf8().data());
     GST_MEMDUMP("init data", initData.characters8(), initData.sizeInBytes());
-
+    if (m_lastInitData.sizeInBytes() >= initData.sizeInBytes() && memmem(m_lastInitData.characters8(), m_lastInitData.sizeInBytes(), initData.characters8(), initData.sizeInBytes()))
+        return;
+    m_lastInitData = initData;
     m_player->initializationDataEncountered(initDataType, ArrayBuffer::create(reinterpret_cast<const uint8_t*>(initData.characters8()), initData.sizeInBytes()));
 }
 

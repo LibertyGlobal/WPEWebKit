@@ -37,7 +37,8 @@
 #endif
 
 // NOTE: YouTube 2018 EME conformance tests expect this to be >=5s.
-const WTF::Seconds WEBCORE_GSTREAMER_EME_LICENSE_KEY_RESPONSE_TIMEOUT = WTF::Seconds(6);
+// WPE Hang detector  kills the process after 30 seconds, so license timeout needs to be < 30s
+const WTF::Seconds WEBCORE_GSTREAMER_EME_LICENSE_KEY_RESPONSE_TIMEOUT = WTF::Seconds(25);
 
 namespace WebCore {
 
