@@ -62,10 +62,10 @@ TextureMapperGC3DPlatformLayer::TextureMapperGC3DPlatformLayer(GraphicsContext3D
 
 TextureMapperGC3DPlatformLayer::~TextureMapperGC3DPlatformLayer()
 {
-#if !USE(COORDINATED_GRAPHICS_THREADED)
+//#if !USE(COORDINATED_GRAPHICS_THREADED)
     if (client())
         client()->platformLayerWillBeDestroyed();
-#endif
+//#endif
 
     if (m_renderStyle == GraphicsContext3D::RenderDirectlyToHostWindow && (s_windowContextRefCount - 1) == 0) {
         s_windowContextRefCount = 0;
