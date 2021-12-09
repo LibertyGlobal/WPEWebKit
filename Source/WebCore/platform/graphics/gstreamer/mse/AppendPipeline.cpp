@@ -216,6 +216,7 @@ AppendPipeline::AppendPipeline(Ref<MediaSourceClientGStreamerMSE> mediaSourceCli
     , m_appendState(AppendState::NotStarted)
     , m_abortPending(false)
     , m_streamType(Unknown)
+    , m_allowedGap(MediaTime(1,10))
 {
     ASSERT(WTF::isMainThread());
     std::call_once(s_staticInitializationFlag, AppendPipeline::staticInitialization);
@@ -815,13 +816,26 @@ void AppendPipeline::appsinkNewSample(GRefPtr<GstSample>&& sample)
     }
 
     // Add a gap sample if a gap is detected before the first sample.
-    if (mediaSample->decodeTime() == MediaTime::zeroTime() && mediaSample->presentationTime() > MediaTime::zeroTime() && mediaSample->presentationTime() <= MediaTime(1, 10)) {
-        GST_DEBUG("Adding gap offset");
-        mediaSample->applyPtsOffset(MediaTime::zeroTime());
+    if (mediaSample->decodeTime() == MediaTime::zeroTime()
+        && mediaSample->presentationTime() > MediaTime::zeroTime()) {
+        if( mediaSample->presentationTime() <= MediaTime(1, 10)) {
+            GST_DEBUG("Adding gap offset 0.1");
+            m_allowedGap = MediaTime(1,10);
+        } else if (mediaSample->presentationTime() <= MediaTime(2, 10)) {
+            GST_WARNING("Adding gap offset 0.2");
+            m_allowedGap = MediaTime(2,10);
+        } else {
+            GST_ERROR("Sample Gap greater then 0.2 sec");
+        }
     }
 
     m_sourceBufferPrivate->didReceiveSample(*mediaSample);
     setAppendState(AppendState::Sampling);
+}
+
+MediaTime& AppendPipeline::allowedGap()
+{
+    return m_allowedGap;
 }
 
 void AppendPipeline::appsinkEOS()

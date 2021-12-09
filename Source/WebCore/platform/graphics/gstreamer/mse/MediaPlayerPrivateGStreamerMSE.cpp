@@ -350,7 +350,11 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek()
     if (!isTimeBuffered(seekTime)) {
         // Look if a near future time (<0.1 sec.) is buffered and change the seek target time.
         if (m_mediaSource) {
-            const MediaTime miniGap = MediaTime(1, 10);
+            MediaTime miniGap = MediaTime(1, 10);
+            for (auto it : m_appendPipelinesMap) {
+                if (it.value->allowedGap() > miniGap)
+                    miniGap = it.value->allowedGap();
+            }
             MediaTime nearest = m_mediaSource->buffered()->nearest(seekTime);
             if (nearest.isValid() && nearest > seekTime && (nearest - seekTime) <= miniGap && isTimeBuffered(nearest + miniGap)) {
                 GST_DEBUG("[Seek] Changed the seek target time from %s to %s, a near point in the future", toString(seekTime).utf8().data(), toString(nearest).utf8().data());
