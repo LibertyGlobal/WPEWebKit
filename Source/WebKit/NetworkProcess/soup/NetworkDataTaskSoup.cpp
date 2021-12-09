@@ -174,7 +174,7 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
     g_signal_connect(static_cast<NetworkSessionSoup&>(m_session.get()).soupSession(), "request-started", G_CALLBACK(requestStartedCallback), this);
 #endif
 
-    m_readPriority = (request.priority() >= ResourceLoadPriority::High) ? G_PRIORITY_HIGH : RunLoopSourcePriority::AsyncIONetwork;
+    m_readPriority = (request.priority() >= ResourceLoadPriority::High) ? RunLoopSourcePriority::AsyncIONetwork : G_PRIORITY_DEFAULT;
 }
 
 void NetworkDataTaskSoup::clearRequest()
