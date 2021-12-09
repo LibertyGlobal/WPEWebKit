@@ -852,7 +852,7 @@ void AppendPipeline::didReceiveInitializationSegment()
     WebCore::SourceBufferPrivateClient::InitializationSegment initializationSegment;
 
     GST_DEBUG("Notifying SourceBuffer for track %s", (m_track) ? m_track->id().string().utf8().data() : nullptr);
-    initializationSegment.duration = m_mediaSourceClient->duration();
+    initializationSegment.duration = m_initialDuration.isValid() ? m_initialDuration : m_mediaSourceClient->duration();
 
     switch (m_streamType) {
     case Audio: {
@@ -1182,9 +1182,6 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink(GstPad* demuxerSrcPad)
         GST_DEBUG("%s", strcaps.get());
     }
 #endif
-
-    if (m_mediaSourceClient->duration().isInvalid() && m_initialDuration > MediaTime::zeroTime())
-        m_mediaSourceClient->durationChanged(m_initialDuration);
 
     parseDemuxerSrcPadCaps(gst_caps_ref(caps.get()));
 
