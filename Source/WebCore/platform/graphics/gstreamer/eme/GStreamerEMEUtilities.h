@@ -64,24 +64,24 @@ public:
 
     static bool isClearKeyKeySystem(const String& keySystem)
     {
-        return equalIgnoringASCIICase(keySystem, s_ClearKeyKeySystem);
+        return keySystem.startsWithIgnoringASCIICase(s_ClearKeyKeySystem);
     }
 
     static bool isUnspecifiedKeySystem(const String& keySystem)
     {
-        return equalIgnoringASCIICase(keySystem, s_UnspecifiedKeySystem);
+        return keySystem.startsWithIgnoringASCIICase(s_UnspecifiedKeySystem);
     }
 
 #if USE(OPENCDM)
     static bool isPlayReadyKeySystem(const String& keySystem)
     {
-        return equalIgnoringASCIICase(keySystem, s_PlayReadyKeySystems[0])
-            || equalIgnoringASCIICase(keySystem, s_PlayReadyKeySystems[1]);
+        return keySystem.startsWithIgnoringASCIICase(s_PlayReadyKeySystems[0])
+            || keySystem.startsWithIgnoringASCIICase(s_PlayReadyKeySystems[1]);
     }
 
     static bool isWidevineKeySystem(const String& keySystem)
     {
-        return equalIgnoringASCIICase(keySystem, s_WidevineKeySystem);
+        return keySystem.startsWithIgnoringASCIICase(s_WidevineKeySystem);
     }
 #endif
 
