@@ -388,6 +388,12 @@ void SourceBuffer::rangeRemoval(const MediaTime& start, const MediaTime& end)
     m_pendingRemoveStart = start;
     m_pendingRemoveEnd = end;
     m_removeTimer.startOneShot(0_s);
+
+    auto& buffered = m_buffered->ranges();
+    if (buffered.length() && buffered.start(0) >= m_pendingRemoveStart) {
+        LOG(MediaSource, "SourceBuffer::rangeRemoval(%p) - adjust start of range removal  %s -> 0", this, toString(m_pendingRemoveStart).utf8().data());
+        m_pendingRemoveStart = MediaTime::zeroTime();
+    }
 }
 
 void SourceBuffer::abortIfUpdating()
