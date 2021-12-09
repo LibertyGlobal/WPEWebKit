@@ -1044,7 +1044,7 @@ GstFlowReturn AppendPipeline::handleNewAppsinkSample(GstElement* appsink)
 static GRefPtr<GstElement>
 createOptionalParserForFormat(GstPad* demuxerSrcPad)
 {
-#if PLATFORM(BROADCOM)
+#if 1 // PLATFORM(BROADCOM)
     return nullptr;
 #endif
     GRefPtr<GstCaps> padCaps = adoptGRef(gst_pad_get_current_caps(demuxerSrcPad));
