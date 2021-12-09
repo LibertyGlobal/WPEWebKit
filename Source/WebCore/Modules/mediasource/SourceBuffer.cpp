@@ -451,6 +451,7 @@ void SourceBuffer::removedFromMediaSource()
     m_private->removedFromMediaSource();
     m_source = nullptr;
     m_asyncEventQueue.cancelAllEvents();
+    m_reportedExtraMemoryCost = 0;
 }
 
 void SourceBuffer::seekToTime(const MediaTime& time)
