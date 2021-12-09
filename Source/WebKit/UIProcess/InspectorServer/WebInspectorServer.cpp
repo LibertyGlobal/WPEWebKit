@@ -152,10 +152,15 @@ bool WebInspectorServer::shouldInhibitLocalHostInspection(int pageId)
     WebInspectorProxy* client = m_clientMap.get(pageId);
     if(client && client->inspectedPage())
     {
-        if(client->inspectedPage()->pageLoadState().activeURL().find("localhost:") != notFound)
+        if(client->inspectedPage()->pageLoadState().activeURL().find("localhost:") != notFound) {
+            m_clientMap.remove(pageId);
             return true;
-        if(client->inspectedPage()->pageLoadState().activeURL().find("file://") != notFound)
+        }
+
+        if(client->inspectedPage()->pageLoadState().activeURL().find("file://") != notFound) {
+            m_clientMap.remove(pageId);
             return true;
+        }
     }
     else
         return true;
