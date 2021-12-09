@@ -893,6 +893,11 @@ void CoordinatedGraphicsLayer::flushCompositingStateForThisLayerOnly()
 
 void CoordinatedGraphicsLayer::syncPendingStateChangesIncludingSubLayers()
 {
+    if (!m_coordinator) {
+        LOG_ERROR("No coordinator");
+        return;
+    }
+
     if (m_layerState.hasPendingChanges()) {
         m_coordinator->syncLayerState(m_id, m_layerState);
         resetLayerState();
@@ -1029,6 +1034,11 @@ void CoordinatedGraphicsLayer::removeTile(uint32_t tileID)
 
 void CoordinatedGraphicsLayer::updateContentBuffersIncludingSubLayers()
 {
+    if (!m_coordinator) {
+        LOG_ERROR("No coordinator");
+        return;
+    }
+
     if (CoordinatedGraphicsLayer* mask = downcast<CoordinatedGraphicsLayer>(maskLayer()))
         mask->updateContentBuffers();
 
