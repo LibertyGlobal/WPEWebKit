@@ -148,6 +148,12 @@ static void webkit_media_opencdm_decrypt_init(WebKitOpenCDMDecrypt* self)
 static void webKitMediaOpenCDMDecryptorFinalize(GObject* object)
 {
     WebKitOpenCDMDecryptPrivate* priv = GST_WEBKIT_OPENCDM_DECRYPT_GET_PRIVATE(WEBKIT_OPENCDM_DECRYPT(object));
+
+    // Let OCDM sessions know playback has stopped
+    // output restrictions can be reset now
+    if(priv->m_openCdmSession)
+        opencdm_session_resetoutputprotection(priv->m_openCdmSession.get());
+
     priv->~WebKitOpenCDMDecryptPrivate();
     GST_CALL_PARENT(G_OBJECT_CLASS, finalize, (object));
 }
