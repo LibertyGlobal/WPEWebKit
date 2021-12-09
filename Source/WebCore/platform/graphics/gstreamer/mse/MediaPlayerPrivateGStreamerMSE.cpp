@@ -914,9 +914,7 @@ HashSet<String, ASCIICaseInsensitiveHash>& MediaPlayerPrivateGStreamerMSE::mimeT
         HashSet<String, ASCIICaseInsensitiveHash> set;
         const char* mimeTypes[] = {
             "video/mp4",
-            "audio/mp4",
-            "video/webm",
-            "audio/webm"
+            "audio/mp4"
         };
         for (auto& type : mimeTypes)
             set.add(type);
