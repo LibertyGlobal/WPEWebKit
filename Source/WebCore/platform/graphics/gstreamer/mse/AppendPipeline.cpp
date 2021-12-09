@@ -187,7 +187,7 @@ public:
             }
 
             // Apply the offset to zero-align the first sample and also correct the next ones.
-            if (m_ptsOffset.isValid())
+            if (MediaPlayer::isYouTubeQuirksEnabled() && m_ptsOffset.isValid())
                 GST_BUFFER_PTS(buffer) += toGstClockTime(m_ptsOffset);
 
             m_lastPts = MediaTime(GST_BUFFER_PTS(buffer), GST_SECOND);
@@ -412,6 +412,9 @@ void AppendPipeline::clearPlayerPrivate()
 
 void AppendPipeline::handleNeedContextSyncMessage(GstMessage* message)
 {
+    if (GST_MESSAGE_TYPE(message) != GST_MESSAGE_NEED_CONTEXT)
+        return;
+
     const gchar* contextType = nullptr;
     gst_message_parse_context_type(message, &contextType);
     GST_TRACE("context type: %s", contextType);
@@ -809,7 +812,7 @@ void AppendPipeline::appsinkNewSample(GRefPtr<GstSample>&& sample)
 
     // If we're beyond the duration, ignore this sample and the remaining ones.
     MediaTime duration = m_mediaSourceClient->duration();
-    if (duration.isValid() && !duration.indefiniteTime() && mediaSample->presentationTime() > duration) {
+    if (MediaPlayer::isYouTubeQuirksEnabled() && duration.isValid() && !duration.indefiniteTime() && mediaSample->presentationTime() > duration) {
         GST_DEBUG("Detected sample (%s) beyond the duration (%s), declaring LastSample", mediaSample->presentationTime().toString().utf8().data(), duration.toString().utf8().data());
         setAppendState(AppendState::LastSample);
         return;
@@ -827,6 +830,8 @@ void AppendPipeline::appsinkNewSample(GRefPtr<GstSample>&& sample)
         } else {
             GST_ERROR("Sample Gap greater then 0.2 sec");
         }
+        if (MediaPlayer::isYouTubeQuirksEnabled() && mediaSample->presentationTime() <= MediaTime(2, 10))
+            mediaSample->applyPtsOffset(MediaTime::zeroTime());
     }
 
     m_sourceBufferPrivate->didReceiveSample(*mediaSample);

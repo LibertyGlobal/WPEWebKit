@@ -236,8 +236,15 @@ void WebLoaderStrategy::scheduleLoad(ResourceLoader& resourceLoader, CachedResou
             WebProcess::singleton().webLoaderStrategy().scheduleLoadFromNetworkProcess(resourceLoader.get(), resourceLoader->request(), trackingParameters, sessionID, shouldClearReferrerOnHTTPSToHTTPRedirect, maximumBufferingTime);
     });
 #else
-    if (!tryLoadingUsingURLSchemeHandler(resourceLoader))
-        scheduleLoadFromNetworkProcess(resourceLoader, resourceLoader.request(), trackingParameters, sessionID, shouldClearReferrerOnHTTPSToHTTPRedirect, maximumBufferingTime(resource));
+    if (!tryLoadingUsingURLSchemeHandler(resourceLoader)) {
+        Seconds bufferingTime;
+        if (resource && resource->type() == CachedResource::Type::RawResource && resourceLoader.request().timeoutInterval() > 0) {
+            bufferingTime = Seconds(std::min(0.25, resourceLoader.request().timeoutInterval() / 2.0));
+        } else {
+            bufferingTime = maximumBufferingTime(resource);
+        }
+        scheduleLoadFromNetworkProcess(resourceLoader, resourceLoader.request(), trackingParameters, sessionID, shouldClearReferrerOnHTTPSToHTTPRedirect, bufferingTime);
+    }
 #endif
 }
 

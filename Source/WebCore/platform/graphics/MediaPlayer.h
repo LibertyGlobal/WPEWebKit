@@ -259,6 +259,8 @@ public:
     static void clearMediaCache(const String& path, WallTime modifiedSince);
     static void clearMediaCacheForOrigins(const String& path, const HashSet<RefPtr<SecurityOrigin>>&);
     static bool supportsKeySystem(const String& keySystem, const String& mimeType);
+    static void setYouTubeQuirksEnabled(bool);
+    static bool isYouTubeQuirksEnabled();
 
     bool supportsPictureInPicture() const;
     bool supportsFullscreen() const;

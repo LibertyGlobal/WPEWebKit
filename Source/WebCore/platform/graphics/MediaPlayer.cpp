@@ -1629,4 +1629,24 @@ String MediaPlayer::errorMessage() const
 
 }
 
+namespace WebCore {
+
+namespace
+{
+bool gYouTubeQuirksEnabled = false;
+}
+
+void MediaPlayer::setYouTubeQuirksEnabled(bool enabled)
+{
+    gYouTubeQuirksEnabled = enabled;
+}
+
+bool MediaPlayer::isYouTubeQuirksEnabled()
+{
+    static bool enableYTQuirks = !!getenv("WPE_ENABLE_YT_MSE_HACKS");
+    return gYouTubeQuirksEnabled || enableYTQuirks;
+}
+
+}
+
 #endif

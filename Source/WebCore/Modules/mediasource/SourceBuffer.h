@@ -117,6 +117,7 @@ public:
     void readyStateChanged();
 
     bool hasPendingActivity() const final;
+    size_t memoryCost() const;
 
     void trySignalAllSamplesEnqueued();
 

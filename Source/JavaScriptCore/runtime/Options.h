@@ -517,6 +517,7 @@ constexpr bool enableWebAssemblyStreamingApi = false;
     v(bool, useTracePoints, false, Normal, nullptr) \
     v(bool, traceLLIntExecution, false, Configurable, nullptr) \
     v(bool, traceLLIntSlowPath, false, Configurable, nullptr) \
+    v(bool, disableConsoleLog, false, Normal, "Disable printing of JS console logs.") \
 
 
 enum OptionEquivalence {

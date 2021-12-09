@@ -516,6 +516,16 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document& docum
     , m_logIdentifier(nextLogIdentifier())
 #endif
 {
+    {
+        String host = document.url().host().toString();
+        if (host.endsWith(".youtube.com") ||
+            equalLettersIgnoringASCIICase(host, "www.youtube.com") ||
+            host.contains("yt-dash-mse-test") ||
+            host.contains("ytlr-cert"))
+            MediaPlayer::setYouTubeQuirksEnabled(true);
+        else
+            MediaPlayer::setYouTubeQuirksEnabled(false);
+    }
     allMediaElements().add(this);
 
     ALWAYS_LOG(LOGIDENTIFIER);
