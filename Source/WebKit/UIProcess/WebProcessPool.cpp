@@ -1876,6 +1876,17 @@ void WebProcessPool::setJavaScriptConfigurationFileEnabled(bool flag)
     m_javaScriptConfigurationFileEnabled = flag;
 }
 
+void WebProcessPool::releaseMemory()
+{
+    size_t processCount = m_processes.size();
+    for (size_t i = 0; i < processCount; ++i) {
+        WebProcessProxy* process = m_processes[i].get();
+        process->releaseMemory();
+    }
+    if (m_networkProcess)
+        m_networkProcess->releaseMemory();
+}
+
 void WebProcessPool::garbageCollectJavaScriptObjects()
 {
     sendToAllProcesses(Messages::WebProcess::GarbageCollectJavaScriptObjects());
