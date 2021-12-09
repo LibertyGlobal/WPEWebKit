@@ -714,6 +714,20 @@ RefPtr<CDMInstanceOpenCDM::Session> CDMInstanceOpenCDM::lookupSession(const Stri
     return lookupSessionUnlocked(sessionId);
 }
 
+bool CDMInstanceOpenCDM::hasValidSessions() const
+{
+    LockHolder locker(m_sessionMapMutex);
+    if (m_sessionsMap.size() > 0)
+    {
+        for (const auto& pair : m_sessionsMap)
+        {
+            if (pair.value->isValid())
+                return true;
+        }
+    }
+    return false;
+}
+
 } // namespace WebCore
 
 #endif // ENABLE(ENCRYPTED_MEDIA) && USE(OPENCDM)

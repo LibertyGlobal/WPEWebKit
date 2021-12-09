@@ -1508,6 +1508,16 @@ void MediaPlayerPrivateGStreamerBase::cdmInstanceAttached(CDMInstance& instance)
     gst_element_set_context(GST_ELEMENT(m_pipeline.get()), context.get());
 
     GST_LOG("CDM instance %p dispatched as context", m_cdmInstance.get());
+
+    #if USE(OPENCDM)
+    if (m_cdmInstance) {
+        auto& cdmInstanceOpenCDM = downcast<WebCore::CDMInstanceOpenCDM>(*m_cdmInstance);
+        if (cdmInstanceOpenCDM.hasValidSessions())
+        {
+            attemptToDecryptWithLocalInstance();
+        }
+    }
+    #endif
 }
 
 void MediaPlayerPrivateGStreamerBase::cdmInstanceDetached(CDMInstance& instance)

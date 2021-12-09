@@ -105,6 +105,9 @@ public:
     CDMInstanceClient* client() const { return m_client; }
 
     OpenCDMSystem* ocdmSystem() const { return &m_openCDMSystem; }
+
+    bool hasValidSessions() const;
+
 private:
     bool addSession(const String& sessionId, RefPtr<Session>&& session);
     bool removeSession(const String& sessionId);
