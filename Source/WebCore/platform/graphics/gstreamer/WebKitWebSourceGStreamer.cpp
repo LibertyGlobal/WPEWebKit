@@ -530,7 +530,7 @@ static void webKitWebSrcStart(WebKitWebSrc* src)
             priv->loader = priv->player->createResourceLoader();
 
         {
-            String cookies = WebCore::cookies(*priv->player->cachedResourceLoader()->document(), request.url());
+            String cookies; // = WebCore::cookies(*priv->player->cachedResourceLoader()->document(), request.url());
             priv->cookies = GUniquePtr<gchar>(g_strdup(cookies.utf8().data()));
         }
 
