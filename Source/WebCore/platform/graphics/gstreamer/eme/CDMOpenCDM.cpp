@@ -88,7 +88,7 @@ class CDMInstanceOpenCDM::Session : public ThreadSafeRefCounted<CDMInstanceOpenC
 public:
     using Notification = void (Session::*)(RefPtr<WebCore::SharedBuffer>&&);
     using ChallengeGeneratedCallback = Function<void(Session*)>;
-    using SessionChangedCallback = CompletionHandler<void(Session*, bool, RefPtr<SharedBuffer>&&, KeyStatusVector&)>;
+    using SessionChangedCallback = Function<void(Session*, bool, RefPtr<SharedBuffer>&&, KeyStatusVector&)>;
 
     static Ref<Session> create(CDMInstanceOpenCDM*, OpenCDMSystem&, const String&, const AtomicString&, Ref<WebCore::SharedBuffer>&&, LicenseType, Ref<WebCore::SharedBuffer>&&);
     ~Session();
@@ -513,11 +513,7 @@ void CDMInstanceOpenCDM::requestLicense(LicenseType licenseType, const AtomicStr
 void CDMInstanceOpenCDM::updateLicense(const String& sessionId, LicenseType, const SharedBuffer& response, LicenseUpdateCallback callback)
 {
     GST_TRACE("Updating session %s", sessionId.utf8().data());
-    // We take the session map mutex here and we do not release it
-    // until the the update lambda is executed by moving the lock into
-    // it.
-    LockHolder locker(m_sessionMapMutex);
-    auto session = lookupSessionUnlocked(sessionId);
+    auto session = lookupSession(sessionId);
     if (!session) {
         GST_WARNING("cannot update the session %s cause we can't find it", sessionId.utf8().data());
         callback(false, std::nullopt, std::nullopt, std::nullopt, SuccessValue::Failed);
@@ -701,17 +697,11 @@ bool CDMInstanceOpenCDM::removeSession(const String& sessionId)
     return m_sessionsMap.remove(sessionId);
 }
 
-RefPtr<CDMInstanceOpenCDM::Session> CDMInstanceOpenCDM::lookupSessionUnlocked(const String& sessionId) const
-{
-    ASSERT(m_sessionMapMutex.isLocked());
-    auto session = m_sessionsMap.find(sessionId);
-    return session == m_sessionsMap.end() ? nullptr : session->value;
-}
-
 RefPtr<CDMInstanceOpenCDM::Session> CDMInstanceOpenCDM::lookupSession(const String& sessionId) const
 {
     LockHolder locker(m_sessionMapMutex);
-    return lookupSessionUnlocked(sessionId);
+    auto session = m_sessionsMap.find(sessionId);
+    return session == m_sessionsMap.end() ? nullptr : session->value;
 }
 
 bool CDMInstanceOpenCDM::hasValidSessions() const
