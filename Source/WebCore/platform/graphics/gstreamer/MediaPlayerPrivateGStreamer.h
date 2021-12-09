@@ -133,6 +133,9 @@ public:
     void enableTrack(TrackPrivateBaseGStreamer::TrackType, unsigned index);
 
     bool handleSyncMessage(GstMessage*) override;
+#if ENABLE(ENCRYPTED_MEDIA)
+    void handleDecryptionError(const GstStructure*);
+#endif
     bool m_reportedPlaybackStarted;
     bool m_reportedPlaybackFailed;
     bool m_reportedPlaybackEOS;
@@ -163,7 +166,7 @@ private:
 #if USE(GSTREAMER_MPEGTS)
     void processMpegTsSection(GstMpegtsSection*);
 #endif
-
+    WeakPtrFactory<MediaPlayerPrivateGStreamer> m_weakPtrFactory;
     void processTableOfContents(GstMessage*);
     void processTableOfContentsEntry(GstTocEntry*);
 

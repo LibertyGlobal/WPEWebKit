@@ -2811,6 +2811,13 @@ void HTMLMediaElement::mediaPlayerInitializationDataEncountered(const String& in
     m_asyncEventQueue.enqueueEvent(MediaEncryptedEvent::create(eventNames().encryptedEvent, initializer, Event::IsTrusted::Yes));
 }
 
+void HTMLMediaElement::mediaPlayerDecryptErrorEncountered()
+{
+    m_error = MediaError::create(MediaError::MEDIA_ERR_ENCRYPTED);
+    if (!m_asyncEventQueue.hasPendingEventsOfType(eventNames().errorEvent))
+        scheduleEvent(eventNames().errorEvent);
+}
+
 void HTMLMediaElement::attemptToDecrypt()
 {
     // https://w3c.github.io/encrypted-media/#attempt-to-decrypt
