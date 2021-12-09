@@ -173,9 +173,6 @@ void ImageBufferData::swapBuffersIfNeeded()
 {
     ASSERT(m_renderingMode == RenderingMode::Accelerated);
 
-    if (!m_bufferChanged)
-        return;
-
     GLContext* previousActiveContext = GLContext::current();
     cairo_surface_flush(m_surface.get());
 
