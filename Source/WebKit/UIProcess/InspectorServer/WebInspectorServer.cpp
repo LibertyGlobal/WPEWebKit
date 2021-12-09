@@ -292,11 +292,10 @@ void WebInspectorServer::didEstablishWebSocketConnection(WebSocketServerConnecti
     unsigned pageId = pageIdFromRequestPath(path);
     ASSERT(pageId);
 
-    // Ignore connections to a page that already have a remote inspector connected.
+    // Shuntdowning old connections and continue to add new remote inspector connected.
     if (m_connectionMap.contains(pageId)) {
-        LOG_ERROR("A remote inspector connection already exist for page ID %d. Ignoring.", pageId);
-        connection->shutdownNow();
-        return;
+        LOG_ERROR("Shutdowning old remote inspector connection and continue to add new connection for page ID %d.", pageId);
+        m_connectionMap.get(pageId)->shutdownNow();
     }
 
     // Ignore connections to the localhost page
