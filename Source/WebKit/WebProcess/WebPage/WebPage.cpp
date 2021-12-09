@@ -343,6 +343,14 @@ Ref<WebPage> WebPage::create(uint64_t pageID, WebPageCreationParameters&& parame
     return page;
 }
 
+static UniqueRef<WebCore::LibWebRTCProvider> makeWebRTCProvider()
+{
+    static bool useWebKitProvider = !!getenv("WPE_USE_WEBKIT_WEBRTC_PROVIDER");
+    if (useWebKitProvider)
+        return makeUniqueRef<WebKit::LibWebRTCProvider>();
+    return WebCore::LibWebRTCProvider::create();
+}
+
 WebPage::WebPage(uint64_t pageID, WebPageCreationParameters&& parameters)
     : m_pageID(pageID)
     , m_viewSize(parameters.viewSize)
@@ -406,7 +414,7 @@ WebPage::WebPage(uint64_t pageID, WebPageCreationParameters&& parameters)
     PageConfiguration pageConfiguration(
         makeUniqueRef<WebEditorClient>(this),
         WebSocketProvider::create(),
-        makeUniqueRef<WebKit::LibWebRTCProvider>(),
+        makeWebRTCProvider(),
         WebProcess::singleton().cacheStorageProvider()
     );
     pageConfiguration.chromeClient = new WebChromeClient(*this);
