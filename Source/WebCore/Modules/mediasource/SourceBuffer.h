@@ -142,6 +142,7 @@ private:
     MediaTime sourceBufferPrivateFastSeekTimeForMediaTime(const MediaTime&, const MediaTime& negativeThreshold, const MediaTime& positiveThreshold) final;
     void sourceBufferPrivateAppendComplete(AppendResult) final;
     void sourceBufferPrivateDidReceiveRenderingError(int errorCode) final;
+    void useEncryptedContentSizeLimits() final;
 
     void audioTrackEnabledChanged(AudioTrack&) final;
     void videoTrackSelectedChanged(VideoTrack&) final;
@@ -237,6 +238,8 @@ private:
     bool m_active { false };
     bool m_bufferFull { false };
     bool m_shouldGenerateTimestamps { false };
+    bool m_useClearContentLimits { true };
+    bool m_didLogQuotaErrorOnce { false };
 
     static size_t maxBufferSizeVideo;
     static size_t maxBufferSizeAudio;

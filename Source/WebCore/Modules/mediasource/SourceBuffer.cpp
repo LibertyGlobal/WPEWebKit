@@ -577,9 +577,14 @@ ExceptionOr<void> SourceBuffer::appendBufferInternal(const unsigned char* data, 
 #if USE(GSTREAMER)
     // 5. If the buffer full flag equals true, then throw a QuotaExceededError exception and abort these step.
     if (m_bufferFull) {
-        LOG(MediaSource, "SourceBuffer::appendBufferInternal(%p) -  buffer full, failing with QuotaExceededError error", this);
+        if (!m_didLogQuotaErrorOnce) {
+            LOG_ERROR("SourceBuffer::appendBufferInternal(%p, %s) -  buffer full, failing with QuotaExceededError error", this,
+                    (hasVideo() ? "video" : (hasAudio() ? "audio" : "unknown")));
+            m_didLogQuotaErrorOnce = true;
+        }
         return Exception { QuotaExceededError };
     }
+    m_didLogQuotaErrorOnce = false;
 #endif
 
     // NOTE: Return to 3.2 appendBuffer()
@@ -1171,9 +1176,9 @@ static void maximumBufferSizeDefaults(size_t& maxBufferSizeVideo, size_t& maxBuf
         maxBufferSizeAudio = 2 * 1024 * 1024;
     if (!maxBufferSizeVideo)
         maxBufferSizeVideo = 15 * 1024 * 1024;
+#endif
     if (!maxBufferSizeText)
         maxBufferSizeText = 1 * 1024 * 1024;
-#endif
 }
 
 size_t SourceBuffer::maximumBufferSize() const
@@ -1186,6 +1191,15 @@ size_t SourceBuffer::maximumBufferSize() const
 
     if (m_source && m_source->sourceBuffers() && m_source->sourceBuffers()->length() == 1)
         return maxBufferSizeVideo;
+
+#if USE(SVP)
+    if (m_useClearContentLimits) {
+        if (m_videoTracks && m_videoTracks->length() > 0)
+            return 2 * maxBufferSizeVideo;
+        if (m_audioTracks && m_audioTracks->length() > 0)
+            return 2 * maxBufferSizeAudio;
+    }
+#endif
 
     if (m_videoTracks && m_videoTracks->length() > 0)
         return maxBufferSizeVideo;
@@ -2416,6 +2430,11 @@ ExceptionOr<void> SourceBuffer::setMode(AppendMode newMode)
 size_t SourceBuffer::memoryCost() const
 {
     return sizeof(SourceBuffer) + m_reportedExtraMemoryCost;
+}
+
+void SourceBuffer::useEncryptedContentSizeLimits()
+{
+    m_useClearContentLimits = false;
 }
 
 } // namespace WebCore

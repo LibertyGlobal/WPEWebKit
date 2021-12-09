@@ -319,6 +319,10 @@ void PlaybackPipeline::flush(AtomicString trackId)
         GST_OBJECT_UNLOCK(m_webKitMediaSrc.get());
         return;
     }
+    if (!stream->lastEnqueuedTime.isValid()) {
+        GST_OBJECT_UNLOCK(m_webKitMediaSrc.get());
+        return;
+    }
 
     stream->lastEnqueuedTime = MediaTime::invalidTime();
     stream->firstEnqueuedTime = MediaTime::invalidTime();
