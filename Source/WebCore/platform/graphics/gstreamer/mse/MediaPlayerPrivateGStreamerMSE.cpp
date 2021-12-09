@@ -902,21 +902,22 @@ const static HashSet<AtomicString>& codecSet()
             { VideoDecoder, "video/x-vp9", { "vp9", "x-vp9" } },
             { AudioDecoder, "audio/x-vorbis", { "vorbis", "x-vorbis" } },
             { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } },
-            { AudioDecoder, "audio/x-ac3", { } },
-            { AudioDecoder, "audio/x-eac3", {"audio/x-ac3"} }
+            { AudioDecoder, "audio/x-ac3", {"x-ac3", "ac3" } },
+            { AudioDecoder, "audio/x-eac3", {"x-eac3", "ec3", "ec-3", "eac3"} }
         } };
 #else
-        std::array<GstCapsWebKitMapping, 9> mapping = { {
+        std::array<GstCapsWebKitMapping, 10> mapping = { {
             { VideoDecoder, "video/x-h264,  profile=(string){ constrained-baseline, baseline }", { "x-h264" } },
             { VideoDecoder, "video/x-h264, stream-format=avc", { "avc*"} },
             // An autoplugged h264parse in decodebin can convert from byte-stream to avc.
             { VideoDecoder, "video/x-h264, stream-format=byte-stream", { "avc*"} },
-            { VideoDecoder, "video/x-h265", { "x-h265", "hvc1*", "hev1*"} },
             { VideoDecoder, "video/mpeg, mpegversion=(int){1,2}, systemstream=(boolean)false", { "mpeg" } },
             { VideoDecoder, "video/x-vp8", { "vp8", "x-vp8" } },
             { VideoDecoder, "video/x-vp9", { "vp9", "x-vp9" } },
             { AudioDecoder, "audio/x-vorbis", { "vorbis", "x-vorbis" } },
-            { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } }
+            { AudioDecoder, "audio/x-opus", { "opus", "x-opus" } },
+            { AudioDecoder, "audio/x-ac3", {"x-ac3", "ac3" } },
+            { AudioDecoder, "audio/x-eac3", {"x-eac3", "ec3", "ec-3", "eac3"} }
         } };
 #endif
         for (auto& current : mapping) {
