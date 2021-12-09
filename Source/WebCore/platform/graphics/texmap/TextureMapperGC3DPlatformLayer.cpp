@@ -67,9 +67,13 @@ TextureMapperGC3DPlatformLayer::~TextureMapperGC3DPlatformLayer()
         client()->platformLayerWillBeDestroyed();
 //#endif
 
-    if (m_renderStyle == GraphicsContext3D::RenderDirectlyToHostWindow && (s_windowContextRefCount - 1) == 0) {
-        s_windowContextRefCount = 0;
-        s_windowContext.reset();
+    if (m_renderStyle == GraphicsContext3D::RenderDirectlyToHostWindow) {
+        if ((s_windowContextRefCount - 1) == 0) {
+            s_windowContextRefCount = 0;
+            s_windowContext.reset();
+        } else {
+            s_windowContextRefCount--;
+        }
     }
 }
 
