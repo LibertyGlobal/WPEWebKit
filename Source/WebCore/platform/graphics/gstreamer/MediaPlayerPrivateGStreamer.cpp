@@ -2257,15 +2257,15 @@ void MediaPlayerPrivateGStreamer::handleDecryptionError(const GstStructure* stru
 {
     ASSERT(isMainThread());
 
-    RunLoop::main().dispatch([this, weakThis = m_weakPtrFactory.createWeakPtr(*this)] {
-        if (!weakThis)
-            return;
+    if (gst_structure_has_field_typed(structure, "error-message", G_TYPE_STRING)) {
+        const gchar* errorMessage = gst_structure_get_string(structure, "error-message");
+        m_errorMessage = errorMessage;
+    }
 
-        GST_WARNING("scheduling decryptionErrorEncountered event");
-        fprintf(stderr, "HTML5 video: Playback failed: Decryption error [%s]\n", m_url.string().utf8().data());
-        loadingFailed(MediaPlayer::FormatError);
-        m_player->decryptErrorEncountered(); // override the error code
-    });
+    GST_WARNING("scheduling decryptionErrorEncountered event");
+    fprintf(stderr, "HTML5 video: Playback failed: Decryption error [%s]\n", m_url.string().utf8().data());
+    loadingFailed(MediaPlayer::FormatError);
+    m_player->decryptErrorEncountered(); // override the error code
 }
 
 void MediaPlayerPrivateGStreamer::cdmInstanceAttached(CDMInstance& instance)
@@ -2273,7 +2273,8 @@ void MediaPlayerPrivateGStreamer::cdmInstanceAttached(CDMInstance& instance)
     if(m_cdmInstance.get() != &instance && m_cdmInstance)
         const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(nullptr);
     MediaPlayerPrivateGStreamerBase::cdmInstanceAttached(instance);
-    const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(m_tracker);
+    if (m_cdmInstance)
+        const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(m_tracker);
 }
 
 void MediaPlayerPrivateGStreamer::cdmInstanceDetached(CDMInstance& instance)

@@ -2813,7 +2813,9 @@ void HTMLMediaElement::mediaPlayerInitializationDataEncountered(const String& in
 
 void HTMLMediaElement::mediaPlayerDecryptErrorEncountered()
 {
-    m_error = MediaError::create(MediaError::MEDIA_ERR_ENCRYPTED);
+    m_error = m_player
+        ? MediaError::create(MediaError::MEDIA_ERR_ENCRYPTED, m_player->errorMessage())
+        : MediaError::create(MediaError::MEDIA_ERR_ENCRYPTED);
     if (!m_asyncEventQueue.hasPendingEventsOfType(eventNames().errorEvent))
         scheduleEvent(eventNames().errorEvent);
 }
