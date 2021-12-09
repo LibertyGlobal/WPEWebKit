@@ -961,7 +961,8 @@ void WebProcessPool::initializeNewWebProcess(WebProcessProxy& process, WebsiteDa
 #endif
 
 #if OS(LINUX)
-    parameters.shouldEnableMemoryPressureReliefLogging = true;
+    static bool enableReliefLogging = !!getenv("WPE_ENABLE_RELIEF_LOGGING");
+    parameters.shouldEnableMemoryPressureReliefLogging = enableReliefLogging;
 #endif
 
 #if PLATFORM(WAYLAND) && USE(EGL)
