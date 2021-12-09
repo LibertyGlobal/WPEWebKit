@@ -34,8 +34,10 @@
 #include <wtf/RunLoop.h>
 #include <wtf/text/Base64.h>
 #include <wtf/text/StringHash.h>
+#include "MediaPlayer.h"
 
 using WebCore::CDMInstance;
+using WebCore::MediaPlayer;
 using WebCore::GstMappedBuffer;
 
 #define WEBKIT_MEDIA_CENC_DECRYPT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), WEBKIT_TYPE_MEDIA_CENC_DECRYPT, WebKitMediaCommonEncryptionDecryptPrivate))
@@ -450,8 +452,14 @@ static void webkitMediaCommonEncryptionDecryptProcessProtectionEvents(WebKitMedi
 
         if (isCDMInstanceAvailable && g_strcmp0(WebCore::GStreamerEMEUtilities::keySystemToUuid(eventKeySystem), WebCore::GStreamerEMEUtilities::keySystemToUuid(priv->m_cdmInstance->keySystem()))) {
             GST_TRACE_OBJECT(self, "protection event for a different key system");
-            continue;
+
+            if (MediaPlayer::isDAZNQuirksEnabled()) {
+                 GST_TRACE_OBJECT(self, "DAZN quirk enabled, processing initdata from different key system");
+            } else {
+                continue;
+            }
         }
+
 
         if (priv->m_currentEvent == GST_EVENT_SEQNUM(event.get())) {
             GST_TRACE_OBJECT(self, "event %u already handled", priv->m_currentEvent);

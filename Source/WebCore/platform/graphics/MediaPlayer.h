@@ -264,6 +264,8 @@ public:
     static bool supportsKeySystem(const String& keySystem, const String& mimeType);
     static void setYouTubeQuirksEnabled(bool);
     static bool isYouTubeQuirksEnabled();
+    static void setDAZNQuirksEnabled(bool);
+    static bool isDAZNQuirksEnabled();
 
     bool supportsPictureInPicture() const;
     bool supportsFullscreen() const;

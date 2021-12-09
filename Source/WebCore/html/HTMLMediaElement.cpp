@@ -525,6 +525,11 @@ HTMLMediaElement::HTMLMediaElement(const QualifiedName& tagName, Document& docum
             MediaPlayer::setYouTubeQuirksEnabled(true);
         else
             MediaPlayer::setYouTubeQuirksEnabled(false);
+
+        if (equalLettersIgnoringASCIICase(host, "www.dazn.com"))
+            MediaPlayer::setDAZNQuirksEnabled(true);
+        else
+            MediaPlayer::setDAZNQuirksEnabled(false);
     }
     allMediaElements().add(this);
 
