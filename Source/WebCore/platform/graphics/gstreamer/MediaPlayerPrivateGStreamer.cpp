@@ -200,6 +200,10 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
 #if USE(GLIB)
     m_readyTimerHandler.setPriority(G_PRIORITY_DEFAULT_IDLE);
 #endif
+
+#if ENABLE(ENCRYPTED_MEDIA)
+    m_tracker = MediaPlayerGStreamerEncryptedPlayTracker::create();
+#endif
 }
 
 MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
@@ -207,10 +211,9 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
     GST_DEBUG("Disposing player");
 
 #if ENABLE(ENCRYPTED_MEDIA)
-        if(m_cdmInstance && !m_lastReportedUrl.isEmpty()) {
-            fprintf(stderr, "Stopped playing Encrypted Content, url=%s, keySystem=%s\n",
-                    m_lastReportedUrl.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
-            m_lastReportedUrl = URL();
+        if(m_cdmInstance) {
+            const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(nullptr);
+            m_tracker = nullptr;
         }
 #endif
 
@@ -286,6 +289,9 @@ void MediaPlayerPrivateGStreamer::setPlaybinURL(const URL& url)
 
     m_url = URL(URL(), cleanURLString);
     convertToInternalProtocol(m_url);
+#if ENABLE(ENCRYPTED_MEDIA)
+    m_tracker->setURL(m_url.string());
+#endif
 
     GST_INFO("Load %s", m_url.string().utf8().data());
     g_object_set(m_pipeline.get(), "uri", m_url.string().utf8().data(), nullptr);
@@ -1344,13 +1350,6 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         didEnd();
         fprintf(stderr, "HTML5 video: End of Stream [%s]\n",m_url.string().utf8().data());
         m_reportedPlaybackEOS = true;
-#if ENABLE(ENCRYPTED_MEDIA)
-        if(m_cdmInstance && !m_lastReportedUrl.isEmpty()) {
-            fprintf(stderr, "Completed playing Encrypted Content, url=%s, keySystem=%s\n",
-                    m_lastReportedUrl.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
-            m_lastReportedUrl = URL();
-        }
-#endif
         break;
     case GST_MESSAGE_ASYNC_DONE:
         if (!messageSourceIsPlaybin || m_delayingLoad)
@@ -1392,13 +1391,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline.get()), GST_DEBUG_GRAPH_SHOW_ALL, dotFileName.data());
         GST_INFO("Playbin changed %s --> %s", gst_element_state_get_name(currentState), gst_element_state_get_name(newState));
 #if ENABLE(ENCRYPTED_MEDIA)
-        if(newState == GST_STATE_PLAYING) {
-            if(m_cdmInstance && !m_url.isEmpty() && m_url != m_lastReportedUrl) {
-                fprintf(stderr, "Started playing Encrypted Content, url=%s, keySystem=%s\n",
-                        m_url.string().utf8().data(), m_cdmInstance->keySystem().utf8().data());
-                m_lastReportedUrl = m_url;
-            }
-        }
+        m_tracker->notifyStateChange(currentState, newState);
 #endif
         break;
     }
@@ -2273,6 +2266,21 @@ void MediaPlayerPrivateGStreamer::handleDecryptionError(const GstStructure* stru
         loadingFailed(MediaPlayer::FormatError);
         m_player->decryptErrorEncountered(); // override the error code
     });
+}
+
+void MediaPlayerPrivateGStreamer::cdmInstanceAttached(CDMInstance& instance)
+{
+    if(m_cdmInstance.get() != &instance && m_cdmInstance)
+        const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(nullptr);
+    MediaPlayerPrivateGStreamerBase::cdmInstanceAttached(instance);
+    const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(m_tracker);
+}
+
+void MediaPlayerPrivateGStreamer::cdmInstanceDetached(CDMInstance& instance)
+{
+    if(m_cdmInstance)
+        const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(nullptr);
+    MediaPlayerPrivateGStreamerBase::cdmInstanceDetached(instance);
 }
 #endif
 

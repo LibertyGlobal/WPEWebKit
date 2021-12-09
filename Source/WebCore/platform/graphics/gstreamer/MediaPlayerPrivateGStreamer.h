@@ -28,6 +28,7 @@
 
 #include "GStreamerCommon.h"
 #include "MediaPlayerPrivateGStreamerBase.h"
+#include "MediaPlayerGStreamerEncryptedPlayTracker.h"
 
 #include <glib.h>
 #include <gst/gst.h>
@@ -135,6 +136,8 @@ public:
     bool handleSyncMessage(GstMessage*) override;
 #if ENABLE(ENCRYPTED_MEDIA)
     void handleDecryptionError(const GstStructure*);
+    void cdmInstanceAttached(CDMInstance&) override;
+    void cdmInstanceDetached(CDMInstance&) override;
 #endif
     bool m_reportedPlaybackStarted;
     bool m_reportedPlaybackFailed;
@@ -271,7 +274,7 @@ private:
     mutable long long m_totalBytes;
     URL m_url;
 #if ENABLE(ENCRYPTED_MEDIA)
-    URL m_lastReportedUrl;
+    RefPtr<MediaPlayerGStreamerEncryptedPlayTracker> m_tracker;
 #endif
     bool m_preservesPitch;
     mutable std::optional<Seconds> m_lastQueryTime;
