@@ -979,6 +979,7 @@ private:
     SeekType m_pendingSeekType { NoSeek };
 
     double m_volume { 1 };
+    double m_referenceVolume { 1 };
     bool m_volumeInitialized { false };
     MediaTime m_lastSeekTime;
     

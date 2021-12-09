@@ -1405,6 +1405,10 @@ void AccessibilityNodeObject::visibleText(Vector<AccessibilityText>& textOrder) 
     case AccessibilityRole::RadioButton:
     case AccessibilityRole::Switch:
     case AccessibilityRole::Tab:
+    case AccessibilityRole::Div:
+    case AccessibilityRole::Cell:
+    case AccessibilityRole::GridCell:
+    case AccessibilityRole::Caption:
         useTextUnderElement = true;
         break;
     default:
@@ -1768,6 +1772,10 @@ String AccessibilityNodeObject::textUnderElement(AccessibilityTextUnderElementMo
     StringBuilder builder;
     for (AccessibilityObject* child = firstChild(); child; child = child->nextSibling()) {
         if (mode.ignoredChildNode && child->node() == mode.ignoredChildNode)
+            continue;
+
+        //to skip invisible node
+        if(child->isHidden())
             continue;
         
         bool shouldDeriveNameFromAuthor = (mode.childrenInclusion == AccessibilityTextUnderElementMode::TextUnderElementModeIncludeNameFromContentsChildren && !child->accessibleNameDerivesFromContent());

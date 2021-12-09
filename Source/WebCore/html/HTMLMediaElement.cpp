@@ -3747,6 +3747,7 @@ ExceptionOr<void> HTMLMediaElement::setVolume(double volume)
         removeBehaviorsRestrictionsAfterFirstUserGesture(MediaElementSession::AllRestrictions & ~MediaElementSession::RequireUserGestureToControlControlsManager);
 
     m_volume = volume;
+    m_referenceVolume = m_volume;
     m_volumeInitialized = true;
     updateVolume();
     scheduleEvent(eventNames().volumechangeEvent);
@@ -4919,6 +4920,9 @@ void HTMLMediaElement::mediaPlayerVolumeChanged(MediaPlayer*)
         double vol = m_player->volume();
         if (vol != m_volume) {
             m_volume = vol;
+            Page* page = document().page();
+            if(!page || page->mediaVolume() == 1)
+                m_referenceVolume = vol;
             updateVolume();
             scheduleEvent(eventNames().volumechangeEvent);
         }
@@ -5322,6 +5326,7 @@ void HTMLMediaElement::updateVolume()
     float volume = m_player->volume();
     if (m_volume != volume) {
         m_volume = volume;
+        m_referenceVolume = volume;
         scheduleEvent(eventNames().volumechangeEvent);
     }
 #else
@@ -5342,7 +5347,7 @@ void HTMLMediaElement::updateVolume()
 #endif
 
         m_player->setMuted(shouldMute);
-        m_player->setVolume(m_volume * volumeMultiplier);
+        m_player->setVolume(m_referenceVolume * volumeMultiplier);
     }
 
 #if ENABLE(MEDIA_SESSION)

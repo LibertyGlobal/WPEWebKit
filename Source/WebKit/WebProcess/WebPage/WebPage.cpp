@@ -281,6 +281,8 @@
 #include <WebCore/AuthenticatorManager.h>
 #endif
 
+#include <rdkat.h>
+
 namespace WebKit {
 using namespace JSC;
 using namespace WebCore;
@@ -289,8 +291,17 @@ static const Seconds pageScrollHysteresisDuration { 300_ms };
 static const Seconds initialLayerVolatilityTimerInterval { 20_ms };
 static const Seconds maximumLayerVolatilityTimerInterval { 2_s };
 
+// Enable RDKAT Processing for WebKitBrowserPlugin
+static bool pluginAXEnabled = !!getenv("ENABLE_WEBKITBROWSER_PLUGIN_ACCESSIBILITY");
+
 #define RELEASE_LOG_IF_ALLOWED(...) RELEASE_LOG_IF(isAlwaysOnLoggingAllowed(), Layers, __VA_ARGS__)
 #define RELEASE_LOG_ERROR_IF_ALLOWED(...) RELEASE_LOG_ERROR_IF(isAlwaysOnLoggingAllowed(), Layers, __VA_ARGS__)
+
+WTF::WeakPtr<WebPage> g_pageHandle;
+static void SetMediaVolume(void *data, float volume) {
+    if(data && g_pageHandle && data == g_pageHandle.get())
+        g_pageHandle->setMediaVolume(volume);
+}
 
 class SendStopResponsivenessTimer {
 public:
@@ -362,7 +373,7 @@ WebPage::WebPage(uint64_t pageID, WebPageCreationParameters&& parameters)
     , m_layerHostingMode(parameters.layerHostingMode)
 #if PLATFORM(COCOA)
     , m_viewGestureGeometryCollector(makeUniqueRef<ViewGestureGeometryCollector>(*this))
-#elif HAVE(ACCESSIBILITY) && PLATFORM(GTK)
+#elif HAVE(ACCESSIBILITY) && (PLATFORM(GTK) || PLATFORM(WPE))
     , m_accessibilityObject(nullptr)
 #endif
     , m_setCanStartMediaTimer(RunLoop::main(), this, &WebPage::setCanStartMediaTimerFired)
@@ -404,6 +415,8 @@ WebPage::WebPage(uint64_t pageID, WebPageCreationParameters&& parameters)
 #endif
 {
     ASSERT(m_pageID);
+
+    RDK_AT::Initialize();
 
     m_pageGroup = WebProcess::singleton().webPageGroup(parameters.pageGroupData);
 
@@ -3195,6 +3208,19 @@ void WebPage::updatePreferences(const WebPreferencesStore& store)
         updateThrottleState();
     }
 
+    bool axEnabled = pluginAXEnabled || store.getBoolValueForKey(WebPreferencesKey::accessibilityEnabledKey());
+    if(m_accessibilityEnabled != axEnabled) {
+        m_accessibilityEnabled = axEnabled;
+
+        if(axEnabled) {
+            WebCore::AXObjectCache::enableAccessibility();
+        } else {
+            WebCore::AXObjectCache::disableAccessibility();
+            if(m_page && m_page->mainFrame().document())
+                m_page->mainFrame().document()->clearAXObjectCache();
+        }
+    }
+
 #if PLATFORM(COCOA)
     m_pdfPluginEnabled = store.getBoolValueForKey(WebPreferencesKey::pdfPluginEnabledKey());
 #endif
@@ -5306,6 +5332,14 @@ void WebPage::didCommitLoad(WebFrame* frame)
 
     if (!frame->isMainFrame())
         return;
+
+    g_pageHandle = makeWeakPtr(*this);
+    bool axEnabled = pluginAXEnabled;
+    axEnabled |= m_accessibilityEnabled && WebCore::AXObjectCache::accessibilityEnabled();
+    WTFLogAlways("%s RDKAT processing for WPE", axEnabled ? "Enable" : "Disable");
+
+    RDK_AT::EnableProcessing(axEnabled);
+    RDK_AT::SetVolumeControlCallback(SetMediaVolume, axEnabled ? this : nullptr);
 
     // If previous URL is invalid, then it's not a real page that's being navigated away from.
     // Most likely, this is actually the first load to be committed in this page.
