@@ -110,6 +110,8 @@ void WebInspectorServer::buildPageList(Vector<char>& data, String& contentType)
     builder.appendLiteral("[ ");
     ClientMap::iterator end = m_clientMap.end();
     for (ClientMap::iterator it = m_clientMap.begin(); it != end; ++it) {
+        if(shouldInhibitLocalHostInspection(it->key))
+            continue;
         WebPageProxy* webPage = it->value->inspectedPage();
         if (it != m_clientMap.begin())
             builder.appendLiteral(", ");
