@@ -385,7 +385,13 @@ bool RenderLayerCompositor::updateCompositingPolicy()
         m_compositingPolicy = page().compositingPolicyOverride().value();
         return m_compositingPolicy != currentPolicy;
     }
-    
+
+    if (m_compositingPolicy != CompositingPolicy::Normal) {
+        m_compositingPolicy = CompositingPolicy::Normal;
+        return true;
+    }
+    return false;
+
     auto memoryPolicy = MemoryPressureHandler::currentMemoryUsagePolicy();
     m_compositingPolicy = memoryPolicy == WTF::MemoryUsagePolicy::Unrestricted ? CompositingPolicy::Normal : CompositingPolicy::Conservative;
     return m_compositingPolicy != currentPolicy;
