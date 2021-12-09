@@ -113,9 +113,13 @@ void ThreadedCompositor::invalidate()
 #if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)
     m_displayRefreshMonitor->invalidate();
 #endif
+    if (m_nonCompositedWebGLEnabled) {
+        m_scene->purgeGLResources();
+    }
     m_compositingRunLoop->performTaskSync([this, protectedThis = makeRef(*this)] {
         if (!m_context || !m_context->makeContextCurrent()) {
             m_client.didDestroyGLContext();
+            m_scene = nullptr;
             return;
         }
         m_scene->purgeGLResources();
