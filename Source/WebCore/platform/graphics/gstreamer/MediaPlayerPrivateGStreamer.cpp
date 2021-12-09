@@ -2399,8 +2399,10 @@ void MediaPlayerPrivateGStreamer::didEnd()
     if (now > MediaTime { } && now <= durationMediaTime())
         m_player->durationChanged();
 
+    if (m_currentState != GST_STATE_READY)
+        updateStates();
     m_isEndReached = true;
-    timeChanged();
+    m_player->timeChanged();
 
     if (!m_player->client().mediaPlayerIsLooping()) {
         m_paused = true;
