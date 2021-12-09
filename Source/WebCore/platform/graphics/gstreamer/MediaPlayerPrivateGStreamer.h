@@ -238,6 +238,7 @@ protected:
 
     void ensureAudioSourceProvider();
     void setAudioStreamProperties(GObject*);
+    void checkPlayingConsitency();
 
     static void setAudioStreamPropertiesCallback(MediaPlayerPrivateGStreamer*, GObject*);
 
@@ -307,6 +308,7 @@ private:
     virtual bool isMediaSource() const { return false; }
 
     String m_errorMessage;
+    bool m_didTryToRecoverPlayingState { false };
 };
 }
 

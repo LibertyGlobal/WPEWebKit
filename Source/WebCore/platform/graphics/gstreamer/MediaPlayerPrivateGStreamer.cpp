@@ -1383,6 +1383,8 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
             break;
         updateStates();
 
+        checkPlayingConsitency();
+
         // Construct a filename for the graphviz dot file output.
         GstState newState;
         gst_message_parse_state_changed(message, &currentState, &newState, nullptr);
@@ -3041,6 +3043,64 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
 #else
     UNUSED_PARAM(player);
 #endif // USE(WESTEROS_SINK)
+}
+
+void MediaPlayerPrivateGStreamer::checkPlayingConsitency()
+{
+    if (!m_pipeline)
+        return;
+
+    static auto iterateSinks = [](GstBin* bin, GstIteratorFoldFunction foldFunc) -> gboolean {
+        GValue ret = G_VALUE_INIT;
+        g_value_init (&ret, G_TYPE_BOOLEAN);
+        g_value_set_boolean (&ret, TRUE);
+        GstIterator *iter = gst_bin_iterate_sinks(bin);
+        for (;;) {
+            auto res = gst_iterator_fold (iter, foldFunc, &ret, nullptr);
+            if (GST_ITERATOR_RESYNC == res) {
+                gst_iterator_resync (iter);
+                continue;
+            }
+            break;
+        }
+        gst_iterator_free(iter);
+        return g_value_get_boolean(&ret);
+    };
+
+    static GstIteratorFoldFunction allPlayingFoldFunc = [](const GValue *vitem, GValue* ret, gpointer) -> gboolean {
+        GstObject *item = GST_OBJECT(g_value_get_object (vitem));
+        if (!GST_IS_ELEMENT(item))
+            return FALSE;
+        GstState state, pending;
+        gst_element_get_state(GST_ELEMENT(item), &state, &pending, 0);
+        if (state != GST_STATE_PLAYING && pending != GST_STATE_PLAYING) {
+            g_value_set_boolean (ret, FALSE);
+            return FALSE;
+        }
+        if (GST_IS_BIN (item)) {
+            if (iterateSinks(GST_BIN(item), allPlayingFoldFunc) == FALSE) {
+                g_value_set_boolean (ret, FALSE);
+                return FALSE;
+            }
+        }
+        return TRUE;
+    };
+
+    GstState state, pending;
+    gst_element_get_state(m_pipeline.get(), &state, &pending, 0);
+    if (state == GST_STATE_PLAYING && pending == GST_STATE_VOID_PENDING) {
+        bool areAllSinksPlaying = (iterateSinks(GST_BIN(m_pipeline.get()), allPlayingFoldFunc) == TRUE);
+        if ( !areAllSinksPlaying ) {
+            if ( !m_didTryToRecoverPlayingState ) {
+                GST_WARNING("Playbin is in PLAYING state but some sinks aren't, trying to recover.");
+                m_didTryToRecoverPlayingState = true;
+                gst_element_set_state(m_pipeline.get(), GST_STATE_PAUSED);
+                gst_element_set_state(m_pipeline.get(), GST_STATE_PLAYING);
+            }
+        } else {
+            m_didTryToRecoverPlayingState = false;
+        }
+    }
 }
 
 }
