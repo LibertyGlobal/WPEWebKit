@@ -90,6 +90,30 @@ GST_DEBUG_CATEGORY_EXTERN(webkit_media_player_debug);
 namespace WebCore {
 using namespace std;
 
+MonotonicTime gEnterKeyDownTime;
+
+void noticeEnterKeyDownEvent()
+{
+    gEnterKeyDownTime = WTF::MonotonicTime::now();
+}
+
+void noticeFirstVideoFrame()
+{
+    if (gEnterKeyDownTime)
+    {
+        auto diffTime = WTF::MonotonicTime::now() - gEnterKeyDownTime;
+        gEnterKeyDownTime = MonotonicTime();
+        WTFLogAlways("Media: browse-to-watch = %.2f ms\n", diffTime.milliseconds());
+    }
+}
+
+#if USE(WESTEROS_SINK)
+static void onFirstVideoFrameCallback(MediaPlayerPrivateGStreamer* /*player*/)
+{
+    noticeFirstVideoFrame();
+}
+#endif
+
 static void busMessageCallback(GstBus*, GstMessage* message, MediaPlayerPrivateGStreamer* player)
 {
     player->handleMessage(message);
@@ -217,6 +241,9 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
     if (m_videoSink) {
         GRefPtr<GstPad> videoSinkPad = adoptGRef(gst_element_get_static_pad(m_videoSink.get(), "sink"));
         g_signal_handlers_disconnect_matched(videoSinkPad.get(), G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, this);
+#if USE(WESTEROS_SINK)
+        g_signal_handlers_disconnect_by_func(G_OBJECT(m_videoSink.get()), reinterpret_cast<gpointer>(onFirstVideoFrameCallback), this);
+#endif
     }
 
     if (m_pipeline) {
@@ -2786,6 +2813,11 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, con
     // configure westeros sink before it allocates resources
     if (m_videoSink)
         elementSetupCallback(this, m_videoSink.get(), m_pipeline.get());
+#endif
+
+#if USE(WESTEROS_SINK)
+    if (m_videoSink)
+        g_signal_connect_swapped(m_videoSink.get(), "first-video-frame-callback", G_CALLBACK(onFirstVideoFrameCallback), this);
 #endif
 
 #if !USE(WESTEROS_SINK) && !USE(FUSION_SINK)
