@@ -477,6 +477,19 @@ GstElement* createDecryptor(const char* requestedProtectionSystemUuid)
     GstElement* decryptor = nullptr;
     GList* decryptors = gst_element_factory_list_get_elements(GST_ELEMENT_FACTORY_TYPE_DECRYPTOR, GST_RANK_MARGINAL);
 
+    // Prefer WebKit decryptors
+    decryptors = g_list_sort(decryptors, [](gconstpointer p1, gconstpointer p2) -> gint {
+        GstPluginFeature *f1, *f2;
+        const gchar* name;
+        f1 = (GstPluginFeature *) p1;
+        f2 = (GstPluginFeature *) p2;
+        if ((name = gst_plugin_feature_get_name(f1)) && g_str_has_prefix(name, "webkit"))
+            return -1;
+        if ((name = gst_plugin_feature_get_name(f2)) && g_str_has_prefix(name, "webkit"))
+            return 1;
+        return gst_plugin_feature_rank_compare_func(p1, p2);
+    });
+
     for (GList* walk = decryptors; !decryptor && walk; walk = g_list_next(walk)) {
         GstElementFactory* factory = reinterpret_cast<GstElementFactory*>(walk->data);
 
