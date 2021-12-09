@@ -67,6 +67,8 @@
 #include "CDMClearKey.h"
 #endif
 
+#include "GCController.h"
+
 // We shouldn't accept media that the player can't actually play.
 // AAC supports up to 96 channels.
 #define MEDIA_MAX_AAC_CHANNELS 96
@@ -93,6 +95,8 @@ static const char* dumpReadyState(WebCore::MediaPlayer::ReadyState readyState)
     default: return "(unknown)";
     }
 }
+
+static int gActivePlayerNum = 0;
 
 GST_DEBUG_CATEGORY(webkit_mse_debug);
 #define GST_CAT_DEFAULT webkit_mse_debug
@@ -138,11 +142,17 @@ bool MediaPlayerPrivateGStreamerMSE::isAvailable()
 MediaPlayerPrivateGStreamerMSE::MediaPlayerPrivateGStreamerMSE(MediaPlayer* player)
     : MediaPlayerPrivateGStreamer(player)
 {
+    // This is a workaround for the case when web app doesn't release player explicitly
+    ++gActivePlayerNum;
+    if (gActivePlayerNum > 1)
+        GCController::singleton().garbageCollectOnNextRunLoop();
+
     GST_TRACE("creating the player (%p)", this);
 }
 
 MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()
 {
+    --gActivePlayerNum;
     GST_TRACE("destroying the player (%p)", this);
 
     for (auto iterator : m_appendPipelinesMap)
