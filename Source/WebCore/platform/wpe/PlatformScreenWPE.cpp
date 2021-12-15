@@ -27,7 +27,10 @@
 #include "PlatformScreen.h"
 
 #include "FloatRect.h"
+#include "FrameView.h"
 #include "NotImplemented.h"
+#include "RenderView.h"
+#include "Widget.h"
 
 namespace WebCore {
 
@@ -65,16 +68,22 @@ void setScreenDPIObserverHandler(Function<void()>&&, void*)
     notImplemented();
 }
 
-FloatRect screenRect(Widget*)
+FloatRect screenRect(Widget* widget)
 {
-    notImplemented();
-    return FloatRect(0, 0, 1024, 640);
+    if (widget && widget->root() && widget->root()->renderView()) {
+        RenderView* renderView = widget->root()->renderView();
+        return FloatRect(0, 0, renderView->viewWidth(), renderView->viewHeight());
+    }
+    const char* widthEnv = getenv("GST_VIRTUAL_DISP_WIDTH");
+    const char* heightEnv = getenv("GST_VIRTUAL_DISP_HEIGHT");
+    int width = widthEnv ? atoi(widthEnv) : 0;
+    int height = heightEnv ? atoi(heightEnv) : 0;
+    return FloatRect(0, 0, width, height);
 }
 
-FloatRect screenAvailableRect(Widget*)
+FloatRect screenAvailableRect(Widget* widget)
 {
-    notImplemented();
-    return FloatRect(0, 0, 1024, 640);
+    return screenRect(widget);
 }
 
 bool screenSupportsExtendedColor(Widget*)
