@@ -144,4 +144,6 @@ messages -> WebProcess LegacyReceiver {
     RemoveMockMediaDevice(String persistentId);
     ResetMockMediaDevices();
 #endif
+
+    SetEnv(String env, String value)
 }

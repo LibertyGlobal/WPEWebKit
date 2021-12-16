@@ -366,6 +366,8 @@ private:
     void resetMockMediaDevices();
 #endif
 
+    void setEnv(const String& env, const String& value);
+
     void platformInitializeProcess(const ChildProcessInitializationParameters&);
 
     // IPC::Connection::Client

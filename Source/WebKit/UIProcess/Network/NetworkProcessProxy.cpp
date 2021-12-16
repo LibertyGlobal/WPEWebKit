@@ -227,13 +227,6 @@ void NetworkProcessProxy::clearCallbackStates()
         m_storageAccessResponseCallbackMap.take(m_storageAccessResponseCallbackMap.begin()->key)(false);
 }
 
-void NetworkProcessProxy::setGnuTlsCipherPriority(const String& gnuTlsCipherPriority)
-{
-    ASSERT(canSendMessage());
-    ASSERT(!gnuTlsCipherPriority.isEmpty());
-    send(Messages::NetworkProcess::SetGnuTlsCipherPriority(gnuTlsCipherPriority), 0);
-}
-
 void NetworkProcessProxy::didReceiveMessage(IPC::Connection& connection, IPC::Decoder& decoder)
 {
     if (dispatchMessage(connection, decoder))

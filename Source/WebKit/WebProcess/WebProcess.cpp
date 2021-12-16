@@ -1748,4 +1748,9 @@ void WebProcess::resetMockMediaDevices()
 }
 #endif
 
+void WebProcess::setEnv(const String& env, const String& value)
+{
+    setenv(env.utf8().data(), value.utf8().data(), 1);
+}
+
 } // namespace WebKit

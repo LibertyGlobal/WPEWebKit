@@ -631,9 +631,9 @@ void WKContextTerminateStorageProcess(WKContextRef context)
     toImpl(context)->terminateStorageProcessForTesting();
 }
 
-void WKContextSetGnuTlsCipherPriority(WKContextRef context, WKStringRef gnuTlsCipherPriority)
+void WKContextSetEnv(WKContextRef context, WKStringRef env, WKStringRef value, bool webProcess /* = true */, bool networkProcess /* = true */)
 {
-    toImpl(context)->setGnuTlsCipherPriority(toWTFString(gnuTlsCipherPriority));
+    toImpl(context)->setEnv(toWTFString(env), toWTFString(value), webProcess, networkProcess);
 }
 
 ProcessID WKContextGetNetworkProcessIdentifier(WKContextRef contextRef)

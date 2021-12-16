@@ -107,8 +107,6 @@ public:
     void addSession(Ref<WebsiteDataStore>&&);
     void removeSession(PAL::SessionID);
 
-    void setGnuTlsCipherPriority(const String& gnuTlsCipherPriority);
-
 private:
     NetworkProcessProxy(WebProcessPool&);
 
