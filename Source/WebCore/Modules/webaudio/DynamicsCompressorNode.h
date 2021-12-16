@@ -55,7 +55,7 @@ public:
     AudioParam* release() { return m_release.get(); }
 
     // Amount by which the compressor is currently compressing the signal in decibels.
-    float reduction() { return m_reduction; }
+    AudioParam* reduction() { return m_reduction.get(); }
 
 private:
     double tailTime() const override;
@@ -67,7 +67,7 @@ private:
     RefPtr<AudioParam> m_threshold;
     RefPtr<AudioParam> m_knee;
     RefPtr<AudioParam> m_ratio;
-    double m_reduction;
+    RefPtr<AudioParam> m_reduction;
     RefPtr<AudioParam> m_attack;
     RefPtr<AudioParam> m_release;
 };
