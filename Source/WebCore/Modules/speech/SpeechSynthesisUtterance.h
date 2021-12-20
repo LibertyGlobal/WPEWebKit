@@ -62,9 +62,6 @@ public:
     MonotonicTime startTime() const { return m_platformUtterance->startTime(); }
     void setStartTime(MonotonicTime startTime) { m_platformUtterance->setStartTime(startTime); }
 
-    double getPageMediaVolume();
-    void setPageMediaVolume(double volume);
-
     using RefCounted::ref;
     using RefCounted::deref;
 

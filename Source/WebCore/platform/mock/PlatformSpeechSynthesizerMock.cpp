@@ -75,7 +75,7 @@ void PlatformSpeechSynthesizerMock::cancel()
         return;
 
     m_speakingFinishedTimer.stop();
-    client()->speakingErrorOccurred(*m_utterance, SpeechErrorCanceled);
+    client()->speakingErrorOccurred(*m_utterance);
     m_utterance = nullptr;
 }
 

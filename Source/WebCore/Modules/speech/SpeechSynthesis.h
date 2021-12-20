@@ -66,15 +66,12 @@ private:
     void didPauseSpeaking(PlatformSpeechSynthesisUtterance&) override;
     void didResumeSpeaking(PlatformSpeechSynthesisUtterance&) override;
     void didFinishSpeaking(PlatformSpeechSynthesisUtterance&) override;
-    void speakingErrorOccurred(PlatformSpeechSynthesisUtterance&, SpeechError) override;
+    void speakingErrorOccurred(PlatformSpeechSynthesisUtterance&) override;
     void boundaryEventOccurred(PlatformSpeechSynthesisUtterance&, SpeechBoundary, unsigned charIndex) override;
-    virtual double getPageMediaVolume() override;
-    virtual void setPageMediaVolume(double volume) override;
 
     void startSpeakingImmediately(SpeechSynthesisUtterance&);
-    void handleSpeakingCompleted(SpeechSynthesisUtterance&, SpeechError);
+    void handleSpeakingCompleted(SpeechSynthesisUtterance&, bool errorOccurred);
     void fireEvent(const AtomicString& type, SpeechSynthesisUtterance&, unsigned long charIndex, const String& name);
-    void fireErrorEvent(SpeechSynthesisUtterance&, SpeechError);
 
 #if PLATFORM(IOS)
     // Restrictions to change default behaviors.

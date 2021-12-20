@@ -103,7 +103,6 @@ namespace WebCore {
     M(WebGPU) \
     M(WebRTC) \
     M(WheelEventTestTriggers) \
-    M(SpeechSynthesis) \
 
 #undef DECLARE_LOG_CHANNEL
 #define DECLARE_LOG_CHANNEL(name) \

@@ -31,10 +31,9 @@
 #include "EventNames.h"
 #include "PlatformSpeechSynthesisVoice.h"
 #include "PlatformSpeechSynthesizer.h"
-#include "SpeechSynthesisErrorEvent.h"
+#include "SpeechSynthesisEvent.h"
 #include "SpeechSynthesisUtterance.h"
 #include "UserGestureIndicator.h"
-#include "Logging.h"
 #include <wtf/NeverDestroyed.h>
 
 namespace WebCore {
@@ -73,7 +72,7 @@ const Vector<Ref<SpeechSynthesisVoice>>& SpeechSynthesis::getVoices()
         return m_voiceList;
 
     if (!m_platformSpeechSynthesizer)
-        m_platformSpeechSynthesizer = PlatformSpeechSynthesizer::create(this);
+        m_platformSpeechSynthesizer = std::make_unique<PlatformSpeechSynthesizer>(this);
 
     // If the voiceList is empty, that's the cue to get the voices from the platform again.
     for (auto& voice : m_platformSpeechSynthesizer->voiceList())
@@ -110,12 +109,12 @@ void SpeechSynthesis::startSpeakingImmediately(SpeechSynthesisUtterance& utteran
 
     // Zero lengthed strings should immediately notify that the event is complete.
     if (utterance.text().isEmpty()) {
-        handleSpeakingCompleted(utterance, SpeechErrorNone);
+        handleSpeakingCompleted(utterance, false);
         return;
     }
 
     if (!m_platformSpeechSynthesizer)
-        m_platformSpeechSynthesizer = PlatformSpeechSynthesizer::create(this);
+        m_platformSpeechSynthesizer = std::make_unique<PlatformSpeechSynthesizer>(this);
     m_platformSpeechSynthesizer->speak(utterance.platformUtterance());
 }
 
@@ -141,18 +140,10 @@ void SpeechSynthesis::cancel()
     // Remove all the items from the utterance queue.
     // Hold on to the current utterance so the platform synthesizer can have a chance to clean up.
     RefPtr<SpeechSynthesisUtterance> current = m_currentSpeechUtterance;
-    Deque<Ref<SpeechSynthesisUtterance>> utteranceQueue = WTFMove(m_utteranceQueue);
+    m_utteranceQueue.clear();
     if (m_platformSpeechSynthesizer)
         m_platformSpeechSynthesizer->cancel();
     current = nullptr;
-
-    // Trigger canceled events for queued utterances
-    while(utteranceQueue.size() > 0) {
-        Ref<SpeechSynthesisUtterance> utterance = utteranceQueue.takeFirst();
-        if(m_currentSpeechUtterance != utterance.ptr())
-            fireErrorEvent(utterance, SpeechErrorCanceled);
-    }
-    utteranceQueue.clear();
 
     // The platform should have called back immediately and cleared the current utterance.
     ASSERT(!m_currentSpeechUtterance);
@@ -170,46 +161,19 @@ void SpeechSynthesis::resume()
         m_platformSpeechSynthesizer->resume();
 }
 
-SpeechSynthesisErrorEvent::Code toSpeechSynthesisErrorEventCode(SpeechError error) {
-    switch(error) {
-        case SpeechErrorCanceled:               return SpeechSynthesisErrorEvent::Code::Canceled;
-        case SpeechErrorInterrupted:            return SpeechSynthesisErrorEvent::Code::Interrupted;
-        case SpeechErrorAudioBusy:              return SpeechSynthesisErrorEvent::Code::AudioBusy;
-        case SpeechErrorAudioHardware:          return SpeechSynthesisErrorEvent::Code::AudioHardware;
-        case SpeechErrorNetwork:                return SpeechSynthesisErrorEvent::Code::Network;
-        case SpeechErrorSynthesisUnavailable:   return SpeechSynthesisErrorEvent::Code::SynthesisUnavailable;
-        case SpeechErrorSynthesisFailed:        return SpeechSynthesisErrorEvent::Code::SynthesisFailed;
-        case SpeechErrorLanguageUnavailable:    return SpeechSynthesisErrorEvent::Code::LanguageUnavailable;
-        case SpeechErrorVoiceUnavailable:       return SpeechSynthesisErrorEvent::Code::VoiceUnavailable;
-        case SpeechErrorTextTooLong:            return SpeechSynthesisErrorEvent::Code::TextTooLong;
-        case SpeechErrorInvalidArgument:        return SpeechSynthesisErrorEvent::Code::InvalidArgument;
-        case SpeechErrorNotAllowed:             return SpeechSynthesisErrorEvent::Code::NotAllowed;
-        default: return SpeechSynthesisErrorEvent::Code::Interrupted;
-    }
-}
-
 void SpeechSynthesis::fireEvent(const AtomicString& type, SpeechSynthesisUtterance& utterance, unsigned long charIndex, const String& name)
 {
     utterance.dispatchEvent(SpeechSynthesisEvent::create(type, charIndex, (MonotonicTime::now() - utterance.startTime()).seconds(), name));
 }
 
-void SpeechSynthesis::fireErrorEvent(SpeechSynthesisUtterance& utterance, SpeechError error)
-{
-    utterance.dispatchEvent(SpeechSynthesisErrorEvent::create(toSpeechSynthesisErrorEventCode(error)));
-}
-
-void SpeechSynthesis::handleSpeakingCompleted(SpeechSynthesisUtterance& utterance, SpeechError error)
+void SpeechSynthesis::handleSpeakingCompleted(SpeechSynthesisUtterance& utterance, bool errorOccurred)
 {
     ASSERT(m_currentSpeechUtterance);
     Ref<SpeechSynthesisUtterance> protect(utterance);
 
-    if(m_currentSpeechUtterance == &utterance)
-        m_currentSpeechUtterance = nullptr;
+    m_currentSpeechUtterance = nullptr;
 
-    if(error == SpeechErrorNone)
-        fireEvent(eventNames().endEvent, utterance, 0, String());
-    else
-        fireErrorEvent(utterance, error);
+    fireEvent(errorOccurred ? eventNames().errorEvent : eventNames().endEvent, utterance, 0, String());
 
     if (m_utteranceQueue.size()) {
         Ref<SpeechSynthesisUtterance> firstUtterance = m_utteranceQueue.takeFirst();
@@ -240,20 +204,6 @@ void SpeechSynthesis::boundaryEventOccurred(PlatformSpeechSynthesisUtterance& ut
     }
 }
 
-double SpeechSynthesis::getPageMediaVolume()
-{
-    if(m_currentSpeechUtterance)
-        return m_currentSpeechUtterance->getPageMediaVolume();
-
-    return 0.0;
-}
-
-void SpeechSynthesis::setPageMediaVolume(double volume)
-{
-    if(m_currentSpeechUtterance)
-        m_currentSpeechUtterance->setPageMediaVolume(volume);
-}
-
 void SpeechSynthesis::didStartSpeaking(PlatformSpeechSynthesisUtterance& utterance)
 {
     if (utterance.client())
@@ -277,13 +227,13 @@ void SpeechSynthesis::didResumeSpeaking(PlatformSpeechSynthesisUtterance& uttera
 void SpeechSynthesis::didFinishSpeaking(PlatformSpeechSynthesisUtterance& utterance)
 {
     if (utterance.client())
-        handleSpeakingCompleted(static_cast<SpeechSynthesisUtterance&>(*utterance.client()), SpeechErrorNone);
+        handleSpeakingCompleted(static_cast<SpeechSynthesisUtterance&>(*utterance.client()), false);
 }
 
-void SpeechSynthesis::speakingErrorOccurred(PlatformSpeechSynthesisUtterance& utterance, SpeechError error)
+void SpeechSynthesis::speakingErrorOccurred(PlatformSpeechSynthesisUtterance& utterance)
 {
     if (utterance.client())
-        handleSpeakingCompleted(static_cast<SpeechSynthesisUtterance&>(*utterance.client()), error);
+        handleSpeakingCompleted(static_cast<SpeechSynthesisUtterance&>(*utterance.client()), true);
 }
 
 } // namespace WebCore

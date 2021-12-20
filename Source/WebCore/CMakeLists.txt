@@ -115,7 +115,6 @@ set(WebCore_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/graphics/transforms"
     "${WEBCORE_DIR}/platform/mediastream"
     "${WEBCORE_DIR}/platform/mediastream/libwebrtc"
-    "${WEBCORE_DIR}/platform/ttsclient"
     "${WEBCORE_DIR}/platform/mock"
     "${WEBCORE_DIR}/platform/mock/mediasource"
     "${WEBCORE_DIR}/platform/network"
@@ -378,7 +377,6 @@ set(WebCore_NON_SVG_IDL_FILES
     Modules/speech/DOMWindowSpeechSynthesis.idl
     Modules/speech/SpeechSynthesis.idl
     Modules/speech/SpeechSynthesisEvent.idl
-    Modules/speech/SpeechSynthesisErrorEvent.idl
     Modules/speech/SpeechSynthesisUtterance.idl
     Modules/speech/SpeechSynthesisVoice.idl
 
@@ -1125,7 +1123,6 @@ set(WebCore_LIBRARIES
     ${ZLIB_LIBRARIES}
     PAL${DEBUG_SUFFIX}
     rdkat
-    TTSClient
 )
 
 if (ENABLE_LEGACY_ENCRYPTED_MEDIA)
