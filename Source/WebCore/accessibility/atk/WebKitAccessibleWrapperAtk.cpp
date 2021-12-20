@@ -797,13 +797,7 @@ static AtkRole atkRole(AccessibilityObject* coreObject)
     case AccessibilityRole::UserInterfaceTooltip:
         return ATK_ROLE_TOOL_TIP;
     case AccessibilityRole::WebArea:
-    {
-        WebCore::Frame *frame = coreObject->frame();
-        if (frame)
-           return frame->WebCore::Frame::isMainFrame() ? ATK_ROLE_DOCUMENT_WEB : ATK_ROLE_DOCUMENT_FRAME;
-        else
-           return ATK_ROLE_DOCUMENT_WEB;
-    }
+        return ATK_ROLE_DOCUMENT_WEB;
     case AccessibilityRole::WebApplication:
         return ATK_ROLE_EMBEDDED;
 #if ATK_CHECK_VERSION(2, 11, 3)
@@ -986,8 +980,8 @@ static void setAtkStateSetFromCoreObject(AccessibilityObject* coreObject, AtkSta
     else if (coreObject->orientation() == AccessibilityOrientation::Vertical)
         atk_state_set_add_state(stateSet, ATK_STATE_VERTICAL);
 
-    //if (coreObject->hasPopup())
-    //    atk_state_set_add_state(stateSet, ATK_STATE_HAS_POPUP);
+    if (coreObject->hasPopup())
+        atk_state_set_add_state(stateSet, ATK_STATE_HAS_POPUP);
 
     if (coreObject->isIndeterminate())
         atk_state_set_add_state(stateSet, ATK_STATE_INDETERMINATE);

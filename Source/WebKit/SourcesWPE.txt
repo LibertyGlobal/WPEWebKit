@@ -260,7 +260,6 @@ WebProcess/WebPage/wpe/AcceleratedSurfaceWPE.cpp @no-unify
 WebProcess/WebPage/wpe/CompositingManager.cpp
 WebProcess/WebPage/wpe/WebInspectorUIWPE.cpp
 WebProcess/WebPage/wpe/WebPageWPE.cpp
-WebProcess/WebPage/atk/WebPageAccessibilityObjectAtk.cpp
 
 WebProcess/soup/WebKitSoupRequestInputStream.cpp
 WebProcess/soup/WebProcessSoup.cpp

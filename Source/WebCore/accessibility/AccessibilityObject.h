@@ -64,9 +64,11 @@ OBJC_CLASS WebAccessibilityObjectWrapper;
 
 typedef WebAccessibilityObjectWrapper AccessibilityObjectWrapper;
 
-#elif (PLATFORM(GTK) || PLATFORM(WPE)) && HAVE(ACCESSIBILITY)
+#elif PLATFORM(GTK)
 typedef struct _AtkObject AtkObject;
 typedef struct _AtkObject AccessibilityObjectWrapper;
+#elif PLATFORM(WPE)
+class AccessibilityObjectWrapper : public RefCounted<AccessibilityObjectWrapper> { };
 #else
 class AccessibilityObjectWrapper;
 #endif
@@ -1090,7 +1092,7 @@ public:
     bool isHidden() const { return isAXHidden() || isDOMHidden(); }
     
 #if HAVE(ACCESSIBILITY)
-#if (PLATFORM(GTK) || PLATFORM(WPE))
+#if PLATFORM(GTK)
     AccessibilityObjectWrapper* wrapper() const;
     void setWrapper(AccessibilityObjectWrapper*);
 #else
@@ -1181,7 +1183,7 @@ protected:
 
     AccessibilityObject* radioGroupAncestor() const;
 
-#if (PLATFORM(GTK) || PLATFORM(WPE)) && HAVE(ACCESSIBILITY)
+#if PLATFORM(GTK) && HAVE(ACCESSIBILITY)
     bool allowsTextRanges() const;
     unsigned getLengthForTextRange() const;
 #else
@@ -1193,8 +1195,10 @@ protected:
     RetainPtr<WebAccessibilityObjectWrapper> m_wrapper;
 #elif PLATFORM(WIN)
     COMPtr<AccessibilityObjectWrapper> m_wrapper;
-#elif (PLATFORM(GTK) || PLATFORM(WPE)) && HAVE(ACCESSIBILITY)
+#elif PLATFORM(GTK)
     AtkObject* m_wrapper { nullptr };
+#elif PLATFORM(WPE)
+    RefPtr<AccessibilityObjectWrapper> m_wrapper;
 #endif
 };
 

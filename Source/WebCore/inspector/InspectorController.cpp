@@ -78,7 +78,6 @@
 #include <JavaScriptCore/InspectorScriptProfilerAgent.h>
 #include <JavaScriptCore/JSLock.h>
 #include <wtf/Stopwatch.h>
-#include <accessibility/AXObjectCache.h>
 
 #if ENABLE(REMOTE_INSPECTOR)
 #include "PageDebuggable.h"
@@ -289,9 +288,6 @@ void InspectorController::disconnectFrontend(FrontendChannel* frontendChannel)
 
     m_isAutomaticInspection = false;
     m_pauseAfterInitialization = false;
-
-    //restoring Accessibility enable flag
-    WebCore::AXObjectCache::restoreAccessibilityFromInspector();
 
     InspectorInstrumentation::frontendDeleted();
 
