@@ -66,7 +66,7 @@ RefPtr<PlatformMediaResource> MediaResourceLoader::requestResource(ResourceReque
         return nullptr;
 
     DataBufferingPolicy bufferingPolicy = options & LoadOption::BufferData ? DataBufferingPolicy::BufferData : DataBufferingPolicy::DoNotBufferData;
-    auto cachingPolicy = options & LoadOption::DisallowCaching ? CachingPolicy::DisallowCaching : CachingPolicy::AllowCaching;
+    auto cachingPolicy = CachingPolicy::DisallowCaching;
 
     request.setRequester(ResourceRequest::Requester::Media);
 #if HAVE(AVFOUNDATION_LOADER_DELEGATE) && PLATFORM(MAC)
