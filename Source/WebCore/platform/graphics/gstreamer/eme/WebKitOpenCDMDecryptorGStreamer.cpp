@@ -224,21 +224,9 @@ static bool webKitMediaOpenCDMDecryptorDecrypt(WebKitMediaCommonEncryptionDecryp
         }
     }
 
-// Let OCDM sessions the current stream type
-   GRefPtr<GstCaps> caps = nullptr;
-   if(priv->m_openCdmSession) {
-       GRefPtr<GstPad> sinkpad = adoptGRef(gst_element_get_static_pad(reinterpret_cast<GstElement*>(self), "sink"));
-       caps = adoptGRef(gst_pad_get_current_caps(sinkpad.get()));
-
-        GstStructure *capstruct = gst_caps_get_structure(caps.get(), 0);
-        const gchar* capsinfo = gst_structure_get_string(capstruct, "original-media-type");
-        GST_DEBUG_OBJECT(self, "CAPS %p - Stream Type = %s", caps, capsinfo);
-   }
-
     // Decrypt cipher.
     GST_TRACE_OBJECT(self, "decrypting");
-    if (int errorCode = opencdm_gstreamer_session_decrypt_ex(priv->m_openCdmSession.get(), buffer, subSamplesBuffer, subSampleCount,
-                                                        ivBuffer, keyIDBuffer, 0, caps.get())) {
+    if (int errorCode = opencdm_gstreamer_session_decrypt(priv->m_openCdmSession.get(), buffer, subSamplesBuffer, subSampleCount, ivBuffer, keyIDBuffer, 0)) {
         GUniquePtr<gchar> errorMessage (g_strdup_printf("Subsample decryption failed (code=%d)", errorCode));
         gst_element_post_message(
             GST_ELEMENT(self),
