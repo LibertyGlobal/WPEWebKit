@@ -49,8 +49,6 @@
 
 namespace {
 
-bool gWorkaroundForShaka = getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") != nullptr && *getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") == '1';
-
 void ConvertKIDEndianness(Ref<WebCore::SharedBuffer>& playreadyKID)
 {
     const char* playreadyKeyId = playreadyKID->data();
@@ -700,7 +698,8 @@ void MediaKeySession::updateKeyStatuses(CDMInstanceClient::KeyStatusVector&& inp
     m_statuses.clear();
     m_statuses.reserveCapacity(inputStatuses.size());
     for (auto& status : inputStatuses) {
-        if (gWorkaroundForShaka) {
+        const auto workaroundForShaka = getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") != nullptr && *getenv("CONVERT_PLAYREADY_KEY_ID_FOR_SHAKA") == '1';
+        if (workaroundForShaka) {
             LOG(EME, "EME - workaround for Shaka, convert KID endianness");
             ConvertKIDEndianness(status.first);
         }
