@@ -609,11 +609,7 @@ void ImageBitmap::createFromBuffer(
 
     auto sharedBuffer = SharedBuffer::create(static_cast<const char*>(arrayBuffer->data()), arrayBuffer->byteLength());
     auto observer = ImageBitmapImageObserver::create(mimeType, expectedContentLength, sourceUrl);
-    auto image = Image::create(observer.get());
-    if (!image) {
-        promise.reject(InvalidStateError, "The type of the argument to createImageBitmap is not supported");
-        return;
-    }
+    auto image = BitmapImage::create(observer.ptr());
 
     auto result = image->setData(sharedBuffer.copyRef(), true);
     if (result != EncodedDataStatus::Complete) {
@@ -638,7 +634,7 @@ void ImageBitmap::createFromBuffer(
     ImagePaintingOptions paintingOptions;
     paintingOptions.m_interpolationQuality = interpolationQualityForResizeQuality(options.resizeQuality);
 
-    bitmapData->context().drawImage(*image, destRect, sourceRectangle.releaseReturnValue(), paintingOptions);
+    bitmapData->context().drawImage(image, destRect, sourceRectangle.releaseReturnValue(), paintingOptions);
 
     auto imageBitmap = create(WTFMove(bitmapData));
 
