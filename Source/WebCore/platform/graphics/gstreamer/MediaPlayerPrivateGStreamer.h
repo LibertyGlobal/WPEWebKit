@@ -26,6 +26,7 @@
 
 #if ENABLE(VIDEO) && USE(GSTREAMER)
 
+#include "DemuxMonitor.h"
 #include "GStreamerCommon.h"
 #include "MediaPlayerPrivateGStreamerBase.h"
 #include "MediaPlayerGStreamerEncryptedPlayTracker.h"
@@ -316,6 +317,7 @@ private:
     HashMap<AtomicString, RefPtr<InbandMetadataTextTrackPrivateGStreamer>> m_metadataTracks;
 #endif
 #endif
+    DemuxMonitor _demuxMonitor;
     virtual bool isMediaSource() const { return false; }
 
     String m_errorMessage;
