@@ -64,24 +64,24 @@ public:
 
     static bool isClearKeyKeySystem(const String& keySystem)
     {
-        return keySystem.startsWithIgnoringASCIICase(ASCIILiteral::fromLiteralUnsafe(s_ClearKeyKeySystem));
+        return equalIgnoringASCIICase(keySystem, ASCIILiteral::fromLiteralUnsafe(s_ClearKeyKeySystem));
     }
 
     static bool isUnspecifiedKeySystem(const String& keySystem)
     {
-        return keySystem.startsWithIgnoringASCIICase(ASCIILiteral::fromLiteralUnsafe(s_UnspecifiedKeySystem));
+        return equalIgnoringASCIICase(keySystem, ASCIILiteral::fromLiteralUnsafe(s_UnspecifiedKeySystem));
     }
 
 #if USE(OPENCDM)
     static bool isPlayReadyKeySystem(const String& keySystem)
     {
-        return keySystem.startsWithIgnoringASCIICase(ASCIILiteral::fromLiteralUnsafe(s_PlayReadyKeySystems[0]))
-            || keySystem.startsWithIgnoringASCIICase(ASCIILiteral::fromLiteralUnsafe(s_PlayReadyKeySystems[1]));
+        return equalIgnoringASCIICase(keySystem, ASCIILiteral::fromLiteralUnsafe(s_PlayReadyKeySystems[0]))
+            || equalIgnoringASCIICase(keySystem, ASCIILiteral::fromLiteralUnsafe(s_PlayReadyKeySystems[1]));
     }
 
     static bool isWidevineKeySystem(const String& keySystem)
     {
-        return keySystem.startsWithIgnoringASCIICase(ASCIILiteral::fromLiteralUnsafe(s_WidevineKeySystem));
+        return equalIgnoringASCIICase(keySystem, ASCIILiteral::fromLiteralUnsafe(s_WidevineKeySystem));
     }
 #endif
 
