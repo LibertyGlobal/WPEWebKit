@@ -852,6 +852,7 @@ set(WebCore_NON_SVG_IDL_FILES
     page/Screen.idl
     page/ScrollToOptions.idl
     page/VisualViewport.idl
+    page/VkConsts.idl
     page/WebKitPoint.idl
     page/WindowEventHandlers.idl
     page/WindowOrWorkerGlobalScope.idl
