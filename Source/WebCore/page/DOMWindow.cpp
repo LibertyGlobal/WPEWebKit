@@ -104,6 +104,7 @@
 #include "URL.h"
 #include "UserGestureIndicator.h"
 #include "VisualViewport.h"
+#include "VkConsts.h"
 #include "WebKitPoint.h"
 #include "WindowFeatures.h"
 #include "WindowFocusAllowedIndicator.h"
@@ -355,6 +356,15 @@ FloatRect DOMWindow::adjustWindowRect(Page& page, const FloatRect& pendingChange
     window.setY(std::max(screen.y(), std::min(window.y(), screen.maxY() - window.height())));
 
     return window;
+}
+
+RefPtr<VkConsts> DOMWindow::keyEvent() const
+{
+    if (!isCurrentlyDisplayedInFrame())
+        return nullptr;
+    if (!m_keyEvent)
+        m_keyEvent = VkConsts::create(m_frame);
+    return m_keyEvent;
 }
 
 bool DOMWindow::allowPopUp(Frame& firstFrame)
