@@ -79,6 +79,7 @@ class Screen;
 class Storage;
 class StyleMedia;
 class VisualViewport;
+class VkConsts;
 class WebKitNamespace;
 class WebKitPoint;
 
@@ -126,6 +127,7 @@ public:
 
     static FloatRect adjustWindowRect(Page&, const FloatRect& pendingChanges);
 
+    RefPtr<VkConsts> keyEvent() const;
     bool allowPopUp(); // Call on first window, not target window.
     static bool allowPopUp(Frame& firstFrame);
     static bool canShowModalDialog(const Frame&);
@@ -388,6 +390,7 @@ private:
     mutable RefPtr<BarProp> m_toolbar;
     mutable RefPtr<Location> m_location;
     mutable RefPtr<VisualViewport> m_visualViewport;
+    mutable RefPtr<VkConsts> m_keyEvent;
 
     String m_status;
     String m_defaultStatus;
