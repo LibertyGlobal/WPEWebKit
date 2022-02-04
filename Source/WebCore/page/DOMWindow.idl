@@ -198,6 +198,8 @@ typedef USVString CSSOMString;
     [NotEnumerable, ImplementedAs=onwebkitAnimationIteration] attribute EventHandler onwebkitanimationiteration;
     [NotEnumerable, ImplementedAs=onwebkitAnimationStart] attribute EventHandler onwebkitanimationstart;
     [NotEnumerable, ImplementedAs=onwebkitTransitionEnd] attribute EventHandler onwebkittransitionend;
+
+    readonly attribute VkConsts KeyEvent;
 };
 
 DOMWindow implements GlobalCrypto;
