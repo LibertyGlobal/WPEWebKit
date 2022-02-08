@@ -257,6 +257,7 @@ void NetworkDataTaskSoup::setPendingDownloadLocation(const String& filename, San
 
 void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
 {
+    LOG(Network, "%s:%d createRequest(this &%p) %s\n", __func__, __LINE__, this, request.url().string().utf8().data());
     m_currentRequest = WTFMove(request);
 
     GUniquePtr<SoupURI> soupURI = m_currentRequest.createSoupURI();
@@ -286,6 +287,7 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
     }
 
     unsigned messageFlags = SOUP_MESSAGE_NO_REDIRECT;
+    messageFlags |= SOUP_MESSAGE_NEW_CONNECTION;
 
     m_currentRequest.updateSoupMessage(soupMessage.get());
     if (m_shouldContentSniff == ContentSniffingPolicy::DoNotSniffContent)
