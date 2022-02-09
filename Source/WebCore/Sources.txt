@@ -1437,6 +1437,7 @@ page/UserContentController.cpp
 page/UserContentURLPattern.cpp
 page/VisitedLinkStore.cpp
 page/VisualViewport.cpp
+page/VkConsts.cpp
 page/WheelEventDeltaFilter.cpp
 page/WheelEventTestTrigger.cpp
 page/WindowFeatures.cpp
