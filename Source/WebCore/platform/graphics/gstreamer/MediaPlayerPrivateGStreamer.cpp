@@ -2698,8 +2698,8 @@ void MediaPlayerPrivateGStreamer::didEnd()
 
     m_isEndReached = true;
 
-    if (!m_player->client().mediaPlayerIsLooping()) {
-        timeChanged();
+    if (!m_player->client().mediaPlayerIsLooping() && !isMediaSource()) {
+	timeChanged();
         m_paused = true;
         m_durationAtEOS = durationMediaTime();
         changePipelineState(GST_STATE_READY);
