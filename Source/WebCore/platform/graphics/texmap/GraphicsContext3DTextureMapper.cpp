@@ -59,10 +59,10 @@
 
 namespace WebCore {
 
-static const size_t MaxActiveContexts = 16;
-static Deque<GraphicsContext3D*, MaxActiveContexts>& activeContexts()
+static const size_t MaxActiveContexts = 1;
+static Deque<GraphicsContext3D*>& activeContexts()
 {
-    static NeverDestroyed<Deque<GraphicsContext3D*, MaxActiveContexts>> s_activeContexts;
+    static NeverDestroyed<Deque<GraphicsContext3D*>> s_activeContexts;
     return s_activeContexts;
 }
 
