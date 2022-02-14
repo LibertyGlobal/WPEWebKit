@@ -59,10 +59,11 @@
 
 namespace WebCore {
 
-static const size_t MaxActiveContexts = 16;
-static Deque<GraphicsContext3D*, MaxActiveContexts>& activeContexts()
+// ARRISEOS-41251: limit number of active GraphicsContexts to only one instance
+static const size_t MaxActiveContexts = 1;
+static Deque<GraphicsContext3D*>& activeContexts()
 {
-    static NeverDestroyed<Deque<GraphicsContext3D*, MaxActiveContexts>> s_activeContexts;
+    static NeverDestroyed<Deque<GraphicsContext3D*>> s_activeContexts;
     return s_activeContexts;
 }
 
