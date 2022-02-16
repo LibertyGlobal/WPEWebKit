@@ -123,7 +123,6 @@ private:
         Base::finishCreation(vm);
         setLength(length);
         setIs8Bit(m_value.impl()->is8Bit());
-        Heap::heap(this)->reportExtraMemoryAllocated(cost);
     }
 
 protected:
@@ -139,6 +138,7 @@ public:
     {
         unsigned length = value->length();
         size_t cost = value->cost();
+        vm.heap.reportExtraMemoryAllocated(cost);
         JSString* newString = new (NotNull, allocateCell<JSString>(vm.heap)) JSString(vm, WTFMove(value));
         newString->finishCreation(vm, length, cost);
         return newString;
