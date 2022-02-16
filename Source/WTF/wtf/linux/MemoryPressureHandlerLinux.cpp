@@ -28,6 +28,8 @@
 #include "config.h"
 #include "MemoryPressureHandler.h"
 
+#include <fstream>
+
 #if OS(LINUX)
 
 #include <fnmatch.h>
@@ -193,6 +195,13 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
     if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
         return false;
 
+#if PLATFORM(BCM_NEXUS)
+    // percentage memory usage
+     criticalLimit = 80;
+     nonCriticalLimit = 75;
+     return true;
+#endif
+
     // Ensure that both the limit and the file containig the used value are defined.
     if (!getenv("WPE_POLL_MAX_MEMORY_GPU") || !getenv("WPE_POLL_MAX_MEMORY_GPU_FILE"))
         return false;
@@ -271,12 +280,21 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
             }
 
             if (s_pollMaximumProcessGPUMemoryCriticalLimit) {
-                if (readToken(s_GPUMemoryUsedFile, nullptr, 1, value)) {
-                    if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
-                        underMemoryPressure = true;
-                        critical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
-                    }
+#if PLATFORM(BCM_NEXUS)
+                size_t gfxUsedPercent, tmp;
+                brcmHeapMemoryFootprint("GFX", tmp, tmp, gfxUsedPercent);
+                if (gfxUsedPercent > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
+                    underMemoryPressure = true;
+                    critical = gfxUsedPercent > s_pollMaximumProcessGPUMemoryCriticalLimit;
                 }
+#else
+               if (readToken(s_GPUMemoryUsedFile, nullptr, 1, value)) {
+                   if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
+                       underMemoryPressure = true;
+                       critical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
+                   }
+               }
+#endif
             }
 
             if (underMemoryPressure) {
@@ -406,6 +424,22 @@ size_t memoryFootprint()
     }
     return footprint;
 }
+
+#if PLATFORM(BCM_NEXUS)
+void brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed)
+{
+    auto fileStream = std::ifstream("/proc/brcm/core");
+    for (std::string line; std::getline(fileStream, line); )
+    {
+        if (strstr(line.c_str(), heap.c_str()) != NULL) {
+            unsigned tmp;
+            std::sscanf(line.c_str(), "%x %x %x %x %zu %x %zu%% %zu%%",
+                &tmp, &tmp, &tmp, &tmp, &valueTotal, &tmp, &valueUsed, &valuePeek);
+           return;
+        }
+    }
+}
+#endif
 
 } // namespace WTF
 
