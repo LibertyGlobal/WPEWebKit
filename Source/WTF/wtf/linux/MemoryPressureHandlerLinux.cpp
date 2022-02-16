@@ -28,7 +28,9 @@
 #include "config.h"
 #include "MemoryPressureHandler.h"
 
+#if PLATFORM(BCM_NEXUS)
 #include <fstream>
+#endif
 
 #if OS(LINUX)
 
@@ -63,6 +65,11 @@ static size_t s_pollMaximumProcessMemoryCriticalLimit = 0;
 static size_t s_pollMaximumProcessMemoryNonCriticalLimit = 0;
 static size_t s_pollMaximumProcessGPUMemoryCriticalLimit = 0;
 static size_t s_pollMaximumProcessGPUMemoryNonCriticalLimit = 0;
+
+#if PLATFORM(BCM_NEXUS)
+static constexpr size_t s_brcmNonCriticalGfxLimitPercentage = 75;
+static constexpr size_t s_brcmCriticalGfxLimitPercentage = 80;
+#endif
 
 static const char* s_processStatus = "/proc/self/status";
 static const char* s_cmdline = "/proc/self/cmdline";
@@ -197,8 +204,8 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
 
 #if PLATFORM(BCM_NEXUS)
     // percentage memory usage
-     criticalLimit = 80;
-     nonCriticalLimit = 75;
+     criticalLimit = s_brcmCriticalGfxLimitPercentage;
+     nonCriticalLimit = s_brcmNonCriticalGfxLimitPercentage;
      return true;
 #endif
 
@@ -281,20 +288,16 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
 
             if (s_pollMaximumProcessGPUMemoryCriticalLimit) {
 #if PLATFORM(BCM_NEXUS)
-                size_t gfxUsedPercent, tmp;
-                brcmHeapMemoryFootprint("GFX", tmp, tmp, gfxUsedPercent);
-                if (gfxUsedPercent > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
-                    underMemoryPressure = true;
-                    critical = gfxUsedPercent > s_pollMaximumProcessGPUMemoryCriticalLimit;
-                }
+                size_t tmp;
+                if (brcmHeapMemoryFootprint("GFX", tmp, tmp, value)) {
 #else
-               if (readToken(s_GPUMemoryUsedFile, nullptr, 1, value)) {
-                   if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
-                       underMemoryPressure = true;
-                       critical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
-                   }
-               }
+                if (readToken(s_GPUMemoryUsedFile, nullptr, 1, value)) {
 #endif
+                    if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
+                        underMemoryPressure = true;
+                        critical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
+                    }
+                }
             }
 
             if (underMemoryPressure) {
@@ -426,7 +429,7 @@ size_t memoryFootprint()
 }
 
 #if PLATFORM(BCM_NEXUS)
-void brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed)
+bool brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed)
 {
     auto fileStream = std::ifstream("/proc/brcm/core");
     for (std::string line; std::getline(fileStream, line); )
@@ -435,9 +438,10 @@ void brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t
             unsigned tmp;
             std::sscanf(line.c_str(), "%x %x %x %x %zu %x %zu%% %zu%%",
                 &tmp, &tmp, &tmp, &tmp, &valueTotal, &tmp, &valueUsed, &valuePeek);
-           return;
+           return true;
         }
     }
+    return false;
 }
 #endif
 

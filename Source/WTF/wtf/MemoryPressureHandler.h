@@ -61,7 +61,7 @@ enum class Synchronous { No, Yes };
 typedef WTF::Function<void(Critical, Synchronous)> LowMemoryHandler;
 
 #if PLATFORM(BCM_NEXUS)
-void brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed);
+bool brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed);
 #endif
 
 class MemoryPressureHandler {
