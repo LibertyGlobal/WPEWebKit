@@ -195,6 +195,19 @@ void MemoryPressureHandler::measurementTimerFired()
 {
     size_t footprint = memoryFootprint();
     RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB", footprint / MB);
+
+#if PLATFORM(BCM_NEXUS)
+    size_t gfxTotal, gfxPeak, gfxUsed;
+    brcmHeapMemoryFootprint("GFX", gfxTotal, gfxPeak, gfxUsed);
+    RELEASE_LOG(MemoryPressure, "GFX memory usage %zuMB/%zu%%, peak memory %zuMB/%zu%%",
+        ((gfxTotal * gfxUsed) / 100), gfxUsed, ((gfxTotal * gfxPeak) / 100), gfxPeak);
+
+    size_t crrTotal, crrPeak, crrUsed;
+    brcmHeapMemoryFootprint("CRR", crrTotal, crrPeak, crrUsed);
+    RELEASE_LOG(MemoryPressure, "CRR memory usage %zuMB/%zu%%, peak memory %zuMB/%zu%%",
+        ((crrTotal * crrUsed) / 100), crrUsed, ((crrTotal * crrPeak) / 100), crrPeak);
+#endif
+
     if (footprint >= thresholdForMemoryKill()) {
         shrinkOrDie();
         return;
