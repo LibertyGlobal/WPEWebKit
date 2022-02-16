@@ -311,6 +311,7 @@ ImageSource::FrameRequestQueue& ImageSource::frameRequestQueue()
 
 bool ImageSource::canUseAsyncDecoding()
 {
+    return false;
     if (!isDecoderAvailable())
         return false;
     // FIXME: figure out the best heuristic for enabling async image decoding.
