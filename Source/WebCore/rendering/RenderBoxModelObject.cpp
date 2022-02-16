@@ -350,6 +350,14 @@ bool RenderBoxModelObject::hasAutoHeightOrContainingBlockWithAutoHeight() const
 
 DecodingMode RenderBoxModelObject::decodingModeForImageDraw(const Image& image, const PaintInfo& paintInfo) const
 {
+    static bool largeImageAsyncDecodingDisabledByEnvVar = false;
+    static bool largeImageAsyncDecodingDisabledByEnvVarInitialized = false;
+
+    if (!largeImageAsyncDecodingDisabledByEnvVarInitialized) {
+        largeImageAsyncDecodingDisabledByEnvVar = !!getenv("WPE_DISABLE_ASYNC_DECODING_LARGE_IMAGES");
+        largeImageAsyncDecodingDisabledByEnvVarInitialized = true;
+    }
+
     if (!is<BitmapImage>(image))
         return DecodingMode::Synchronous;
     
@@ -375,6 +383,8 @@ DecodingMode RenderBoxModelObject::decodingModeForImageDraw(const Image& image, 
     if (document().isImageDocument())
         return DecodingMode::Synchronous;
     if (paintInfo.paintBehavior.contains(PaintBehavior::Snapshotting))
+        return DecodingMode::Synchronous;
+    if (largeImageAsyncDecodingDisabledByEnvVar)
         return DecodingMode::Synchronous;
     if (!settings().largeImageAsyncDecodingEnabled())
         return DecodingMode::Synchronous;
