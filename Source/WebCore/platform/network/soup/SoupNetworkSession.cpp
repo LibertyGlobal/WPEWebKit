@@ -132,6 +132,7 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* 
         SOUP_SESSION_USE_THREAD_CONTEXT, TRUE,
         SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
         SOUP_SESSION_SSL_STRICT, TRUE,
+        SOUP_SESSION_TIMEOUT, 60,
         nullptr);
 
     setupCustomProtocols();
