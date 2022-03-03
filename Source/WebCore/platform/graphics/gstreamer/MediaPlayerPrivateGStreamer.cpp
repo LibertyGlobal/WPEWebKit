@@ -1649,7 +1649,7 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
 
     GST_DEBUG("[Buffering] Buffering: %d%%.", m_bufferingPercentage);
 
-    if (m_bufferingPercentage == 100)
+    if (m_bufferingPercentage == 100 || m_bufferingPercentage == 0)
         updateStates();
 }
 
@@ -2235,11 +2235,16 @@ void MediaPlayerPrivateGStreamer::updateStates()
             if (didBuffering && !m_buffering && !m_paused && m_playbackRate) {
                 GST_DEBUG("[Buffering] Restarting playback.");
                 changePipelineState(GST_STATE_PLAYING);
+                shouldUpdatePlaybackState = true;
             }
         } else if (m_currentState == GST_STATE_PLAYING) {
             m_paused = false;
-	    //FIXME Here we should analyse the current state of the buffers and network.
-	    //If network is bad/gone or buffers are not sufficient we should go to PAUSED state.
+
+            if ((m_buffering && m_bufferingPercentage == 0 && pending != GST_STATE_PAUSED && !isLiveStream()) || !m_playbackRate) {
+                GST_DEBUG("[Buffering] Pausing stream for buffering.");
+                changePipelineState(GST_STATE_PAUSED);
+                shouldUpdatePlaybackState = true;
+            }
         } else
             m_paused = true;
 
