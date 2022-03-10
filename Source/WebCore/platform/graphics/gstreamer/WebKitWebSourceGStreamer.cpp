@@ -722,37 +722,31 @@ static void webKitWebSrcUriHandlerInit(gpointer gIface, gpointer)
 
 static void webKitWebSrcNeedData(WebKitWebSrc* src)
 {
-    WebKitWebSrcPrivate* priv = src->priv;
-
     GST_LOG_OBJECT(src, "Need more data");
-
-    if (!priv->paused)
-        return;
-    priv->paused = false;
-
     GRefPtr<WebKitWebSrc> protector = WTF::ensureGRef(src);
-    priv->notifier->notify(MainThreadSourceNotification::NeedData, [protector] {
+    src->priv->notifier->notify(MainThreadSourceNotification::NeedData, [protector] {
         WebKitWebSrcPrivate* priv = protector->priv;
-        if (priv->resource)
-            priv->resource->setDefersLoading(false);
+        if (priv->paused) {
+            GST_DEBUG_OBJECT(protector.get(), "Unpausing data loader");
+            priv->paused = false;
+            if (priv->resource)
+                priv->resource->setDefersLoading(false);
+        }
     }, true);
 }
 
 static void webKitWebSrcEnoughData(WebKitWebSrc* src)
 {
-    WebKitWebSrcPrivate* priv = src->priv;
-
-    GST_DEBUG_OBJECT(src, "Have enough data");
-
-    if (priv->paused)
-        return;
-    priv->paused = true;
-
+    GST_LOG_OBJECT(src, "Have enough data");
     GRefPtr<WebKitWebSrc> protector = WTF::ensureGRef(src);
-    priv->notifier->notify(MainThreadSourceNotification::EnoughData, [protector] {
+    src->priv->notifier->notify(MainThreadSourceNotification::EnoughData, [protector] {
         WebKitWebSrcPrivate* priv = protector->priv;
-        if (priv->resource)
-            priv->resource->setDefersLoading(true);
+        if (!priv->paused) {
+            GST_DEBUG_OBJECT(protector.get(), "Pausing data loader");
+            priv->paused = true;
+            if (priv->resource)
+                priv->resource->setDefersLoading(true);
+        }
     }, true);
 }
 
