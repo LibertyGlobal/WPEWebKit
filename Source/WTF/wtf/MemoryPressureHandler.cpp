@@ -194,7 +194,10 @@ void MemoryPressureHandler::setMemoryUsagePolicyBasedOnFootprint(size_t footprin
 void MemoryPressureHandler::measurementTimerFired()
 {
     size_t footprint = memoryFootprint();
-    RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB", footprint / MB);
+    static size_t footprintPeak = 0;
+
+    if (footprintPeak < footprint) footprintPeak = footprint;
+    RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB", footprint / MB, footprintPeak / MB);
 
 #if PLATFORM(BCM_NEXUS)
     size_t gfxTotal, gfxPeak, gfxUsed;
