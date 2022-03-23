@@ -9,5 +9,5 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fasynchronous-unwind-tables")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -funwind-tables")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 
-add_library(memcheck SHARED ${MEMCHECK_SOURCES})
-target_link_libraries(memcheck dl pthread)
+add_library(memcheckthunder SHARED ${MEMCHECK_SOURCES})
+target_link_libraries(memcheckthunder dl pthread)
