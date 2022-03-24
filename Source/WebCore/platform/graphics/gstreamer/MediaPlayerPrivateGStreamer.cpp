@@ -2554,13 +2554,16 @@ void MediaPlayerPrivateGStreamer::didEnd()
         m_player->durationChanged();
 
     m_isEndReached = true;
-    timeChanged();
 
     if (!m_player->client().mediaPlayerIsLooping()) {
+        timeChanged();
         m_paused = true;
         m_durationAtEOS = durationMediaTime();
         changePipelineState(GST_STATE_READY);
         m_downloadFinished = false;
+    } else {
+        // Skip updateStates() as that would eventually result in play(), clearing m_isEndReached
+        m_player->timeChanged();
     }
 }
 
