@@ -34,7 +34,6 @@
 #include "GUniquePtrSoup.h"
 #include "Logging.h"
 #include "SoupNetworkProxySettings.h"
-#include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <libsoup/soup.h>
 #include <pal/crypto/CryptoDigest.h>
@@ -107,11 +106,6 @@ static HashMap<String, HostTLSCertificateSet, ASCIICaseInsensitiveHash>& clientC
     return certificates;
 }
 
-static void networkDidChange(GNetworkMonitor*, gboolean, SoupNetworkSession* session)
-{
-    soup_session_abort(session->soupSession());
-}
-
 SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* cookieJar)
     : m_soupSession(adoptGRef(soup_session_async_new()))
 {
@@ -159,14 +153,9 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* 
     if (proxySettings().mode != SoupNetworkProxySettings::Mode::Default)
         setupProxy();
     setupLogger();
-
-    g_signal_connect(g_network_monitor_get_default(), "network-changed", G_CALLBACK(networkDidChange), this);
 }
 
-SoupNetworkSession::~SoupNetworkSession()
-{
-    g_signal_handlers_disconnect_by_func(g_network_monitor_get_default(), reinterpret_cast<gpointer>(networkDidChange), this);
-}
+SoupNetworkSession::~SoupNetworkSession() = default;
 
 void SoupNetworkSession::setupLogger()
 {
