@@ -425,8 +425,9 @@ bool SubframeLoader::loadPlugin(HTMLPlugInImageElement& pluginElement, const URL
         return false;
 
     if (!widget) {
-        if (!renderer->isPluginUnavailable())
-            renderer->setPluginUnavailabilityReason(RenderEmbeddedObject::PluginMissing);
+        if (!renderer->isPluginUnavailable()) {
+            LOG(Plugins, "Missing plug-in; Notification suppressed");
+        }
         return false;
     }
 
