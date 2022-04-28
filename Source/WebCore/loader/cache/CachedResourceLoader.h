@@ -99,6 +99,7 @@ public:
 #if ENABLE(APPLICATION_MANIFEST)
     ResourceErrorOr<CachedResourceHandle<CachedApplicationManifest>> requestApplicationManifest(CachedResourceRequest&&);
 #endif
+    void destroyImagesDecodedData();
 
     // Called to load Web Worker main script, Service Worker main script, importScripts(), XHR,
     // EventSource, Fetch, and App Cache.

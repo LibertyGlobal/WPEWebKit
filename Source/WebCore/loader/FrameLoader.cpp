@@ -1328,6 +1328,8 @@ void FrameLoader::loadURL(FrameLoadRequest&& frameLoadRequest, const String& ref
 
     Ref<Frame> protect(m_frame);
 
+    if(m_frame.document()) m_frame.document()->cachedResourceLoader().destroyImagesDecodedData();
+
     String frameName = frameLoadRequest.frameName();
     AllowNavigationToInvalidURL allowNavigationToInvalidURL = frameLoadRequest.allowNavigationToInvalidURL();
     NewFrameOpenerPolicy openerPolicy = frameLoadRequest.newFrameOpenerPolicy();
@@ -1335,6 +1337,13 @@ void FrameLoader::loadURL(FrameLoadRequest&& frameLoadRequest, const String& ref
     bool isFormSubmission = formState;
 
     const URL& newURL = frameLoadRequest.resourceRequest().url();
+
+    LOG(
+            Loading,
+            "%s:%d %s %s",
+            ::basename(__FILE__), __LINE__, __FUNCTION__,
+            newURL.string().utf8().data());
+
     ResourceRequest request(newURL);
     if (!referrer.isEmpty()) {
         request.setHTTPReferrer(referrer);
