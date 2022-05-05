@@ -44,10 +44,72 @@
 #include <wtf/text/StringBuilder.h>
 #include <gwildcardproxyresolver.h>
 
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+#include <gio/gio.h>
+#include <linux/route.h>
+#endif
+
 namespace WebCore {
 
 static bool gIgnoreTLSErrors;
 static GType gCustomProtocolRequestType;
+
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+static const Seconds s_networkChangeCheckDelay { 2_s };
+static const char* s_IPV4ProcfilePath = "/proc/net/route";
+static const char* s_IPV6ProcfilePath = "/proc/net/ipv6_route";
+enum class Protocol { IPV4, IPV6 };
+
+static String getDefaultNetworkInterface(Protocol protocol)
+{
+    FILE *file = fopen(protocol == Protocol::IPV4 ? s_IPV4ProcfilePath : s_IPV6ProcfilePath, "r");
+    if (!file) {
+        LOG(Network, "SoupNetworkSession: Could not open route file %s", protocol == Protocol::IPV4 ? s_IPV4ProcfilePath : s_IPV6ProcfilePath);
+        return String();
+    }
+
+    static const unsigned bufferSize = 1024;
+    char buffer[bufferSize] = {0, };
+    char iface[20], dest[33], src[33], gate[33], mask[9];
+    int flags, refCnt, use, metric, mtu, window, rtt, destPlen, srcPlen;
+
+    // On IPV4, drop the first line with the labels.
+    if (protocol == Protocol::IPV4)
+        fgets (buffer, bufferSize, file);
+
+    while (fgets (buffer, bufferSize, file) != NULL) {
+        if (protocol == Protocol::IPV4) {
+            int n = sscanf(buffer, "%s %s %s %x %d %d %d %s %d %d %d", iface, dest, gate, &flags, &refCnt, &use, &metric, mask, &mtu, &window, &rtt);
+            if (n != 11) {
+                // Could not read all the routing information.
+                continue;
+            }
+        } else {
+            int n = sscanf (buffer, "%32s %02x %32s %02x %32s %08x %08x %08x %08x %s", dest, &destPlen, src, &srcPlen, gate, &metric, &use, &refCnt, &flags, iface);
+            if (n != 10) {
+                // Could not read all the routing information.
+                continue;
+            }
+        }
+        // We're looking for the first interface that has the up and gateway flag, as that should be
+        // the route we're using by default.
+        if ((flags & RTF_UP) && (flags & RTF_GATEWAY)) {
+            fclose(file);
+            LOG(Network, "SoupNetworkSession: default interface for protocol %s is %s", protocol == Protocol::IPV4 ? "IPV4" : "IPV6", iface);
+            return String(iface);
+        }
+    }
+
+    fclose(file);
+    LOG(Network, "SoupNetworkSession: could not find default interface for protocol %s", protocol == Protocol::IPV4 ? "IPV4" : "IPV6");
+    return String();
+}
+
+static void networkDidChange(GNetworkMonitor*, gboolean, SoupNetworkSession* session)
+{
+    session->scheduleNetworkChangeCheck();
+}
+#endif
 
 static CString& initialAcceptLanguages()
 {
@@ -108,6 +170,9 @@ static HashMap<String, HostTLSCertificateSet, ASCIICaseInsensitiveHash>& clientC
 
 SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* cookieJar)
     : m_soupSession(adoptGRef(soup_session_async_new()))
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+    , m_networkChangeCheckTimer(RunLoop::main(), this, &SoupNetworkSession::networkChangeCheckTimerFired)
+#endif
 {
     // Values taken from http://www.browserscope.org/ following
     // the rule "Do What Every Other Modern Browser Is Doing". They seem
@@ -153,9 +218,21 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* 
     if (proxySettings().mode != SoupNetworkProxySettings::Mode::Default)
         setupProxy();
     setupLogger();
+
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+    // Store the sames of the existing default interfaces.
+    m_defaultNetworkInterfaceIPV4 = getDefaultNetworkInterface(Protocol::IPV4);
+    m_defaultNetworkInterfaceIPV6 = getDefaultNetworkInterface(Protocol::IPV6);
+    g_signal_connect(g_network_monitor_get_default(), "network-changed", G_CALLBACK(networkDidChange), this);
+#endif
 }
 
-SoupNetworkSession::~SoupNetworkSession() = default;
+SoupNetworkSession::~SoupNetworkSession()
+{
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+    g_signal_handlers_disconnect_by_func(g_network_monitor_get_default(), reinterpret_cast<gpointer>(networkDidChange), this);
+#endif
+}
 
 void SoupNetworkSession::setupLogger()
 {
@@ -321,6 +398,44 @@ void SoupNetworkSession::setupCustomProtocols()
 
     soup_session_add_feature_by_type(m_soupSession.get(), gCustomProtocolRequestType);
 }
+
+#if ENABLE(NETWORK_CHANGE_DETECTION)
+void SoupNetworkSession::scheduleNetworkChangeCheck()
+{
+    // The network-changed signal may be emitted a lot of times in a small amount of time while
+    // the network configuration is changing. We don't want to perform the network check that
+    // many times, so we will wait some time after signals have stopped arriving.
+
+    if (m_networkChangeCheckTimer.isActive())
+        m_networkChangeCheckTimer.stop();
+
+    m_networkChangeCheckTimer.startOneShot(s_networkChangeCheckDelay);
+}
+
+void SoupNetworkSession::networkChangeCheckTimerFired()
+{
+    LOG(Network, "SoupNetworkSession: checking for changes in network interfaces");
+    bool sessionAbortNeeded = false;
+
+    String newInterfaceIPV4 = getDefaultNetworkInterface(Protocol::IPV4);
+    LOG(Network, "SoupNetworkSession: IPV4: old interface %s -> new interface %s", m_defaultNetworkInterfaceIPV4.utf8().data(), newInterfaceIPV4.utf8().data());
+    // We need to abort the soup session when we had a valid interface and it's being removed or replaced.
+    sessionAbortNeeded |= !m_defaultNetworkInterfaceIPV4.isEmpty() && (newInterfaceIPV4 != m_defaultNetworkInterfaceIPV4);
+    m_defaultNetworkInterfaceIPV4 = newInterfaceIPV4;
+
+    String newInterfaceIPV6 = getDefaultNetworkInterface(Protocol::IPV6);
+    LOG(Network, "SoupNetworkSession: IPV6: old interface %s -> new interface %s", m_defaultNetworkInterfaceIPV6.utf8().data(), newInterfaceIPV6.utf8().data());
+    // We need to abort the soup session when we had a valid interface and it's being removed or replaced.
+    sessionAbortNeeded |= !m_defaultNetworkInterfaceIPV6.isEmpty() && (newInterfaceIPV6 != m_defaultNetworkInterfaceIPV6);
+    m_defaultNetworkInterfaceIPV6 = newInterfaceIPV6;
+
+    if (sessionAbortNeeded) {
+        LOG(Network, "SoupNetworkSession: change in default interfaces, aborting soup session");
+        soup_session_abort(m_soupSession.get());
+    } else
+        LOG(Network, "SoupNetworkSession: default interfaces didn't change, soup session abort not needed");
+}
+#endif
 
 void SoupNetworkSession::setShouldIgnoreTLSErrors(bool ignoreTLSErrors)
 {
