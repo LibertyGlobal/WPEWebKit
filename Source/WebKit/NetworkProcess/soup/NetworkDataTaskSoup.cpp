@@ -266,7 +266,9 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
     }
 
     GRefPtr<SoupRequest> soupRequest = adoptGRef(soup_session_request_uri(static_cast<NetworkSessionSoup&>(m_session.get()).soupSession(), soupURI.get(), nullptr));
+    LOG(Network, "soup_session_request_uri\n");
     if (!soupRequest) {
+        LOG(Network, "!soupRequest\n");
         scheduleFailure(InvalidURLFailure);
         return;
     }
@@ -280,7 +282,9 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
 
     // HTTP request.
     GRefPtr<SoupMessage> soupMessage = adoptGRef(soup_request_http_get_message(SOUP_REQUEST_HTTP(soupRequest.get())));
+    LOG(Network, "soup_request_http_get_message\n");
     if (!soupMessage) {
+        LOG(Network, "!soupMessage\n");
         scheduleFailure(InvalidURLFailure);
         return;
     }
@@ -335,6 +339,7 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
 
 void NetworkDataTaskSoup::clearRequest()
 {
+    LOG(Network, "NetworkDataTaskSoup::clearRequest\n");
     if (m_state == State::Completed)
         return;
 
@@ -375,6 +380,7 @@ void NetworkDataTaskSoup::resume()
     if (m_soupRequest && !m_cancellable) {
         m_cancellable = adoptGRef(g_cancellable_new());
         soup_request_send_async(m_soupRequest.get(), m_cancellable.get(), reinterpret_cast<GAsyncReadyCallback>(sendRequestCallback), protectedThis.leakRef());
+        LOG(Network, "soup_request_send_async\n");
         return;
     }
 
@@ -393,6 +399,7 @@ void NetworkDataTaskSoup::resume()
 
 void NetworkDataTaskSoup::suspend()
 {
+    LOG(Network, "NetworkDataTaskSoup::suspend\n");
     ASSERT(m_state != State::Suspended);
     if (m_state == State::Canceling || m_state == State::Completed)
         return;
@@ -403,6 +410,7 @@ void NetworkDataTaskSoup::suspend()
 
 void NetworkDataTaskSoup::cancel()
 {
+    LOG(Network, "NetworkDataTaskSoup::cancel\n");
     if (m_state == State::Canceling || m_state == State::Completed)
         return;
 
@@ -430,6 +438,7 @@ NetworkDataTask::State NetworkDataTaskSoup::state() const
 
 void NetworkDataTaskSoup::timeoutFired()
 {
+    LOG(Network, "NetworkDataTaskSoup::timeoutFired\n");
     if (m_state == State::Canceling || m_state == State::Completed || !m_client) {
         clearRequest();
         return;
@@ -453,6 +462,7 @@ void NetworkDataTaskSoup::stopTimeout()
 
 void NetworkDataTaskSoup::sendRequestCallback(SoupRequest* soupRequest, GAsyncResult* result, NetworkDataTaskSoup* task)
 {
+    LOG(Network, "NetworkDataTaskSoup::sendRequestCallback\n");
     RefPtr<NetworkDataTaskSoup> protectedThis = adoptRef(task);
     if (task->state() == State::Canceling || task->state() == State::Completed || !task->m_client) {
         task->clearRequest();
@@ -476,6 +486,7 @@ void NetworkDataTaskSoup::sendRequestCallback(SoupRequest* soupRequest, GAsyncRe
 
 void NetworkDataTaskSoup::didSendRequest(GRefPtr<GInputStream>&& inputStream)
 {
+    LOG(Network, "NetworkDataTaskSoup::didSendRequest\n");
     if (m_soupMessage) {
         if (m_shouldContentSniff == ContentSniffingPolicy::SniffContent && m_soupMessage->status_code != SOUP_STATUS_NOT_MODIFIED)
             m_response.setSniffedContentType(soup_request_get_content_type(m_soupRequest.get()));
@@ -564,6 +575,7 @@ void NetworkDataTaskSoup::dispatchDidCompleteWithError(const ResourceError& erro
 
 gboolean NetworkDataTaskSoup::tlsConnectionAcceptCertificateCallback(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkDataTaskSoup* task)
 {
+    LOG(Network, "NetworkDataTaskSoup::tlsConnectionAcceptCertificateCallback\n");
     if (task->state() == State::Canceling || task->state() == State::Completed || !task->m_client) {
         task->clearRequest();
         return FALSE;
@@ -581,12 +593,15 @@ bool NetworkDataTaskSoup::tlsConnectionAcceptCertificate(GTlsCertificate* certif
     ASSERT(m_soupRequest);
     URL url(soup_request_get_uri(m_soupRequest.get()));
     auto error = SoupNetworkSession::checkTLSErrors(url, certificate, tlsErrors);
-    if (!error)
+    if (!error) {
+        LOG(Network, "NetworkDataTaskSoup::tlsConnectionAcceptCertificate true\n");
         return true;
+    }
 
     RefPtr<NetworkDataTaskSoup> protectedThis(this);
     invalidateAndCancel();
     dispatchDidCompleteWithError(error.value());
+    LOG(Network, "NetworkDataTaskSoup::tlsConnectionAcceptCertificate false\n");
     return false;
 }
 
@@ -1217,15 +1232,19 @@ void NetworkDataTaskSoup::networkEvent(GSocketClientEvent event, GIOStream* stre
     Seconds deltaTime = MonotonicTime::now() - m_startTime;
     switch (event) {
     case G_SOCKET_CLIENT_RESOLVING:
+        LOG(Network, "G_SOCKET_CLIENT_RESOLVING\n");
         m_networkLoadMetrics.domainLookupStart = deltaTime;
         break;
     case G_SOCKET_CLIENT_RESOLVED:
+    LOG(Network, "G_SOCKET_CLIENT_RESOLVED\n");
         m_networkLoadMetrics.domainLookupEnd = deltaTime;
         break;
     case G_SOCKET_CLIENT_CONNECTING:
+    LOG(Network, "G_SOCKET_CLIENT_CONNECTING\n");
         m_networkLoadMetrics.connectStart = deltaTime;
         break;
     case G_SOCKET_CLIENT_CONNECTED: {
+        LOG(Network, "G_SOCKET_CLIENT_CONNECTED\n");
             // Web Timing considers that connection time involves dns, proxy & TLS negotiation...
             // so we better pick G_SOCKET_CLIENT_COMPLETE for connectEnd
             const char* enableTCPkeepalive = getenv("WEBKIT_TCP_KEEPALIVE");
@@ -1239,18 +1258,23 @@ void NetworkDataTaskSoup::networkEvent(GSocketClientEvent event, GIOStream* stre
         }
         break;
     case G_SOCKET_CLIENT_PROXY_NEGOTIATING:
+        LOG(Network, "G_SOCKET_CLIENT_PROXY_NEGOTIATING\n");
         break;
     case G_SOCKET_CLIENT_PROXY_NEGOTIATED:
+        LOG(Network, "G_SOCKET_CLIENT_PROXY_NEGOTIATED\n");
         break;
     case G_SOCKET_CLIENT_TLS_HANDSHAKING:
+        LOG(Network, "G_SOCKET_CLIENT_TLS_HANDSHAKING\n");
         m_networkLoadMetrics.secureConnectionStart = deltaTime;
         RELEASE_ASSERT(G_IS_TLS_CONNECTION(stream));
         g_object_set_data(G_OBJECT(stream), "wk-soup-message", m_soupMessage.get());
         g_signal_connect(stream, "accept-certificate", G_CALLBACK(tlsConnectionAcceptCertificateCallback), this);
         break;
     case G_SOCKET_CLIENT_TLS_HANDSHAKED:
+        LOG(Network, "G_SOCKET_CLIENT_TLS_HANDSHAKED\n");
         break;
     case G_SOCKET_CLIENT_COMPLETE:
+        LOG(Network, "G_SOCKET_CLIENT_COMPLETE\n");
         m_networkLoadMetrics.connectEnd = deltaTime;
         break;
     default:
@@ -1262,6 +1286,7 @@ void NetworkDataTaskSoup::networkEvent(GSocketClientEvent event, GIOStream* stre
 #if SOUP_CHECK_VERSION(2, 49, 91)
 void NetworkDataTaskSoup::startingCallback(SoupMessage* soupMessage, NetworkDataTaskSoup* task)
 {
+    LOG(Network, "NetworkDataTaskSoup::startingCallback\n");
     if (task->state() == State::Canceling || task->state() == State::Completed || !task->m_client)
         return;
 
@@ -1271,6 +1296,7 @@ void NetworkDataTaskSoup::startingCallback(SoupMessage* soupMessage, NetworkData
 #else
 void NetworkDataTaskSoup::requestStartedCallback(SoupSession* session, SoupMessage* soupMessage, SoupSocket*, NetworkDataTaskSoup* task)
 {
+    LOG(Network, "NetworkDataTaskSoup::requestStartedCallback\n");
     ASSERT(session == static_cast<NetworkSessionSoup&>(task->m_session.get()).soupSession());
     if (soupMessage != task->m_soupMessage.get())
         return;
@@ -1284,11 +1310,13 @@ void NetworkDataTaskSoup::requestStartedCallback(SoupSession* session, SoupMessa
 
 void NetworkDataTaskSoup::didStartRequest()
 {
+    LOG(Network, "NetworkDataTaskSoup::didStartRequest\n");
     m_networkLoadMetrics.requestStart = MonotonicTime::now() - m_startTime;
 }
 
 void NetworkDataTaskSoup::restartedCallback(SoupMessage* soupMessage, NetworkDataTaskSoup* task)
 {
+    LOG(Network, "NetworkDataTaskSoup::restartedCallback\n");
     // Called each time the message is going to be sent again except the first time.
     // This happens when libsoup handles HTTP authentication.
     if (task->state() == State::Canceling || task->state() == State::Completed || !task->m_client)

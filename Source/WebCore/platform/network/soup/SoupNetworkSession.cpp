@@ -127,12 +127,10 @@ static SoupNetworkProxySettings& proxySettings()
     return settings.get();
 }
 
-#if !LOG_DISABLED
 inline static void soupLogPrinter(SoupLogger*, SoupLoggerLogLevel, char direction, const char* data, gpointer)
 {
     LOG(Network, "%c %s", direction, data);
 }
-#endif
 
 class HostTLSCertificateSet {
 public:
@@ -178,6 +176,8 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* 
     , m_networkChangeCheckTimer(RunLoop::main(), this, &SoupNetworkSession::networkChangeCheckTimerFired)
 #endif
 {
+
+    LOG(Network, "SoupSession constructor start\n");
     // Values taken from http://www.browserscope.org/ following
     // the rule "Do What Every Other Modern Browser Is Doing". They seem
     // to significantly improve page loading time compared to soup's
@@ -229,6 +229,7 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID, SoupCookieJar* 
     m_defaultNetworkInterfaceIPV6 = getDefaultNetworkInterface(Protocol::IPV6);
     g_signal_connect(g_network_monitor_get_default(), "network-changed", G_CALLBACK(networkDidChange), this);
 #endif
+    LOG(Network, "SoupSession created\n");
 }
 
 SoupNetworkSession::~SoupNetworkSession()
@@ -240,14 +241,9 @@ SoupNetworkSession::~SoupNetworkSession()
 
 void SoupNetworkSession::setupLogger()
 {
-#if !LOG_DISABLED
-    if (LogNetwork.state != WTFLogChannelOn || soup_session_get_feature(m_soupSession.get(), SOUP_TYPE_LOGGER))
-        return;
-
     GRefPtr<SoupLogger> logger = adoptGRef(soup_logger_new(SOUP_LOGGER_LOG_BODY, -1));
     soup_session_add_feature(m_soupSession.get(), SOUP_SESSION_FEATURE(logger.get()));
     soup_logger_set_printer(logger.get(), soupLogPrinter, nullptr, nullptr);
-#endif
 }
 
 void SoupNetworkSession::setCookieJar(SoupCookieJar* jar)
@@ -323,6 +319,7 @@ void SoupNetworkSession::setupProxy()
 
     g_object_set(m_soupSession.get(), SOUP_SESSION_PROXY_RESOLVER, resolver.get(), nullptr);
     soup_session_abort(m_soupSession.get());
+    LOG(Network, "proxy sth session abort!!!!\n");
 }
 
 void SoupNetworkSession::setProxies(const Vector<WebCore::Proxy>& proxies)
@@ -434,7 +431,7 @@ void SoupNetworkSession::networkChangeCheckTimerFired()
     m_defaultNetworkInterfaceIPV6 = newInterfaceIPV6;
 
     if (sessionAbortNeeded) {
-        LOG(Network, "SoupNetworkSession: change in default interfaces, aborting soup session");
+        LOG(Network, "SoupNetworkSession: change in default interfaces, aborting soup session !!!!!!!!!!!!!!");
         soup_session_abort(m_soupSession.get());
     } else
         LOG(Network, "SoupNetworkSession: default interfaces didn't change, soup session abort not needed");
