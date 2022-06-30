@@ -120,9 +120,11 @@ bool MixedContentChecker::canRunInsecureContent(SecurityOrigin& securityOrigin, 
 
     bool allowed = !m_frame.document()->isStrictMixedContentMode() && m_frame.settings().allowRunningOfInsecureContent() && !m_frame.document()->geolocationAccessed() && !m_frame.document()->secureCookiesAccessed();
 
+    fprintf(stderr, "ARRISAPOL-2585: %s:%d url = %s, allowed = %d, isUrlWhitelisted = %d\n", __func__, __LINE__, url.string().utf8().data(), allowed, isUrlWhitelisted(url));
     // When mixed content is enabled check if URL is whitelisted
     if (!allowed && isUrlWhitelisted(url)) return true;
 
+    fprintf(stderr, "ARRISAPOL-2585: %s:%d\n", __func__, __LINE__);
     if (!allowed)
         logWarning(allowed, "run", url);
 
