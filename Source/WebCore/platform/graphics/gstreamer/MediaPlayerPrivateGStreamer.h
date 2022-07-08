@@ -338,8 +338,6 @@ private:
         //AvContextGetter
         OdhDrm getDrm() override;
         OdhOwner getOwner() override;
-        GstElement* getDecoder(const OdhMediaType media_type) override;
-        std::string getCodec(const OdhMediaType media_type) override;
         GstElement* getPipeline() override;
 
     private:

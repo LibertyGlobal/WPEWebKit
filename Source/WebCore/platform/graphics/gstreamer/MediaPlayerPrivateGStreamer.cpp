@@ -571,7 +571,6 @@ void MediaPlayerPrivateGStreamer::play()
         GST_INFO("Play");
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", OdhMediaType::VIDEO, m_avContextGetter);
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", OdhMediaType::AUDIO, m_avContextGetter);
-
     } else
         loadingFailed(MediaPlayer::Empty);
 }
@@ -1342,6 +1341,8 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
 
         m_errorMessage = err->message;
         error = MediaPlayer::Empty;
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::VIDEO, m_avContextGetter);
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::AUDIO, m_avContextGetter);
         if (g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_CODEC_NOT_FOUND)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT_NOKEY)
@@ -1360,8 +1361,6 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
             fprintf(stderr, "HTML5 video: Playback failed: Decode error [%s]\n",m_url.string().utf8().data());
             GST_ERROR("Decode error, let the Media element emit a stalled event.");
             m_loadingStalled = true;
-            m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::VIDEO, m_avContextGetter);
-            m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::AUDIO, m_avContextGetter);
             break;
         } else if (err->domain == GST_STREAM_ERROR) {
             error = MediaPlayer::DecodeError;
@@ -1370,9 +1369,6 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
             fprintf(stderr, "HTML5 video: Playback failed: Network error [%s]\n",m_url.string().utf8().data());
             error = MediaPlayer::NetworkError;
         }
-
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::VIDEO, m_avContextGetter);
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::AUDIO, m_avContextGetter);
 
         if (attemptNextLocation)
             issueError = !loadNextLocation();
@@ -3287,24 +3283,35 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
 
 OdhDrm MediaPlayerPrivateGStreamer::AvContextGetterImpl::getDrm()
 {
-    OdhDrm drmType = {OdhDrm::NONE};
     if (m_pipeline.get()) {
-        if (GstContext* drmCdmInstanceContext = gst_element_get_context(GST_ELEMENT(m_pipeline.get()), "drm-cdm-instance")) {
-            if (const GstStructure* drmCdmInstanceStructure = gst_context_get_structure(drmCdmInstanceContext)) {
-                if (const GValue* drmCdmInstanceVal = gst_structure_get_value(drmCdmInstanceStructure, "cdm-instance")) {
-                    if (const CDMInstance* drmCdmInstance = (const CDMInstance*)g_value_get_pointer(drmCdmInstanceVal)) {
-                        const std::string keySystem = drmCdmInstance->keySystem().utf8().data();
-                        if (keySystem.find("playready") != string::npos) {
-                            drmType = OdhDrm::PLAYREADY_DRM;
-                        } else if (keySystem.find("widevine") != string::npos) {
-                            drmType = OdhDrm::WIDEVINE_DRM;
-                        }
-                    }
-                }
-            }
+        GstContext* drmCdmInstanceContext = gst_element_get_context(GST_ELEMENT(m_pipeline.get()), "drm-cdm-instance");
+        if (!drmCdmInstanceContext) {
+            return {OdhDrm::NONE};
+        }
+
+        const GstStructure* drmCdmInstanceStructure = gst_context_get_structure(drmCdmInstanceContext);
+        if (!drmCdmInstanceStructure) {
+            return {OdhDrm::NONE};
+        }
+
+        const GValue* drmCdmInstanceVal = gst_structure_get_value(drmCdmInstanceStructure, "cdm-instance");
+        if (!drmCdmInstanceVal) {
+            return {OdhDrm::NONE};
+        }
+
+        const CDMInstance* drmCdmInstance = (const CDMInstance*)g_value_get_pointer(drmCdmInstanceVal);
+        if (!drmCdmInstance) {
+            return {OdhDrm::NONE};
+        }
+
+        const std::string keySystem = drmCdmInstance->keySystem().utf8().data();
+        if (keySystem.find("playready") != string::npos) {
+            return {OdhDrm::PLAYREADY_DRM};
+        } else if (keySystem.find("widevine") != string::npos) {
+            return {OdhDrm::WIDEVINE_DRM};
         }
     }
-    return drmType;
+    return {OdhDrm::NONE};
 }
 
 OdhOwner MediaPlayerPrivateGStreamer::AvContextGetterImpl::getOwner()
@@ -3312,19 +3319,9 @@ OdhOwner MediaPlayerPrivateGStreamer::AvContextGetterImpl::getOwner()
     return OdhOwner::WPE;
 }
 
-GstElement* MediaPlayerPrivateGStreamer::AvContextGetterImpl::getDecoder(const OdhMediaType /*media_type*/)
-{
-    return nullptr;
-}
-
 GstElement* MediaPlayerPrivateGStreamer::AvContextGetterImpl::getPipeline()
 {
     return m_pipeline.get();
-}
-
-std::string MediaPlayerPrivateGStreamer::AvContextGetterImpl::getCodec(const OdhMediaType /*media_type*/)
-{
-    return "";
 }
 
 
