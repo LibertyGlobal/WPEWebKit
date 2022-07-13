@@ -2683,8 +2683,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
         m_downloadFinished = false;
     }
 
-    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_END_OF_STREAM, "", OdhMediaType::VIDEO, m_avContextGetter);
-    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_END_OF_STREAM, "", OdhMediaType::AUDIO, m_avContextGetter);
+    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_END_OF_STREAM, "", OdhMediaType::NONE, m_avContextGetter);
 }
 
 void MediaPlayerPrivateGStreamer::durationChanged()
