@@ -1244,7 +1244,7 @@ void WebProcessProxy::isResponsive(WTF::Function<void(bool isWebProcessResponsiv
     if (callback)
         m_isResponsiveCallbacks.append(WTFMove(callback));
 
-#if defined(NDEBUG)
+#if defined(USE_DEBUG_LOGGER)
     WTFLogAlways("sending MainThreadPing\n");
 #endif
     responsivenessTimer().start();
@@ -1253,7 +1253,8 @@ void WebProcessProxy::isResponsive(WTF::Function<void(bool isWebProcessResponsiv
 
 void WebProcessProxy::didReceiveMainThreadPing()
 {
-#if defined(NDEBUG)
+#if defined(USE_DEBUG_LOGGER)
+    thisShouldFailToCompile()();
     WTFLogAlways("received DidReceiveMainThreadPing\n");
 #endif
     responsivenessTimer().stop();
