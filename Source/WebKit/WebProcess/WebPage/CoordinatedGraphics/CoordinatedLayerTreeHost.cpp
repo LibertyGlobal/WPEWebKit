@@ -114,7 +114,7 @@ void CoordinatedLayerTreeHost::resumeRendering()
     LayerTreeHost::resumeRendering();
 }
 
-void CoordinatedLayerTreeHost::forceRepaint()
+void CoordinatedLayerTreeHost::forceRepaint(bool afterCompositorReconfigure)
 {
     // This is necessary for running layout tests. Since in this case we are not waiting for a UIProcess to reply nicely.
     // Instead we are just triggering forceRepaint. But we still want to have the scripted animation callbacks being executed.

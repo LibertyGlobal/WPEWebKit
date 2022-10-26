@@ -65,7 +65,7 @@ private:
 
     void invalidate() override;
 
-    void forceRepaint() override;
+    void forceRepaint(bool afterCompositorReconfigure = false) override;
 
     void pauseRendering() override;
     void resumeRendering() override;

@@ -3148,6 +3148,11 @@ void WebPage::forceRepaintWithoutCallback()
     m_drawingArea->forceRepaint();
 }
 
+void WebPage::repaintAfterCompositorReconfigure()
+{
+    m_drawingArea->forceRepaint(true);
+}
+
 void WebPage::forceRepaint(CallbackID callbackID)
 {
     if (m_drawingArea->forceRepaintAsync(callbackID))

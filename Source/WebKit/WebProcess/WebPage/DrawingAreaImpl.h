@@ -47,7 +47,7 @@ private:
     void setNeedsDisplay() override;
     void setNeedsDisplayInRect(const WebCore::IntRect&) override;
     void scroll(const WebCore::IntRect& scrollRect, const WebCore::IntSize& scrollDelta) override;
-    void forceRepaint() override;
+    void forceRepaint(bool afterCompositorReconfigure = false) override;
 
     void updatePreferences(const WebPreferencesStore&) override;
 

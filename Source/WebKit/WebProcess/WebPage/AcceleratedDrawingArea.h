@@ -48,7 +48,7 @@ protected:
     void setLayerTreeStateIsFrozen(bool) override;
     bool layerTreeStateIsFrozen() const override { return m_layerTreeStateIsFrozen; }
     LayerTreeHost* layerTreeHost() const override { return m_layerTreeHost.get(); }
-    void forceRepaint() override;
+    void forceRepaint(bool afterCompositorReconfigure = false) override;
     bool forceRepaintAsync(CallbackID) override;
 
     void setPaintingEnabled(bool) override;

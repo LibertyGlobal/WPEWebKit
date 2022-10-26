@@ -126,7 +126,7 @@ void AcceleratedDrawingArea::setLayerTreeStateIsFrozen(bool isFrozen)
         exitAcceleratedCompositingModeSoon();
 }
 
-void AcceleratedDrawingArea::forceRepaint()
+void AcceleratedDrawingArea::forceRepaint(bool afterCompositorReconfigure)
 {
     setNeedsDisplay();
 
@@ -139,7 +139,7 @@ void AcceleratedDrawingArea::forceRepaint()
     // but clearly it doesn't make sense to call the function with that name.
     // Consider refactoring and renaming it.
     if (m_compositingAccordingToProxyMessages)
-        m_layerTreeHost->forceRepaint();
+        m_layerTreeHost->forceRepaint(afterCompositorReconfigure);
     else {
         // Call setShouldNotifyAfterNextScheduledLayerFlush(false) here to
         // prevent layerHostDidFlushLayers() from being called a second time.

@@ -136,8 +136,13 @@ View::View(struct wpe_view_backend* backend, const API::PageConfiguration& baseC
             page.handleTouchEvent(WebKit::NativeWebTouchEvent(event, page.deviceScaleFactor()));
 #endif
         },
+        // handle_wpe_compositor_refresh
+        [](void* data)
+        {
+            auto& page = reinterpret_cast<View*>(data)->page();
+            page.repaintAfterCompositorReconfigure();
+        },
         // padding
-        nullptr,
         nullptr,
         nullptr,
         nullptr

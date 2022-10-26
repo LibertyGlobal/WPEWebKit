@@ -71,7 +71,7 @@ public:
     virtual void setNonCompositedContentsNeedDisplay() { };
     virtual void setNonCompositedContentsNeedDisplayInRect(const WebCore::IntRect&) { };
     virtual void scrollNonCompositedContents(const WebCore::IntRect&) { };
-    virtual void forceRepaint() = 0;
+    virtual void forceRepaint(bool afterCompositorReconfigure = false) = 0;
     virtual bool forceRepaintAsync(CallbackID) { return false; }
     virtual void sizeDidChange(const WebCore::IntSize& newSize) = 0;
     virtual void pageBackgroundTransparencyChanged() = 0;
