@@ -569,8 +569,7 @@ void MediaPlayerPrivateGStreamer::play()
             totalBytes();
         setDownloadBuffering();
         GST_INFO("Play");
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", OdhMediaType::VIDEO, m_avContextGetter);
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", OdhMediaType::AUDIO, m_avContextGetter);
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     } else
         loadingFailed(MediaPlayer::Empty);
 }
@@ -586,8 +585,7 @@ void MediaPlayerPrivateGStreamer::pause()
     if (changePipelineState(GST_STATE_PAUSED)) {
         m_paused = true;
         GST_INFO("Pause");
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PAUSE, "", OdhMediaType::VIDEO, m_avContextGetter);
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PAUSE, "", OdhMediaType::AUDIO, m_avContextGetter);
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PAUSE, "", {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     } else
         loadingFailed(MediaPlayer::Empty);
 }
@@ -668,8 +666,7 @@ void MediaPlayerPrivateGStreamer::seek(const MediaTime& mediaTime)
     char json_str[100];
     int len = snprintf(json_str, 100, "{\"seek_from\":%f, \"seek_to\":%f}", playbackPosition().toDouble(), time.toDouble());
     if (len > 0 && len < 100) {
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_START, json_str, OdhMediaType::VIDEO, m_avContextGetter);
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_START, json_str, OdhMediaType::AUDIO, m_avContextGetter);
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_START, json_str, {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     }
 
     if (m_seeking) {
@@ -1349,8 +1346,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
 
         m_errorMessage = err->message;
         error = MediaPlayer::Empty;
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::VIDEO, m_avContextGetter);
-        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), OdhMediaType::AUDIO, m_avContextGetter);
+        m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
         if (g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_CODEC_NOT_FOUND)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT_NOKEY)
@@ -2240,8 +2236,7 @@ void MediaPlayerPrivateGStreamer::asyncStateChangeDone()
             char json_str[100];
             int len = snprintf(json_str, 100, "{\"seek_to\":%f}", m_seekTime.toDouble());
             if (len > 0 && len < 100) {
-                m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_DONE, json_str, OdhMediaType::VIDEO, m_avContextGetter);
-                m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_DONE, json_str, OdhMediaType::AUDIO, m_avContextGetter);
+                m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_DONE, json_str, {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
             }
 
             m_seeking = false;
@@ -2474,8 +2469,7 @@ void MediaPlayerPrivateGStreamer::handleDecryptionError(const GstStructure* stru
     loadingFailed(MediaPlayer::FormatError);
     m_player->decryptErrorEncountered(); // override the error code
 
-    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DECRYPT_ERROR, m_errorMessage.utf8().data(), OdhMediaType::VIDEO, m_avContextGetter);
-    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DECRYPT_ERROR, m_errorMessage.utf8().data(), OdhMediaType::AUDIO, m_avContextGetter);
+    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DECRYPT_ERROR, m_errorMessage.utf8().data(), {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
 }
 
 void MediaPlayerPrivateGStreamer::cdmInstanceAttached(CDMInstance& instance)
