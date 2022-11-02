@@ -1769,25 +1769,11 @@ void MediaPlayerPrivateGStreamer::tryReduceQueueSize(GstObject* queue)
 {
     guint max_size_bytes = 0;
     g_object_get(queue, "max-size-bytes", &max_size_bytes, NULL);
-    bool update_queue_size = true;
-
-#if GST_CHECK_VERSION(1, 16, 0) // bitrate query is available from version 1.16
-    GstQuery* query = gst_query_new_bitrate();
-    if (gst_element_query(m_pipeline.get(), query.get())) {
-        guint bitrate = 0;
-        gst_query_parse_bitrate(query, &bitrate);
-        GST_DEBUG("Stream bitrate value: %u\n", bitrate);
-        if (bitrate) {
-            update_queue_size = false;
-        }
-    }
-    gst_query_unref(query);
-#endif
 
     // ARRISEOS-43118 : for some specific aac shoutcast streams mpegaudioparse plugin is not attached to pipeline and in consequence bitstream
     // value cannot be correctly calculated. UriDecodeBin is setting queue size based on that bitstream value.
     // Let's reduce for those specific audio streams queue size to reasonable size
-    if (update_queue_size && max_size_bytes >= 2097152) {
+    if (max_size_bytes >= 2097152) {
          GST_DEBUG("Hardcode queue max size\n");
          g_object_set(queue, "max-size-bytes", 16000, NULL);
     }
