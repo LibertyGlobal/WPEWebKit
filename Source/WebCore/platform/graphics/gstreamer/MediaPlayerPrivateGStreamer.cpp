@@ -377,6 +377,8 @@ void MediaPlayerPrivateGStreamer::loadFull(const String& urlString, const gchar*
     m_volumeAndMuteInitialized = false;
     m_durationAtEOS = MediaTime::invalidTime();
 
+    m_isShoutcastStreaming = false;
+
     if (!m_delayingLoad)
         commitLoad();
 }
