@@ -74,7 +74,7 @@ TrackPrivateBaseGStreamer::TrackPrivateBaseGStreamer(TrackPrivateBase* owner, gi
 
 TrackPrivateBaseGStreamer::~TrackPrivateBaseGStreamer()
 {
-    disconnect();
+    TrackPrivateBaseGStreamer::disconnect();
     m_notifier->invalidate();
 }
 

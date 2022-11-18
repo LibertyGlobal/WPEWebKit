@@ -51,7 +51,7 @@ bool RemoteConnectionToTarget::setup(bool isAutomaticInspection, bool automatica
 
     unsigned targetIdentifier = this->targetIdentifier().value_or(0);
 
-    if (!m_target || !m_target->remoteControlAllowed()) {
+    if (!m_target->remoteControlAllowed()) {
         RemoteInspector::singleton().setupFailed(targetIdentifier);
         m_target = nullptr;
     } else if (is<RemoteInspectionTarget>(m_target)) {

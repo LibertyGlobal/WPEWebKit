@@ -47,7 +47,7 @@ TrackListBase::TrackListBase(HTMLMediaElement* element, ScriptExecutionContext* 
 
 TrackListBase::~TrackListBase()
 {
-    clearElement();
+    TrackListBase::clearElement();
 }
 
 void TrackListBase::clearElement()

@@ -43,7 +43,7 @@ TextTrackList::TextTrackList(HTMLMediaElement* element, ScriptExecutionContext* 
 
 TextTrackList::~TextTrackList()
 {
-    clearElement();
+    TextTrackList::clearElement();
 }
 
 void TextTrackList::clearElement()
