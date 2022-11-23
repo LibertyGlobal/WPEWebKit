@@ -393,10 +393,13 @@ bool GIFImageDecoder::initFrameBuffer(unsigned frameIndex)
         }
 
         ASSERT(prevBuffer->isComplete());
+        if (!prevBuffer->backingStore()) {
+            return setFailed();
+        }
 
         if ((prevMethod == ScalableImageDecoderFrame::DisposalMethod::Unspecified) || (prevMethod == ScalableImageDecoderFrame::DisposalMethod::DoNotDispose)) {
             // Preserve the last frame as the starting state for this frame.
-            if (!prevBuffer->backingStore() || !buffer->initialize(*prevBuffer->backingStore()))
+            if (!buffer->initialize(*prevBuffer->backingStore()))
                 return setFailed();
         } else {
             // We want to clear the previous frame to transparent, without
@@ -410,7 +413,7 @@ bool GIFImageDecoder::initFrameBuffer(unsigned frameIndex)
                     return setFailed();
             } else {
                 // Copy the whole previous buffer, then clear just its frame.
-                if (!prevBuffer->backingStore() || !buffer->initialize(*prevBuffer->backingStore()))
+                if (!buffer->initialize(*prevBuffer->backingStore()))
                     return setFailed();
                 buffer->backingStore()->clearRect(prevRect);
                 buffer->setHasAlpha(true);

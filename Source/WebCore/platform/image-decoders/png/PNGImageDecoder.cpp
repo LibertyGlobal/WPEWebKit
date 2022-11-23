@@ -770,6 +770,10 @@ void PNGImageDecoder::initFrameBuffer(size_t frameIndex)
         if (!prevBuffer->backingStore() || !buffer.initialize(*prevBuffer->backingStore()))
             longjmp(JMPBUF(png), 1);
     } else {
+        if (!prevBuffer->backingStore()) {
+            longjmp(JMPBUF(png), 1);
+            return;
+        }
         // We want to clear the previous frame to transparent, without
         // affecting pixels in the image outside of the frame.
         IntRect prevRect = prevBuffer->backingStore()->frameRect();
