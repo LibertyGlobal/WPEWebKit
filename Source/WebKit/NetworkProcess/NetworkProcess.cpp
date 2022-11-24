@@ -95,6 +95,14 @@
 #include "NetworkSessionCocoa.h"
 #endif
 
+namespace {
+#if USE(RDK_LOGGER)
+void glibLogHandler(const gchar*, GLogLevelFlags, const gchar *message, gpointer) {
+    RDK_LOG(RDK_LOG_DEBUG, RDK_LOG_CHANNEL(GLib-GIO), message);
+}
+#endif // USE(RDK_LOGGER)
+} // namespace
+
 namespace WebKit {
 using namespace WebCore;
 
@@ -946,6 +954,9 @@ void NetworkProcess::initializeProcess(const ChildProcessInitializationParameter
 {
 #if USE(RDK_LOGGER)
     rdk_logger_init("/etc/debug.ini");
+    if (rdk_dbg_enabled(RDK_LOG_CHANNEL(GLib-GIO), RDK_LOG_DEBUG)) {
+        g_log_set_handler("GLib-GIO", G_LOG_LEVEL_DEBUG, glibLogHandler, nullptr);
+    }
 #endif
 }
 
