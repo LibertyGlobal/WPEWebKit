@@ -19,13 +19,14 @@ private:
     GstPadProbeReturn onPadProbeBuffer(GstPad* pad, GstBuffer* buffer);
 
     static void onElementAddedCb(GstBin *pipeline, GstElement *element, gpointer data);
+    static void onElementRemovedCb(GstBin *pipeline, GstElement *element, gpointer data);
     static void onPadAddedCb(GstElement* element, GstPad* newPad, gpointer data);
     static GstPadProbeReturn onPadProbeCb(GstPad* pad, GstPadProbeInfo* info, gpointer data);
 
-    const uint64_t                SKIP_TRESHOLD{200*GST_MSECOND};
-    uint64_t                      m_seekTimestamp{0};
-    bool                          m_skipFirst{false};
-    std::map<GstElement*, gulong> m_handlerIds{};
+    const uint64_t                          SKIP_TRESHOLD{200*GST_MSECOND};
+    uint64_t                                m_seekTimestamp{0};
+    bool                                    m_skipFirst{false};
+    std::multimap<GstElement*, gulong>      m_handlerIds{};
 };
 
 }

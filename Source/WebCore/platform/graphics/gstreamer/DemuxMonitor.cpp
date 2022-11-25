@@ -23,6 +23,10 @@ void DemuxMonitor::init(GstElement *pipeline)
     auto handlerId = g_signal_connect(GST_BIN(pipeline), "element-added", G_CALLBACK(onElementAddedCb), this);
     if (handlerId)
         m_handlerIds.insert({pipeline, handlerId});
+
+    handlerId = g_signal_connect(GST_BIN(pipeline), "element-removed", G_CALLBACK(onElementRemovedCb), this);
+    if (handlerId)
+        m_handlerIds.insert({pipeline, handlerId});
 }
 
 void DemuxMonitor::onElementAddedCb(GstBin*, GstElement *element, gpointer data)
@@ -36,12 +40,33 @@ void DemuxMonitor::onElementAddedCb(GstBin*, GstElement *element, gpointer data)
         auto handlerId = g_signal_connect(element, "pad-added", G_CALLBACK(onPadAddedCb), data);
         if (handlerId)
             that->m_handlerIds.insert({element, handlerId});
+        /* "pad-removed" doesn't need to be registered as its callback will be removed when gst element is removed */
     }
     else if (g_signal_lookup("element-added", G_OBJECT_TYPE(element)))
     {
         auto handlerId = g_signal_connect(GST_BIN(element), "element-added", G_CALLBACK(onElementAddedCb), data);
         if (handlerId)
             that->m_handlerIds.insert({element, handlerId});
+
+        handlerId = g_signal_connect(GST_BIN(element), "element-removed", G_CALLBACK(onElementRemovedCb), data);
+        if (handlerId)
+            that->m_handlerIds.insert({element, handlerId});
+    }
+}
+
+void DemuxMonitor::onElementRemovedCb(GstBin*, GstElement *element, gpointer data)
+{
+    if (!element)
+        return;
+
+    /* Disconnect and remove all callbacks for given element, otherwise there will be use after free vulnerability
+     * when this would be done in DemuxMonitor destructor */
+    DemuxMonitor *that = static_cast<DemuxMonitor*>(data);
+    auto &elements = that->m_handlerIds;
+    auto elementRange = elements.equal_range(element);
+    for (auto el = elementRange.first; el != elementRange.second;) {
+        g_signal_handler_disconnect(el->first, el->second);
+        el = elements.erase(el);
     }
 }
 
