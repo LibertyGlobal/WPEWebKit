@@ -243,7 +243,14 @@ AppendPipeline::AppendPipeline(Ref<MediaSourceClientGStreamerMSE> mediaSourceCli
 
     const String& type = m_sourceBufferPrivate->type().containerType();
     if (type.endsWith("mp4"))
+    {
         m_demux = gst_element_factory_make("qtdemux", nullptr);
+#if GST_CHECK_VERSION(1, 10, 4)
+        // ONEM-27832: enable track id change (needed for canal plus app)
+        // qtdemux is supporting by default runtime track id change staring from version 1.15
+        g_object_set(m_demux.get(), "support-track-id-change", true, nullptr);
+#endif
+    }
     else if (type.endsWith("webm"))
         m_demux = gst_element_factory_make("matroskademux", nullptr);
     else
