@@ -161,7 +161,7 @@ void PageConsoleClient::addMessage(MessageSource source, MessageLevel level, con
 void PageConsoleClient::messageWithTypeAndLevel(MessageType type, MessageLevel level, JSC::ExecState* exec, Ref<Inspector::ScriptArguments>&& arguments)
 {
     String messageText;
-    bool gotMessage = arguments->getFirstArgumentAsString(messageText);
+    bool gotMessage = arguments->getFirstArgumentAsJSONString(messageText);
 
     auto message = std::make_unique<Inspector::ConsoleMessage>(MessageSource::ConsoleAPI, type, level, messageText, arguments.copyRef(), exec);
 
