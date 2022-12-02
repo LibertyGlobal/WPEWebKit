@@ -433,7 +433,8 @@ MediaTime SourceBuffer::highestPresentationTimestamp() const
 
 void SourceBuffer::readyStateChanged()
 {
-    updateBufferedFromTrackBuffers();
+    if (!isRemoved())
+        updateBufferedFromTrackBuffers();
 }
 
 void SourceBuffer::removedFromMediaSource()
@@ -1582,7 +1583,7 @@ void SourceBuffer::appendError(bool decodeErrorParam)
     scheduleEvent(eventNames().updateendEvent);
 
     // 5. If decode error is true, then run the end of stream algorithm with the error parameter set to "decode".
-    if (decodeErrorParam)
+    if (decodeErrorParam && !isRemoved())
         m_source->streamEndedWithError(MediaSource::EndOfStreamError::Decode);
 }
 
