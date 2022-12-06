@@ -54,6 +54,7 @@ public:
     JSC::ExecState* globalState() const;
 
     bool getFirstArgumentAsString(String& result);
+    bool getFirstArgumentAsJSONString(String& result);
     bool isEqual(const ScriptArguments&) const;
 
 private:

@@ -34,6 +34,7 @@
 
 #include "CatchScope.h"
 #include "JSCInlines.h"
+#include "JSONObject.h"
 #include "ProxyObject.h"
 
 namespace Inspector {
@@ -84,6 +85,29 @@ bool ScriptArguments::getFirstArgumentAsString(String& result)
 
     auto scope = DECLARE_CATCH_SCOPE(state->vm());
     result = value.toWTFString(state);
+    scope.clearException();
+    return true;
+}
+
+bool ScriptArguments::getFirstArgumentAsJSONString(String& result)
+{
+    if (!argumentCount())
+        return false;
+
+    auto* state = globalState();
+    if (!state) {
+        ASSERT_NOT_REACHED();
+        return false;
+    }
+
+    auto value = argumentAt(0);
+    if (JSC::jsDynamicCast<JSC::ProxyObject*>(state->vm(), value)) {
+        result = "[object Proxy]"_s;
+        return true;
+    }
+
+    auto scope = DECLARE_CATCH_SCOPE(state->vm());
+    result = JSONStringify(state, value, 0);
     scope.clearException();
     return true;
 }
