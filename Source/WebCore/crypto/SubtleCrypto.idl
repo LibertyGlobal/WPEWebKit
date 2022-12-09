@@ -29,6 +29,7 @@ typedef (object or DOMString) AlgorithmIdentifier;
 
 [
     Conditional=SUBTLE_CRYPTO,
+    SecureContext,
     Exposed=(Window,Worker),
     GenerateIsReachable=ImplScriptExecutionContext,
 ] interface SubtleCrypto {
