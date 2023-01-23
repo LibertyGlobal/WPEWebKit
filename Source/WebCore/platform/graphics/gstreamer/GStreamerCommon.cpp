@@ -317,7 +317,11 @@ bool areEncryptedCaps(const GstCaps* caps)
         GST_WARNING("caps are empty");
         return false;
     }
-    return gst_structure_has_name(structure, "application/x-cenc") || gst_structure_has_name(structure, "application/x-webm-enc");
+    return gst_structure_has_name(structure, "application/x-cenc")
+#if ENABLE(CBCS)
+        || gst_structure_has_name(structure, "application/x-cbcs")
+#endif
+        || gst_structure_has_name(structure, "application/x-webm-enc");
 #else
     UNUSED_PARAM(caps);
     return false;

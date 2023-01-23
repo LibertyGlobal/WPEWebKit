@@ -174,6 +174,10 @@ if (ENABLE_VP9_HDR)
   add_definitions(-DENABLE_VP9_HDR=1)
 endif()
 
+if (ENABLE_CBCS)
+    add_definitions(-DENABLE_CBCS=1)
+endif()
+
 add_definitions(-DBUILDING_WPE__=1)
 add_definitions(-DGETTEXT_PACKAGE="WPE")
 add_definitions(-DJSC_GLIB_API_ENABLED)
