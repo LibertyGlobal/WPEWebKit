@@ -466,6 +466,9 @@ ASCIILiteral IntlNumberFormat::partTypeString(UNumberFormatFields field, double 
     case UNUM_PERCENT_FIELD:
         return "percentSign"_s;
     case UNUM_SIGN_FIELD:
+#if U_ICU_VERSION_MAJOR_NUM > 70
+    case UNUM_APPROXIMATELY_SIGN_FIELD:
+#endif
         return value < 0 ? "minusSign"_s : "plusSign"_s;
     // These should not show up because there is no way to specify them in NumberFormat options.
     // If they do, they don't fit well into any of known part types, so consider it an "unknown".
