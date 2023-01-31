@@ -241,7 +241,14 @@ SoupNetworkSession::~SoupNetworkSession()
 void SoupNetworkSession::setupLogger()
 {
 #if !LOG_DISABLED
-    if (LogNetwork.state != WTFLogChannelOn || soup_session_get_feature(m_soupSession.get(), SOUP_TYPE_LOGGER))
+    if (
+#if USE(RDK_LOGGER)
+        !rdk_dbg_enabled(RDK_LOG_CHANNEL(NETWORK), RDK_LOG_DEBUG)
+#else
+        LogNetwork.state != WTFLogChannelOn
+#endif // USE(RDK_LOGGER)
+         || soup_session_get_feature(m_soupSession.get(), SOUP_TYPE_LOGGER)
+    )
         return;
 
     GRefPtr<SoupLogger> logger = adoptGRef(soup_logger_new(SOUP_LOGGER_LOG_BODY, -1));
