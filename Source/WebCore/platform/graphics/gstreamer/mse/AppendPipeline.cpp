@@ -1318,9 +1318,8 @@ void AppendPipeline::disconnectDemuxerSrcPadFromAppsinkFromAnyThread(GstPad* dem
         }
     }
     if (remainingPad) {
-
         auto probeId = GPOINTER_TO_ULONG(g_object_get_data(G_OBJECT(remainingPad), "blackHoleProbeId"));
-        if (remainingPad && probeId) {
+        if (probeId) {
             gst_pad_remove_probe(remainingPad, probeId);
 
             // FIXME: Unlike in upstream (2020-09-10), demuxerSrcPad and oldPeerPad always have null caps at this point, so it doesn't
