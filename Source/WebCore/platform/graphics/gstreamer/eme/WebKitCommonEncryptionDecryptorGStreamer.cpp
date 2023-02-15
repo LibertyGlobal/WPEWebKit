@@ -246,6 +246,7 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
     const GValue* streamEncryptionEventsList = gst_structure_get_value(protectionMeta->info, "stream-encryption-events");
     if (streamEncryptionEventsList && GST_VALUE_HOLDS_LIST(streamEncryptionEventsList)) {
         unsigned streamEncryptionEventsListSize = gst_value_list_get_size(streamEncryptionEventsList);
+        GST_DEBUG_OBJECT(self, "jmanko streamEncryptionEventsListSize %u", streamEncryptionEventsListSize);
         for (unsigned i = 0; i < streamEncryptionEventsListSize; ++i)
             priv->m_protectionEvents.append(GRefPtr<GstEvent>(static_cast<GstEvent*>(g_value_get_boxed(gst_value_list_get_value(streamEncryptionEventsList, i)))));
         gst_structure_remove_field(protectionMeta->info, "stream-encryption-events");
@@ -272,8 +273,10 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
     }
     auto keyId = WebCore::SharedBuffer::create(mappedKeyID.data(), mappedKeyID.size());
 
-    if (!priv->m_protectionEvents.isEmpty())
+    if (!priv->m_protectionEvents.isEmpty()) {
+        GST_DEBUG_OBJECT(self, "jmanko calling webkitMediaCommonEncryptionDecryptProcessProtectionEvents");
         webkitMediaCommonEncryptionDecryptProcessProtectionEvents(self, keyId.copyRef());
+    }
 
     GST_MEMDUMP_OBJECT(self, "requested key ID", reinterpret_cast<const guint8*>(keyId->data()), keyId->size());
     if (priv->m_currentKeyID.has_value())
@@ -497,8 +500,10 @@ static void webkitMediaCommonEncryptionDecryptProcessProtectionEvents(WebKitMedi
             GST_MEMDUMP_OBJECT(self, "init data", mappedBuffer.data(), mappedBuffer.size());
             if (isCDMInstanceAvailable)
                 priv->m_initDatas.set(priv->m_cdmInstance->keySystem(), initData);
-            else
+            else {
+                GST_DEBUG_OBJECT(self, "jmanko setting m_initDatas, eventKeySystem:'%s'", eventKeySystem);
                 priv->m_initDatas.set(eventKeySystem, initData);
+            }
             GST_MEMDUMP_OBJECT(self, "key ID", reinterpret_cast<const uint8_t*>(kid->data()), kid->size());
             handleKeyID(self, WTFMove(kid));
             if (!priv->m_currentKeyID.has_value()) {

@@ -112,6 +112,7 @@ public:
 
     static const char* uuidToKeySystem(const String& uuid)
     {
+        fprintf(stderr, "jmanko uuidToKeySystem '%s'\n", uuid.utf8().data());
         if (uuid == s_ClearKeyUUID)
             return s_ClearKeyKeySystem;
 
