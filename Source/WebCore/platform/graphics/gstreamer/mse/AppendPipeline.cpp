@@ -1328,6 +1328,10 @@ void AppendPipeline::disconnectDemuxerSrcPadFromAppsinkFromAnyThread(GstPad* dem
             GST_DEBUG("The remaining compatible pad has a blackHoleProbe, reconnecting as main pad. oldPad: %" GST_PTR_FORMAT ", newPad: %" GST_PTR_FORMAT ", peerPad: %" GST_PTR_FORMAT, demuxerSrcPad, remainingPad, oldPeerPad.get());
 
             gst_pad_link(remainingPad, oldPeerPad.get());
+
+            // after pad relinkage attach the same probe which updates gstsegment
+            gst_pad_add_probe(remainingPad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, demuxerForceSegmentStartToEqualZero, nullptr, nullptr);
+
             if (m_parser)
                 gst_element_set_state(m_parser.get(), GST_STATE_NULL);
             gst_element_set_state(m_appsink.get(), GST_STATE_NULL);
