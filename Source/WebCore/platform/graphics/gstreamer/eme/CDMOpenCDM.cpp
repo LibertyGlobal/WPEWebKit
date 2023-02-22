@@ -163,6 +163,7 @@ private:
     String m_keySystem;
     OpenCDMSystem& m_ocdmSystem;
     CDMInstanceOpenCDM* m_parent;
+    CDMInstanceClient*  m_CDMInstanceClient;
     // Accessed only on the main thread allowing to track if the Session is still valid and could be used.
     // Needed due to the fact the Session pointer is passed to the OCDM as the userData for notifications which are no
     // warranted to be called on the main thread the Session lives on.
@@ -330,8 +331,12 @@ CDMInstanceOpenCDM::Session::Session(CDMInstanceOpenCDM* parent, OpenCDMSystem& 
         GST_ERROR("Could not create session");
         return;
     }
+
+    m_CDMInstanceClient = m_parent->client();
+
     m_session.reset(session);
     m_id = String::fromUTF8(opencdm_session_id(m_session.get()));
+    GST_DEBUG("set m_CDMInstanceClient to %p for sessionid: %s\n", m_CDMInstanceClient, m_id.utf8().data());
     Session::m_validSessions.add(this);
 }
 
@@ -360,8 +365,9 @@ void CDMInstanceOpenCDM::Session::challengeGeneratedCallback(RefPtr<SharedBuffer
             sessionChangedCallback(this, true, message.copyRef(), m_keyStatuses);
         m_sessionChangedCallbacks.clear();
     } else {
-        if (m_parent->client() && requestType.has_value())
-            m_parent->client()->issueMessage(static_cast<CDMInstanceClient::MessageType>(requestType.value()), message.releaseNonNull());
+        GST_DEBUG("calling issueMessage for m_CDMInstanceClient: %p, sessionid: %s\n", m_CDMInstanceClient, m_id.utf8().data());
+        if (m_CDMInstanceClient && requestType.has_value())
+            m_CDMInstanceClient->issueMessage(static_cast<CDMInstanceClient::MessageType>(requestType.value()), message.releaseNonNull());
     }
 }
 
@@ -382,8 +388,8 @@ void CDMInstanceOpenCDM::Session::keyUpdatedCallback(RefPtr<SharedBuffer>&& buff
 void CDMInstanceOpenCDM::Session::keysUpdateDoneCallback(RefPtr<SharedBuffer>&&)
 {
     bool appliesToApiCall = !m_sessionChangedCallbacks.isEmpty();
-    if (!appliesToApiCall && m_parent && m_parent->client()) {
-        m_parent->client()->updateKeyStatuses(copyAndMaybeReplaceValue(m_keyStatuses));
+    if (!appliesToApiCall && m_parent && m_CDMInstanceClient) {
+        m_CDMInstanceClient->updateKeyStatuses(copyAndMaybeReplaceValue(m_keyStatuses));
         return;
     }
 
