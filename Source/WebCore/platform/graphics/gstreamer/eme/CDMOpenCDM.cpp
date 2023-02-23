@@ -61,7 +61,14 @@ public:
     virtual ~CDMPrivateOpenCDM() = default;
 
 public:
-    bool supportsInitDataType(const AtomicString& initDataType) const final { return equalLettersIgnoringASCIICase(initDataType, "cenc") || equalLettersIgnoringASCIICase(initDataType, "webm") || equalLettersIgnoringASCIICase(initDataType, "keyids"); }
+    bool supportsInitDataType(const AtomicString& initDataType) const final {
+        return equalLettersIgnoringASCIICase(initDataType, "cenc")
+#if ENABLE(CBCS)
+            || equalLettersIgnoringASCIICase(initDataType, "cbcs")
+#endif
+            || equalLettersIgnoringASCIICase(initDataType, "webm")
+            || equalLettersIgnoringASCIICase(initDataType, "keyids");
+    }
     bool supportsConfiguration(const MediaKeySystemConfiguration& config) const final;
     bool supportsConfigurationWithRestrictions(const MediaKeySystemConfiguration& config, const MediaKeysRestrictions&) const final { return supportsConfiguration(config); }
     bool supportsSessionTypeWithConfiguration(MediaKeySessionType&, const MediaKeySystemConfiguration& config) const final { return supportsConfiguration(config); }

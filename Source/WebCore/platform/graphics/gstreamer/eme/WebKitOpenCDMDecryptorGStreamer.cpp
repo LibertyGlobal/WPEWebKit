@@ -49,6 +49,9 @@ static bool webKitMediaOpenCDMDecryptorHandleKeyId(WebKitMediaCommonEncryptionDe
 static bool webKitMediaOpenCDMDecryptorAttemptToDecryptWithLocalInstance(WebKitMediaCommonEncryptionDecrypt* self, const WebCore::SharedBuffer&);
 
 static const char* cencEncryptionMediaTypes[] = { "video/mp4", "audio/mp4", "video/x-h264", "audio/mpeg", "audio/x-eac3", "audio/x-ac3", "video/x-h265", nullptr };
+#if ENABLE(CBCS)
+static const char** cbcsEncryptionMediaTypes = cencEncryptionMediaTypes;
+#endif
 static const char* webmEncryptionMediaTypes[] = { "video/webm", "audio/webm", "video/x-vp9", nullptr };
 
 static GstStaticPadTemplate srcTemplate = GST_STATIC_PAD_TEMPLATE("src",
@@ -98,6 +101,12 @@ static GRefPtr<GstCaps> createSinkPadTemplateCaps()
 
     for (int i = 0; cencEncryptionMediaTypes[i]; ++i)
         gst_caps_append_structure(caps.get(), gst_structure_new("application/x-cenc", "original-media-type", G_TYPE_STRING, cencEncryptionMediaTypes[i], nullptr));
+
+#if ENABLE(CBCS)
+    for (int i = 0; cbcsEncryptionMediaTypes[i]; ++i) {
+        gst_caps_append_structure(caps.get(), gst_structure_new("application/x-cbcs", "original-media-type", G_TYPE_STRING, cbcsEncryptionMediaTypes[i], nullptr));
+    }
+#endif
 
     if (!opencdm_is_type_supported(WebCore::GStreamerEMEUtilities::s_WidevineKeySystem, emptyString.c_str())) {
         addKeySystemToSinkPadCaps(caps, WEBCORE_GSTREAMER_EME_UTILITIES_WIDEVINE_UUID);

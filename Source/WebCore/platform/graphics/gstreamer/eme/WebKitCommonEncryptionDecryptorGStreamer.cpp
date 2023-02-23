@@ -316,6 +316,12 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
 
     GST_TRACE_OBJECT(self, "key available, preparing for decryption");
 
+#if ENABLE(CBCS)
+    bool isCbcs = !g_strcmp0(gst_structure_get_string(protectionMeta->info, "cipher-mode"), "cbcs");
+#else
+    bool isCbcs = false;
+#endif
+
     unsigned ivSize;
     if (!gst_structure_get_uint(protectionMeta->info, "iv_size", &ivSize)) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to get iv_size"), (NULL));
@@ -331,14 +337,16 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
     }
 
     if (!ivSize || !encrypted) {
+        GST_TRACE_OBJECT(self, "iv size %u, encrypted %s, bailing out OK as unencrypted", ivSize, boolForPrinting(encrypted));
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
         return GST_FLOW_OK;
     }
 
     GST_TRACE_OBJECT(base, "protection meta: %" GST_PTR_FORMAT, protectionMeta->info);
 
-    unsigned subSampleCount;
-    if (!gst_structure_get_uint(protectionMeta->info, "subsample_count", &subSampleCount)) {
+    unsigned subSampleCount = 0;
+    // cbcs could not include the subsample_count.
+    if (!isCbcs && !gst_structure_get_uint(protectionMeta->info, "subsample_count", &subSampleCount)) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to get subsample_count"), (NULL));
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
         return GST_FLOW_NOT_SUPPORTED;
