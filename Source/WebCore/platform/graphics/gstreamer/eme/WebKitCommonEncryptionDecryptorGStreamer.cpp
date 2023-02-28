@@ -345,8 +345,9 @@ static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseT
     GST_TRACE_OBJECT(base, "protection meta: %" GST_PTR_FORMAT, protectionMeta->info);
 
     unsigned subSampleCount = 0;
+    gboolean isok = gst_structure_get_uint(protectionMeta->info, "subsample_count", &subSampleCount);
     // cbcs could not include the subsample_count.
-    if (!isCbcs && !gst_structure_get_uint(protectionMeta->info, "subsample_count", &subSampleCount)) {
+    if (!isCbcs && !isok) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to get subsample_count"), (NULL));
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
         return GST_FLOW_NOT_SUPPORTED;
