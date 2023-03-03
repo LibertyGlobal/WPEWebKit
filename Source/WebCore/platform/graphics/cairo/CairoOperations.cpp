@@ -885,17 +885,15 @@ void drawSurface(PlatformContextCairo& platformContext, cairo_surface_t* surface
     RefPtr<cairo_surface_t> patternSurface = surface;
     float leftPadding = 0;
     float topPadding = 0;
-    if (srcRect.x() || srcRect.y() || srcRect.size() != cairoSurfaceSize(surface)) {
-        // Cairo subsurfaces don't support floating point boundaries well, so we expand the rectangle.
-        IntRect expandedSrcRect(enclosingIntRect(srcRect));
-
+    IntRect srcRectIntSize = IntRect(srcRect);
+    if (srcRect.x() || srcRect.y() || srcRectIntSize.size() != cairoSurfaceSize(surface)) {
         // We use a subsurface here so that we don't end up sampling outside the originalSrcRect rectangle.
         // See https://bugs.webkit.org/show_bug.cgi?id=58309
-        patternSurface = adoptRef(cairo_surface_create_for_rectangle(surface, expandedSrcRect.x(),
-            expandedSrcRect.y(), expandedSrcRect.width(), expandedSrcRect.height()));
+        patternSurface = adoptRef(cairo_surface_create_for_rectangle(surface, srcRectIntSize.x(),
+            srcRectIntSize.y(), srcRectIntSize.width(), srcRectIntSize.height()));
 
-        leftPadding = static_cast<float>(expandedSrcRect.x()) - floorf(srcRect.x());
-        topPadding = static_cast<float>(expandedSrcRect.y()) - floorf(srcRect.y());
+        leftPadding = static_cast<float>(srcRectIntSize.x()) - floorf(srcRect.x());
+        topPadding = static_cast<float>(srcRectIntSize.y()) - floorf(srcRect.y());
     }
 
     RefPtr<cairo_pattern_t> pattern = adoptRef(cairo_pattern_create_for_surface(patternSurface.get()));
