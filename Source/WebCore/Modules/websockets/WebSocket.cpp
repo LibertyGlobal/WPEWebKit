@@ -61,12 +61,31 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 #include <wtf/text/WTFString.h>
+#include <sstream>
 
 #if USE(WEB_THREAD)
 #include "WebCoreThreadRun.h"
 #endif
 
 namespace WebCore {
+
+bool isUrlWhitelisted(const URL &url) {
+    static Vector<URL> whitelistedUrls;
+    if (whitelistedUrls.isEmpty() && getenv("WPE_MIXEDCONTENT_WHITELIST")) {
+        std::stringstream whitelistedEnv(getenv("WPE_MIXEDCONTENT_WHITELIST"));
+        std::string item;
+        while (std::getline(whitelistedEnv, item, ',')) {
+            URL wl_url(URL(), item.c_str());
+            whitelistedUrls.append(wl_url);
+        }
+    }
+
+    for (const auto &wlUrl : whitelistedUrls) {
+        if (protocolHostAndPortAreEqual(wlUrl, url))
+            return true;
+    }
+    return false;
+}
 
 const size_t maxReasonSizeInBytes = 123;
 
@@ -282,30 +301,32 @@ ExceptionOr<void> WebSocket::connect(const String& url, const Vector<String>& pr
     if (is<Document>(context)) {
         Document& document = downcast<Document>(context);
         RefPtr<Frame> frame = document.frame();
-        if (!frame || !frame->loader().mixedContentChecker().canRunInsecureContent(document.securityOrigin(), m_url)) {
-            // Balanced by the call to ActiveDOMObject::unsetPendingActivity() in WebSocket::stop().
-            ActiveDOMObject::setPendingActivity(this);
+        if (!isUrlWhitelisted(m_url)) {
+            if (!frame || !frame->loader().mixedContentChecker().canRunInsecureContent(document.securityOrigin(), m_url)) {
+                // Balanced by the call to ActiveDOMObject::unsetPendingActivity() in WebSocket::stop().
+                ActiveDOMObject::setPendingActivity(this);
 
-            // We must block this connection. Instead of throwing an exception, we indicate this
-            // using the error event. But since this code executes as part of the WebSocket's
-            // constructor, we have to wait until the constructor has completed before firing the
-            // event; otherwise, users can't connect to the event.
+                // We must block this connection. Instead of throwing an exception, we indicate this
+                // using the error event. But since this code executes as part of the WebSocket's
+                // constructor, we have to wait until the constructor has completed before firing the
+                // event; otherwise, users can't connect to the event.
 #if USE(WEB_THREAD)
-            ref();
-            dispatch_async(dispatch_get_main_queue(), ^{
-                WebThreadRun(^{
+                ref();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    WebThreadRun(^{
+                        dispatchOrQueueErrorEvent();
+                        stop();
+                        deref();
+                    });
+                });
+#else
+                RunLoop::main().dispatch([this, protectedThis = makeRef(*this)]() {
                     dispatchOrQueueErrorEvent();
                     stop();
-                    deref();
                 });
-            });
-#else
-            RunLoop::main().dispatch([this, protectedThis = makeRef(*this)]() {
-                dispatchOrQueueErrorEvent();
-                stop();
-            });
-#endif
-            return { };
+    #endif
+                return { };
+            }
         }
         ResourceLoadObserver::shared().logWebSocketLoading(frame.get(), m_url);
     }
