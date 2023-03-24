@@ -242,11 +242,13 @@ AppendPipeline::AppendPipeline(Ref<MediaSourceClientGStreamerMSE> mediaSourceCli
     }, this, nullptr);
 
     const String& type = m_sourceBufferPrivate->type().containerType();
-    if (type.endsWith("mp4"))
+    if (type.endsWith("mp4")) {
         m_demux = gst_element_factory_make("qtdemux", nullptr);
-    else if (type.endsWith("webm"))
+        GRefPtr<GstCaps> caps = adoptGRef(gst_caps_new_simple("video/quicktime", "variant", G_TYPE_STRING, "mse-bytestream", NULL));
+        gst_app_src_set_caps(GST_APP_SRC(m_appsrc.get()), caps.get());
+    } else if (type.endsWith("webm")) {
         m_demux = gst_element_factory_make("matroskademux", nullptr);
-    else
+    } else
         ASSERT_NOT_REACHED();
 
     m_appsink = gst_element_factory_make("appsink", nullptr);
@@ -931,8 +933,21 @@ void AppendPipeline::resetPipeline()
     ASSERT(WTF::isMainThread());
     GST_DEBUG("resetting pipeline");
 
-    gst_element_set_state(m_pipeline.get(), GST_STATE_READY);
-    gst_element_get_state(m_pipeline.get(), nullptr, nullptr, 0);
+    // This function restores the GStreamer pipeline to the same state it was when the AppendPipeline constructor
+    // finished. All previously enqueued data is lost and the demuxer is flushed, but retains the configuration from the
+    // last received init segment, in accordance to the spec.
+
+    // Flush approach requires these GStreamer patches:
+    // https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4101.
+    // https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4199.
+
+    GST_DEBUG_OBJECT(pipeline(), "Handling resetParserState() in AppendPipeline by flushing the pipeline");
+    gst_element_send_event(m_appsrc.get(), gst_event_new_flush_start());
+    gst_element_send_event(m_appsrc.get(), gst_event_new_flush_stop(true));
+
+    GstSegment segment;
+    gst_segment_init(&segment, GST_FORMAT_BYTES);
+    gst_element_send_event(m_appsrc.get(), gst_event_new_segment(&segment));
 
 #if (!(LOG_DISABLED || defined(GST_DISABLE_GST_DEBUG)))
     {
