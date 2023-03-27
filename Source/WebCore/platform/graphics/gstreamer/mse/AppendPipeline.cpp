@@ -255,6 +255,12 @@ AppendPipeline::AppendPipeline(Ref<MediaSourceClientGStreamerMSE> mediaSourceCli
     gst_base_sink_set_sync(GST_BASE_SINK(m_appsink.get()), FALSE);
     gst_base_sink_set_last_sample_enabled(GST_BASE_SINK(m_appsink.get()), FALSE);
 
+    bool disableClipping = getenv("DISABLE_CLIPPING") != nullptr && *getenv("DISABLE_CLIPPING") == '1';
+    if (disableClipping) {
+        GST_DEBUG("Disabling clipping basesink feature");
+        gst_base_sink_set_drop_out_of_segment(GST_BASE_SINK(m_appsink.get()), FALSE);
+    }
+
     GRefPtr<GstPad> appsinkPad = adoptGRef(gst_element_get_static_pad(m_appsink.get(), "sink"));
     g_signal_connect(appsinkPad.get(), "notify::caps", G_CALLBACK(appendPipelineAppsinkCapsChanged), this);
 
