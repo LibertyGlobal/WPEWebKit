@@ -2201,6 +2201,7 @@ void MediaPlayerPrivateGStreamer::sourceSetup(GstElement* sourceElement)
     if (WEBKIT_IS_WEB_SRC(m_source.get())) {
         webKitWebSrcSetMediaPlayer(WEBKIT_WEB_SRC(m_source.get()), m_player);
         g_signal_connect(GST_ELEMENT_PARENT(m_source.get()), "element-added", G_CALLBACK(uriDecodeBinElementAddedCallback), this);
+        g_object_set(G_OBJECT(m_source.get()), "keep-alive", TRUE, nullptr);
     }
 #else
     // TODO: set HTTP headers on source element here.
