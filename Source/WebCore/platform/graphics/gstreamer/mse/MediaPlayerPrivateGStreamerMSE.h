@@ -88,6 +88,7 @@ public:
 
     static bool supportsCodec(String codec);
     static bool supportsAllCodecs(const Vector<String>& codecs);
+    static bool isAnyCodecH264AndExceedSupportedSize(const Vector<String>& codecs, float width, float height);
 
 #if ENABLE(ENCRYPTED_MEDIA)
     void dispatchDecryptionStructure(GUniquePtr<GstStructure>&&) final;
