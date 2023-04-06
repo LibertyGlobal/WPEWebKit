@@ -931,10 +931,8 @@ void AppendPipeline::resetPipeline()
     ASSERT(WTF::isMainThread());
     GST_DEBUG("resetting pipeline");
 
-    // gst_element_send_event(m_appsrc.get(), gst_event_new_flush_start());
-    // gst_element_send_event(m_appsrc.get(), gst_event_new_flush_stop(true));
-
-    gst_element_seek(m_pipeline.get(), 1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
+    gst_element_set_state(m_pipeline.get(), GST_STATE_READY);
+    gst_element_get_state(m_pipeline.get(), nullptr, nullptr, 0);
 
 #if (!(LOG_DISABLED || defined(GST_DISABLE_GST_DEBUG)))
     {
