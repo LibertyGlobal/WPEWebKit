@@ -969,8 +969,10 @@ void AppendPipeline::abort()
         }
         // Drain samples before source buffer state is reset
         if (m_appendState == AppendState::Sampling) {
-            GST_DEBUG("ARRISEOS-43952");
-/*            GRefPtr<GstPad> appsrcPad = adoptGRef(gst_element_get_static_pad(m_appsrc.get(), "src"));
+            // Draining samples procedure is commented out because it causes hang in gstreamer version 1.18
+            GST_DEBUG("Skip samples draining procedure");
+            /*
+            GRefPtr<GstPad> appsrcPad = adoptGRef(gst_element_get_static_pad(m_appsrc.get(), "src"));
             if (appsrcPad) {
                 GRefPtr<GstQuery> query = adoptGRef(gst_query_new_drain());
                 gst_pad_peer_query(appsrcPad.get(), query.get());
