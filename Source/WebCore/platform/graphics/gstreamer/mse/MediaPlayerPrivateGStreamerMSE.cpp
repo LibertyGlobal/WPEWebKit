@@ -89,6 +89,15 @@
 #define MEDIA_MAX_FRAMERATE 60.0f
 #endif
 
+#if PLATFORM(EOS)
+   #define H264_MAX_SIZE 1920.0f
+#elif PLATFORM(EOS2008C)
+   #define H264_MAX_SIZE 3840.0f
+#elif PLATFORM(APOLLO)
+   #define H264_MAX_SIZE 4096.0f
+#else
+   #define H264_MAX_SIZE 7680.0f
+#endif
 static const char* dumpReadyState(WebCore::MediaPlayer::ReadyState readyState)
 {
     switch (readyState) {
@@ -1077,6 +1086,16 @@ bool MediaPlayerPrivateGStreamerMSE::supportsAllCodecs(const Vector<String>& cod
     return true;
 }
 
+bool MediaPlayerPrivateGStreamerMSE::isAnyCodecH264AndExceedSupportedSize(const Vector<String>& codecs, float width, float height)
+{
+    for (String codec : codecs) {
+        if(codec.startsWith("avc") && (width > H264_MAX_SIZE || height > H264_MAX_SIZE)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 FloatSize MediaPlayerPrivateGStreamerMSE::naturalSize() const
 {
     if (!hasVideo())
@@ -1118,6 +1137,9 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamerMSE::supportsType(const Med
         height = 0;
 
     if (width > MEDIA_MAX_WIDTH || height > MEDIA_MAX_HEIGHT)
+        return result;
+
+    if(isAnyCodecH264AndExceedSupportedSize(parameters.type.codecs(), width, height))
         return result;
 
     float framerate = parameters.type.parameter("framerate"_s).toFloat(&ok);

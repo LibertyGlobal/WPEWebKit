@@ -965,11 +965,12 @@ void AppendPipeline::abort()
         }
         // Drain samples before source buffer state is reset
         if (m_appendState == AppendState::Sampling) {
-            GRefPtr<GstPad> appsrcPad = adoptGRef(gst_element_get_static_pad(m_appsrc.get(), "src"));
+            GST_DEBUG("ARRISEOS-43952");
+/*            GRefPtr<GstPad> appsrcPad = adoptGRef(gst_element_get_static_pad(m_appsrc.get(), "src"));
             if (appsrcPad) {
                 GRefPtr<GstQuery> query = adoptGRef(gst_query_new_drain());
                 gst_pad_peer_query(appsrcPad.get(), query.get());
-            }
+            }*/
             drainBusIfNeeded();
         }
     }
