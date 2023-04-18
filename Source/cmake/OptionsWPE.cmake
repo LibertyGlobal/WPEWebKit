@@ -178,6 +178,18 @@ if (ENABLE_CBCS)
     add_definitions(-DENABLE_CBCS=1)
 endif()
 
+if (PLATFORM_EOS)
+    add_definitions(-DWTF_PLATFORM_EOS=1)
+endif()
+
+if (PLATFORM_EOS2008C)
+    add_definitions(-DWTF_PLATFORM_EOS2008C=1)
+endif()
+
+if (PLATFORM_APOLLO)
+    add_definitions(-DWTF_PLATFORM_APOLLO=1)
+endif()
+
 add_definitions(-DBUILDING_WPE__=1)
 add_definitions(-DGETTEXT_PACKAGE="WPE")
 add_definitions(-DJSC_GLIB_API_ENABLED)
