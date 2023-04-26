@@ -217,8 +217,10 @@ void CachedResource::load(CachedResourceLoader& cachedResourceLoader)
     }
 
     FrameLoader& frameLoader = frame.loader();
-    if (m_options.securityCheck == SecurityCheckPolicy::DoSecurityCheck && !shouldUsePingLoad(type()) && (frameLoader.state() == FrameStateProvisional || !frameLoader.activeDocumentLoader() || frameLoader.activeDocumentLoader()->isStopping())) {
-        if (frameLoader.state() == FrameStateProvisional)
+    const char* provisionalCheckEnv = getenv("WPE_DISABLE_PROVISIONAL_CHECK");
+    bool isProvisionalState = !(provisionalCheckEnv && provisionalCheckEnv[0] == '1') && frameLoader.state() == FrameStateProvisional;
+    if (m_options.securityCheck == SecurityCheckPolicy::DoSecurityCheck && !shouldUsePingLoad(type()) && (isProvisionalState || !frameLoader.activeDocumentLoader() || frameLoader.activeDocumentLoader()->isStopping())) {
+        if (isProvisionalState)
             RELEASE_LOG_IF_ALLOWED("load: Failed security check -- state is provisional (frame = %p)", &frame);
         else if (!frameLoader.activeDocumentLoader())
             RELEASE_LOG_IF_ALLOWED("load: Failed security check -- not active document (frame = %p)", &frame);
