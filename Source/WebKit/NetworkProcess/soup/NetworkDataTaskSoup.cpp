@@ -568,7 +568,6 @@ gboolean NetworkDataTaskSoup::tlsConnectionAcceptCertificateCallback(GTlsConnect
         task->clearRequest();
         return FALSE;
     }
-
     auto* connectionMessage = g_object_get_data(G_OBJECT(connection), "wk-soup-message");
     if (connectionMessage != task->m_soupMessage.get())
         return FALSE;
@@ -876,8 +875,16 @@ void NetworkDataTaskSoup::readCallback(GInputStream* inputStream, GAsyncResult* 
 
     GUniqueOutPtr<GError> error;
     gssize bytesRead = g_input_stream_read_finish(inputStream, result, &error.outPtr());
-    if (error)
-        task->didFail(ResourceError::genericGError(error.get(), task->m_soupRequest.get()));
+    if (error) {
+        const char* wptWorkaroundEnv = getenv("ENABLE_WPT_TLS_WORKAROUND");
+        if (wptWorkaroundEnv && wptWorkaroundEnv[0] != '0'
+            && !strcmp(g_quark_to_string(error->domain), "g-tls-error-quark") && error->code == G_TLS_ERROR_MISC) {
+            LOG(Network, "Error reading from TLS socket, ignoring!");
+            task->didFinishRead();
+        } else {
+            task->didFail(ResourceError::genericGError(error.get(), task->m_soupRequest.get()));
+        }
+    }
     else if (bytesRead > 0)
         task->didRead(bytesRead);
     else
