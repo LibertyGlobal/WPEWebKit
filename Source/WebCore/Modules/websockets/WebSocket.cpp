@@ -70,12 +70,31 @@
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
+#include <sstream>
 
 #if USE(WEB_THREAD)
 #include "WebCoreThreadRun.h"
 #endif
 
 namespace WebCore {
+
+bool isUrlWhitelisted(const URL &url) {
+    static Vector<URL> whitelistedUrls;
+    if (whitelistedUrls.isEmpty()) {
+        std::stringstream whitelistedEnv("ws://127.0.0.1:10016,ws://127.0.0.1:10415,ws://localhost:10016,ws://localhost:10415");
+        std::string item;
+        while (std::getline(whitelistedEnv, item, ',')) {
+            URL wl_url(String(String::fromUTF8(item.c_str())));
+            whitelistedUrls.append(wl_url);
+        }
+    }
+    for (const auto &wlUrl : whitelistedUrls) {
+        if (protocolHostAndPortAreEqual(wlUrl, url)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 WTF_MAKE_ISO_ALLOCATED_IMPL(WebSocket);
 
@@ -308,10 +327,12 @@ ExceptionOr<void> WebSocket::connect(const String& url, const Vector<String>& pr
     if (is<Document>(context)) {
         Document& document = downcast<Document>(context);
         RefPtr<Frame> frame = document.frame();
-        // FIXME: make the mixed content check equivalent to the non-document mixed content check currently in WorkerThreadableWebSocketChannel::Bridge::connect()
-        if (!frame || !MixedContentChecker::canRunInsecureContent(*frame, document.securityOrigin(), m_url)) {
-            failAsynchronously();
-            return { };
+        if (!isUrlWhitelisted(m_url)) {
+            // FIXME: make the mixed content check equivalent to the non-document mixed content check currently in WorkerThreadableWebSocketChannel::Bridge::connect()
+            if (!frame || !MixedContentChecker::canRunInsecureContent(*frame, document.securityOrigin(), m_url)) {
+                failAsynchronously();
+                return { };
+            }
         }
     }
 
