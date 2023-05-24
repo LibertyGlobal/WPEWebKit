@@ -2468,6 +2468,9 @@ void NetworkProcess::requestStorageSpace(PAL::SessionID sessionID, const ClientO
 #if !PLATFORM(COCOA)
 void NetworkProcess::initializeProcess(const AuxiliaryProcessInitializationParameters&)
 {
+#if ENABLE(RDK_LOGGER)
+    rdk_logger_init("/etc/debug.ini");
+#endif
 }
 
 void NetworkProcess::initializeProcessName(const AuxiliaryProcessInitializationParameters&)
