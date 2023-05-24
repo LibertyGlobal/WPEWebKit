@@ -633,6 +633,7 @@ void WTFReleaseLogStackTrace(WTFLogChannel* channel)
 
 } // extern "C"
 
+
 #if (OS(DARWIN) || PLATFORM(PLAYSTATION)) && (CPU(X86_64) || CPU(ARM64))
 #if CPU(X86_64)
 
