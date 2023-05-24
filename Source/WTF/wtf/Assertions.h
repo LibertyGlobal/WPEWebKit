@@ -556,10 +556,10 @@ constexpr bool assertionFailureDueToUnreachableCode = false;
 #define LOG_WITH_LEVEL(channel, level, ...) ((void)0)
 #elif ENABLE(RDK_LOGGER)
 #define LOG_WITH_LEVEL_STRING(channel, level, ...) RDK_LOG( \
-        level == 0 ? RDK_LOG_FATAL : level == 1 ? RDK_LOG_ERROR : level == 2 ? RDK_LOG_WARN : level == 3 ? RDK_LOG_INFO : RDK_LOG_DEBUG, \
+        level == 0 ? RDK_LOG_NOTICE : level == 1 ? RDK_LOG_ERROR : level == 2 ? RDK_LOG_WARN : level == 3 ? RDK_LOG_INFO : RDK_LOG_DEBUG, \
         channel, __VA_ARGS__)
 #define LOG_WITH_LEVEL(channel, level, ...) RDK_LOG( \
-        level == 0 ? RDK_LOG_FATAL : level == 1 ? RDK_LOG_ERROR : level == 2 ? RDK_LOG_WARN : level == 3 ? RDK_LOG_INFO : RDK_LOG_DEBUG, \
+        level == 0 ? RDK_LOG_NOTICE : level == 1 ? RDK_LOG_ERROR : level == 2 ? RDK_LOG_WARN : level == 3 ? RDK_LOG_INFO : RDK_LOG_DEBUG, \
         RDK_LOG_CHANNEL(channel), __VA_ARGS__)
 #else
 #define LOG_WITH_LEVEL(channel, level, ...) do { \
