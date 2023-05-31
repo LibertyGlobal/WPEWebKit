@@ -656,16 +656,22 @@ constexpr bool assertionFailureDueToUnreachableCode = false;
 
 #elif ENABLE(RDK_LOGGER)
 
-#define PUBLIC_LOG_STRING "s"
-#define PRIVATE_LOG_STRING "s"
+#define PUBLIC_LOG_PREFIX ""
+#define PRIVATE_LOG_PREFIX ""
 #define RELEASE_LOG(channel, ...) LOG(channel, __VA_ARGS__)
 #define RELEASE_LOG_ERROR(channel, ...) LOG_ERROR(__VA_ARGS__)
-#define RELEASE_LOG_ERROR_NO_ODH(channel, ...) LOG_ERROR_NO_ODH(__VA_ARGS__)
-#define RELEASE_LOG_FAULT(channel, ...) LOG_ERROR(__VA_ARGS__)
+#define RELEASE_LOG_FAULT(channel, ...) FATAL(__VA_ARGS__)
 #define RELEASE_LOG_INFO(channel, ...) LOG_WITH_LEVEL(channel, 3, __VA_ARGS__)
+
+#define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...) do { \
+    if (LOG_CHANNEL(channel).level >= (logLevel)) \
+        LOG(channel, __VA_ARGS__); \
+} while (0)
 
 #define RELEASE_LOG_WITH_LEVEL(channel, logLevel, ...)  LOG_WITH_LEVEL(channel, logLevel, ...)
 #define RELEASE_LOG_WITH_LEVEL_IF(isAllowed, channel, logLevel, ...) do { \
+    if ((isAllowed) && LOG_CHANNEL(channel).level >= (logLevel)) \
+        LOG(channel, __VA_ARGS__); \
     if (isAllowed) \
         LOG_WITH_LEVEL(channel, logLevel,__VA_ARGS__); \
 } while (0)
