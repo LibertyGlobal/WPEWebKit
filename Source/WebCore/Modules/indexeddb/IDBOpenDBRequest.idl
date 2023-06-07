@@ -26,6 +26,7 @@
 [
     JSGenerateToJSObject,
     JSGenerateToNativeObject,
+    EnabledBySetting=DatabasesEnabled,
     SkipVTableValidation,
     Exposed=(Window,Worker)
 ] interface IDBOpenDBRequest : IDBRequest {

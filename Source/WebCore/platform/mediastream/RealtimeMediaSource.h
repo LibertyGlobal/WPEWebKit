@@ -54,8 +54,6 @@
 #if USE(GSTREAMER)
 #include "GUniquePtrGStreamer.h"
 #include <wtf/glib/GRefPtr.h>
-
-typedef struct _GstEvent GstEvent;
 #endif
 
 namespace WTF {
@@ -97,10 +95,6 @@ public:
         virtual bool preventSourceFromStopping() { return false; }
 
         virtual void hasStartedProducingData() { }
-
-#if USE(GSTREAMER)
-        virtual void handleDownstreamEvent(GRefPtr<GstEvent>&&) { }
-#endif
     };
     class AudioSampleObserver {
     public:
@@ -154,7 +148,7 @@ public:
     const AtomString& name() const { return m_name; }
     void setName(const AtomString& name) { m_name = name; }
 
-    unsigned fitnessScore() const { return m_fitnessScore; }
+    double fitnessScore() const { return m_fitnessScore; }
 
     WEBCORE_EXPORT void addObserver(Observer&);
     WEBCORE_EXPORT void removeObserver(Observer&);

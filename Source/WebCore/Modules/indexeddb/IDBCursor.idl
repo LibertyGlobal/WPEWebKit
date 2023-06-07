@@ -25,6 +25,7 @@
 
 [
     CustomToJSObject,
+    EnabledBySetting=DatabasesEnabled,
     JSCustomMarkFunction,
     SkipVTableValidation,
     Exposed=(Window,Worker)

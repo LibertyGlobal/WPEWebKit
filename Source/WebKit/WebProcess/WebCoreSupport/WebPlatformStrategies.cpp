@@ -331,6 +331,13 @@ void WebPlatformStrategies::clearClipboard(const String& pasteboardName)
     WebProcess::singleton().parentProcessConnection()->send(Messages::WebPasteboardProxy::ClearClipboard(pasteboardName), 0);
 }
 
+int64_t WebPlatformStrategies::changeCount(const String& pasteboardName)
+{
+    int64_t changeCount { 0 };
+    WebProcess::singleton().parentProcessConnection()->sendSync(Messages::WebPasteboardProxy::GetPasteboardChangeCount(pasteboardName), Messages::WebPasteboardProxy::GetPasteboardChangeCount::Reply(changeCount), 0);
+    return changeCount;
+}
+
 #endif // PLATFORM(GTK)
 
 #if USE(LIBWPE)

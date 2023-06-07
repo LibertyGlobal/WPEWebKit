@@ -148,6 +148,7 @@ public:
     void play() override;
     void pause() override;
     bool paused() const final;
+    bool ended() const final;
     bool seeking() const override { return m_isSeeking; }
     void seek(const MediaTime&) override;
     void setRate(float) override;
@@ -232,7 +233,7 @@ public:
     void handleStreamCollectionMessage(GstMessage*);
     void handleMessage(GstMessage*);
 
-    void triggerRepaint(GstSample*);
+    void triggerRepaint(GRefPtr<GstSample>&&);
 #if USE(GSTREAMER_GL)
     void flushCurrentBuffer();
 #endif
@@ -332,7 +333,6 @@ protected:
     void repaint();
     void cancelRepaint(bool destroying = false);
 
-    static void repaintCallback(MediaPlayerPrivateGStreamer*, GstSample*);
     static void repaintCancelledCallback(MediaPlayerPrivateGStreamer*);
 
     void notifyPlayerOfVolumeChange();
@@ -519,7 +519,6 @@ private:
     void configureDownloadBuffer(GstElement*);
     static void downloadBufferFileCreatedCallback(MediaPlayerPrivateGStreamer*);
 
-    void configureDepayloader(GstElement*);
     void configureVideoDecoder(GstElement*);
     void configureElement(GstElement*);
 #if PLATFORM(BROADCOM) || USE(WESTEROS_SINK) || PLATFORM(AMLOGIC) || PLATFORM(REALTEK)
@@ -655,6 +654,10 @@ private:
 #endif
 
     bool m_didTryToRecoverPlayingState { false };
+
+    // Specific to MediaStream playback.
+    MediaTime m_startTime;
+    MediaTime m_pausedTime;
 };
 
 }

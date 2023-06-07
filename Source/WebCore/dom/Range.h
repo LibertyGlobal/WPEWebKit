@@ -26,6 +26,7 @@
 
 #include "AbstractRange.h"
 #include "RangeBoundaryPoint.h"
+#include "Position.h"
 
 namespace WebCore {
 

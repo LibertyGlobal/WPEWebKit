@@ -241,6 +241,7 @@ namespace WebCore {
     macro(InputEvent) \
     macro(IntersectionObserver) \
     macro(IntersectionObserverEntry) \
+    macro(Keyboard) \
     macro(KeyframeEffect) \
     macro(Lock) \
     macro(LockManager) \
@@ -269,6 +270,7 @@ namespace WebCore {
     macro(MockRTCRtpTransform) \
     macro(NavigationPreloadManager) \
     macro(NavigatorCredentials) \
+    macro(NavigatorKeyboard) \
     macro(NavigatorMediaDevices) \
     macro(NavigatorPermissions) \
     macro(NavigatorUserMedia) \

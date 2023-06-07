@@ -278,7 +278,7 @@ bool isRendererReplacedElement(RenderObject* renderer, TextIteratorBehaviors beh
             return true;
         if (equalLettersIgnoringASCIICase(element.attributeWithoutSynchronization(roleAttr), "img"_s))
             return true;
-#if USE(ATSPI)
+#if USE(ATSPI) || USE(ATK)
         // Links are also replaced with object replacement character in ATSPI.
         if (behaviors.contains(TextIteratorBehavior::EmitsObjectReplacementCharacters) && element.isLink())
             return true;

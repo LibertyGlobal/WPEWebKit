@@ -18,7 +18,6 @@ list(APPEND WebCore_UNIFIED_SOURCE_LIST_FILES
 )
 
 list(APPEND WebCore_PRIVATE_INCLUDE_DIRECTORIES
-    "${WEBCORE_DIR}/accessibility/atspi"
     "${WEBCORE_DIR}/platform/adwaita"
     "${WEBCORE_DIR}/platform/audio/glib"
     "${WEBCORE_DIR}/platform/glib"
@@ -38,18 +37,30 @@ list(APPEND WebCore_PRIVATE_INCLUDE_DIRECTORIES
     "${WEBCORE_DIR}/platform/text/icu"
     "${WEBCORE_DIR}/platform/wpe"
 )
+if (USE_ATK)
+    list(APPEND WebCore_PRIVATE_INCLUDE_DIRECTORIES "${WEBCORE_DIR}/accessibility/atk")
+else ()
+    list(APPEND WebCore_PRIVATE_INCLUDE_DIRECTORIES "${WEBCORE_DIR}/accessibility/atspi")
+endif ()
 
 list(APPEND WebCore_PRIVATE_FRAMEWORK_HEADERS
-    accessibility/atspi/AccessibilityAtspi.h
-    accessibility/atspi/AccessibilityAtspiEnums.h
-    accessibility/atspi/AccessibilityObjectAtspi.h
-    accessibility/atspi/AccessibilityRootAtspi.h
-
     platform/glib/ApplicationGLib.h
 
     platform/graphics/wayland/PlatformDisplayWayland.h
     platform/graphics/wayland/WlUniquePtr.h
 )
+if (USE_ATK)
+    list(APPEND WebCore_PRIVATE_FRAMEWORK_HEADERS
+        accessibility/atk/WebKitAccessible.h
+    )
+else ()
+    list(APPEND WebCore_PRIVATE_FRAMEWORK_HEADERS
+        accessibility/atspi/AccessibilityAtspi.h
+        accessibility/atspi/AccessibilityAtspiEnums.h
+        accessibility/atspi/AccessibilityObjectAtspi.h
+        accessibility/atspi/AccessibilityRootAtspi.h
+    )
+endif ()
 
 set(CSS_VALUE_PLATFORM_DEFINES "HAVE_OS_DARK_MODE_SUPPORT=1")
 
@@ -73,6 +84,9 @@ list(APPEND WebCore_LIBRARIES
     ${LIBTASN1_LIBRARIES}
     ${UPOWERGLIB_LIBRARIES}
 )
+if (USE_ATK)
+    list(APPEND WebCore_LIBRARIES ${ATK_LIBRARIES})
+endif ()
 
 list(APPEND WebCore_SYSTEM_INCLUDE_DIRECTORIES
     ${GIO_UNIX_INCLUDE_DIRS}
@@ -80,6 +94,9 @@ list(APPEND WebCore_SYSTEM_INCLUDE_DIRECTORIES
     ${LIBTASN1_INCLUDE_DIRS}
     ${UPOWERGLIB_INCLUDE_DIRS}
 )
+if (USE_ATK)
+    list(APPEND WebCore_SYSTEM_INCLUDE_DIRECTORIES ${ATK_INCLUDE_DIRS})
+endif ()
 
 if (USE_WPE_VIDEO_PLANE_DISPLAY_DMABUF OR USE_WPEBACKEND_FDO_AUDIO_EXTENSION)
     list(APPEND WebCore_LIBRARIES ${WPEBACKEND_FDO_LIBRARIES})

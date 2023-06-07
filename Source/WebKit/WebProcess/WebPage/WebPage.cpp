@@ -214,6 +214,7 @@
 #include <WebCore/LegacySchemeRegistry.h>
 #include <WebCore/LocalizedStrings.h>
 #include <WebCore/MIMETypeRegistry.h>
+#include <WebCore/MemoryCache.h>
 #include <WebCore/MouseEvent.h>
 #include <WebCore/NotImplemented.h>
 #include <WebCore/Page.h>
@@ -4191,7 +4192,7 @@ void WebPage::updatePreferences(const WebPreferencesStore& store)
 #endif
     settings.setPitchCorrectionAlgorithm(static_cast<MediaPlayerEnums::PitchCorrectionAlgorithm>(store.getUInt32ValueForKey(WebPreferencesKey::pitchCorrectionAlgorithmKey())));
 
-    DatabaseManager::singleton().setIsAvailable(store.getBoolValueForKey(WebPreferencesKey::databasesEnabledKey()));
+    DatabaseManager::singleton().setIsAvailable(settings.databasesEnabled());
 
     m_tabToLinks = store.getBoolValueForKey(WebPreferencesKey::tabsToLinksKey());
 
@@ -5502,7 +5503,7 @@ bool WebPage::hasLocalDataForURL(const URL& url)
         return true;
 
     DocumentLoader* documentLoader = m_page->mainFrame().loader().documentLoader();
-    if (documentLoader && documentLoader->subresource(url))
+    if (documentLoader && documentLoader->subresource(MemoryCache::removeFragmentIdentifierIfNeeded(url)))
         return true;
 
     return false;

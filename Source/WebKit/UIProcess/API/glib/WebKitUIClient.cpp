@@ -29,6 +29,7 @@
 #include "WebKitMediaKeySystemPermissionRequestPrivate.h"
 #include "WebKitNavigationActionPrivate.h"
 #include "WebKitNotificationPermissionRequestPrivate.h"
+#include "WebKitPermissionStateQueryPrivate.h"
 #include "WebKitPointerLockPermissionRequestPrivate.h"
 #include "WebKitURIRequestPrivate.h"
 #include "WebKitUserMediaPermissionRequestPrivate.h"
@@ -270,7 +271,7 @@ private:
 
     void exceededDatabaseQuota(WebPageProxy*, WebFrameProxy*, API::SecurityOrigin*, const String&, const String&, unsigned long long /*currentQuota*/, unsigned long long /*currentOriginUsage*/, unsigned long long /*currentDatabaseUsage*/, unsigned long long /*expectedUsage*/, Function<void(unsigned long long)>&& completionHandler) final
     {
-        static const unsigned long long defaultQuota = 5 * 1024 * 1204; // 5 MB
+        static const unsigned long long defaultQuota = 5 * MB;
         // FIXME: Provide API for this.
         completionHandler(defaultQuota);
     }
@@ -377,6 +378,13 @@ private:
         webkitWebViewDidLosePointerLock(m_webView);
     }
 #endif
+
+    void queryPermission(const WTF::String& permissionName, API::SecurityOrigin& origin, CompletionHandler<void(std::optional<WebCore::PermissionState>)>&& completionHandler) final
+    {
+        auto* query = webkitPermissionStateQueryCreate(permissionName, origin, WTFMove(completionHandler));
+        webkitWebViewPermissionStateQuery(m_webView, query);
+        webkit_permission_state_query_unref(query);
+    }
 
     WebKitWebView* m_webView;
 #if ENABLE(POINTER_LOCK)

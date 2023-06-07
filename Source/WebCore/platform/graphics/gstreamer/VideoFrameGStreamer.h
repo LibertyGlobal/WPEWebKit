@@ -55,6 +55,8 @@ public:
 
     RefPtr<VideoFrameGStreamer> resizeTo(const IntSize&);
 
+    GRefPtr<GstSample> resizedSample(const IntSize&);
+
     GstSample* sample() const { return m_sample.get(); }
     RefPtr<JSC::Uint8ClampedArray> computeRGBAImageData() const;
 

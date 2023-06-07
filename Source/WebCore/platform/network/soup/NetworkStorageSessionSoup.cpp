@@ -423,7 +423,7 @@ void NetworkStorageSession::setCookieJar(const Vector<Cookie>& cookies)
         g_array_append_val(blocked_handler_id_array, handler_id);
         g_signal_handler_block(jar, handler_id);
     }
-    deleteAllCookies(nullptr);
+    deleteAllCookies([]{});
     for (const auto& cookie : cookies)
         soup_cookie_jar_add_cookie(jar, cookie.toSoupCookie());
 

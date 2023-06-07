@@ -3673,7 +3673,7 @@ TextIteratorBehaviors AccessibilityObject::textIteratorBehaviorForTextRange() co
 {
     TextIteratorBehaviors behaviors { TextIteratorBehavior::IgnoresStyleVisibility };
 
-#if USE(ATSPI)
+#if USE(ATSPI) || USE(ATK)
     // We need to emit replaced elements for ATSPI, and present
     // them with the 'object replacement character' (0xFFFC).
     behaviors.add(TextIteratorBehavior::EmitsObjectReplacementCharacters);

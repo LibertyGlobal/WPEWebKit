@@ -24,6 +24,7 @@
  */
 
 [
+    EnabledBySetting=DatabasesEnabled,
     SkipVTableValidation,
     JSCustomMarkFunction,
     Exposed=(Window,Worker)

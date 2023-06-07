@@ -380,7 +380,7 @@ inline void FrameSelection::clearTypingStyle()
     m_typingStyle = nullptr;
 }
 
-#if !(ENABLE(ACCESSIBILITY) && (PLATFORM(COCOA) || USE(ATSPI)))
+#if !(ENABLE(ACCESSIBILITY) && (PLATFORM(COCOA) || USE(ATSPI) || USE(ATK)))
 
 inline void FrameSelection::notifyAccessibilityForSelectionChange(const AXTextStateChangeIntent&)
 {

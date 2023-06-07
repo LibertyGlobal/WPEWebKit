@@ -163,6 +163,8 @@ Modules/indexeddb/shared/IDBResourceIdentifier.cpp
 Modules/indexeddb/shared/IDBResultData.cpp
 Modules/indexeddb/shared/IDBTransactionInfo.cpp
 Modules/indexeddb/shared/IndexKey.cpp
+Modules/keyboard-lock/Keyboard.cpp
+Modules/keyboard-lock/NavigatorKeyboard.cpp
 Modules/mediacapabilities/MediaCapabilities.cpp
 Modules/mediacapabilities/NavigatorMediaCapabilities.cpp
 Modules/mediacapabilities/WorkerNavigatorMediaCapabilities.cpp

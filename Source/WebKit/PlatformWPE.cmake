@@ -196,6 +196,7 @@ set(WPE_API_INSTALLED_HEADERS
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitOptionMenu.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitOptionMenuItem.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitPermissionRequest.h
+    ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitPermissionStateQuery.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitPlugin.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitPolicyDecision.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitRectangle.h
@@ -361,7 +362,7 @@ list(APPEND WebKit_LIBRARIES
     ${LIBSOUP_LIBRARIES}
 )
 
-if (ENABLE_ACCESSIBILITY)
+if (USE_ATK)
     list(APPEND WebKit_LIBRARIES ATK::Bridge)
 endif ()
 

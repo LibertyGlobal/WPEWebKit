@@ -24,22 +24,27 @@
 
 #include "GStreamerCommon.h"
 #include "GStreamerMediaStreamSource.h"
-#include "GStreamerWebRTCUtils.h"
 #include "MediaStreamTrack.h"
 
 #define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 #undef GST_USE_UNSTABLE_API
 
-GST_DEBUG_CATEGORY_EXTERN(webkit_webrtc_endpoint_debug);
-#define GST_CAT_DEFAULT webkit_webrtc_endpoint_debug
+GST_DEBUG_CATEGORY(webkit_webrtc_outgoing_media_debug);
+#define GST_CAT_DEFAULT webkit_webrtc_outgoing_media_debug
 
 namespace WebCore {
 
-RealtimeOutgoingMediaSourceGStreamer::RealtimeOutgoingMediaSourceGStreamer(const String& mediaStreamId, MediaStreamTrack& track)
+RealtimeOutgoingMediaSourceGStreamer::RealtimeOutgoingMediaSourceGStreamer(const RefPtr<UniqueSSRCGenerator>& ssrcGenerator, const String& mediaStreamId, MediaStreamTrack& track)
     : m_mediaStreamId(mediaStreamId)
     , m_trackId(track.id())
+    , m_ssrcGenerator(ssrcGenerator)
 {
+    static std::once_flag debugRegisteredFlag;
+    std::call_once(debugRegisteredFlag, [] {
+        GST_DEBUG_CATEGORY_INIT(webkit_webrtc_outgoing_media_debug, "webkitwebrtcoutgoingmedia", 0, "WebKit WebRTC outgoing media");
+    });
+
     m_bin = gst_bin_new(nullptr);
 
     m_inputSelector = gst_element_factory_make("input-selector", nullptr);
@@ -63,6 +68,8 @@ RealtimeOutgoingMediaSourceGStreamer::~RealtimeOutgoingMediaSourceGStreamer()
     if (m_transceiver)
         g_signal_handlers_disconnect_by_data(m_transceiver.get(), this);
 
+    stopOutgoingSource();
+
     if (GST_IS_PAD(m_webrtcSinkPad.get())) {
         auto srcPad = adoptGRef(gst_element_get_static_pad(m_bin.get(), "src"));
         if (gst_pad_unlink(srcPad.get(), m_webrtcSinkPad.get())) {
@@ -85,7 +92,7 @@ const GRefPtr<GstCaps>& RealtimeOutgoingMediaSourceGStreamer::allowedCaps() cons
         return m_allowedCaps;
 
     auto sdpMsIdLine = makeString(m_mediaStreamId, ' ', m_trackId);
-    m_allowedCaps = capsFromRtpCapabilities(rtpCapabilities(), [&sdpMsIdLine](GstStructure* structure) {
+    m_allowedCaps = capsFromRtpCapabilities(m_ssrcGenerator, rtpCapabilities(), [&sdpMsIdLine](GstStructure* structure) {
         gst_structure_set(structure, "a-msid", G_TYPE_STRING, sdpMsIdLine.ascii().data(), nullptr);
     });
 
@@ -109,8 +116,10 @@ void RealtimeOutgoingMediaSourceGStreamer::setSource(Ref<MediaStreamTrackPrivate
 
 void RealtimeOutgoingMediaSourceGStreamer::start()
 {
-    if (!m_isStopped)
+    if (!m_isStopped) {
+        GST_DEBUG_OBJECT(m_bin.get(), "Source already started");
         return;
+    }
 
     GST_DEBUG_OBJECT(m_bin.get(), "Starting outgoing source");
     m_source.value()->addObserver(*this);
@@ -119,6 +128,7 @@ void RealtimeOutgoingMediaSourceGStreamer::start()
     if (m_transceiver) {
         auto selectorSrcPad = adoptGRef(gst_element_get_static_pad(m_inputSelector.get(), "src"));
         if (!gst_pad_is_linked(selectorSrcPad.get())) {
+            GST_DEBUG_OBJECT(m_bin.get(), "Codec preferences haven't changed before startup, ensuring source is linked");
             GRefPtr<GstCaps> codecPreferences;
             g_object_get(m_transceiver.get(), "codec-preferences", &codecPreferences.outPtr(), nullptr);
             callOnMainThreadAndWait([&] {
@@ -213,6 +223,7 @@ void RealtimeOutgoingMediaSourceGStreamer::link()
 
 void RealtimeOutgoingMediaSourceGStreamer::setSinkPad(GRefPtr<GstPad>&& pad)
 {
+    GST_DEBUG_OBJECT(m_bin.get(), "Associating with webrtcbin pad %" GST_PTR_FORMAT, pad.get());
     m_webrtcSinkPad = WTFMove(pad);
 
     if (m_transceiver)

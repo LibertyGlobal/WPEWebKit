@@ -28,8 +28,8 @@
 [
     ImplementedBy=WindowOrWorkerGlobalScopeIndexedDatabase
 ] partial interface mixin WindowOrWorkerGlobalScope {
-    [SameObject] readonly attribute IDBFactory indexedDB;
+    [EnabledBySetting=DatabasesEnabled, SameObject] readonly attribute IDBFactory indexedDB;
     
     // Non-standard.
-    [Exposed=Window, ImplementedAs=indexedDB] readonly attribute IDBFactory webkitIndexedDB;
+    [EnabledBySetting=DatabasesEnabled, Exposed=Window, ImplementedAs=indexedDB] readonly attribute IDBFactory webkitIndexedDB;
 };

@@ -38,10 +38,6 @@
 #include "PixelBuffer.h"
 #include <cairo.h>
 
-#if ENABLE(ACCELERATED_2D_CANVAS)
-#include <cairo-gl.h>
-#endif
-
 #if USE(CAIRO)
 
 namespace WebCore {
@@ -61,22 +57,11 @@ GraphicsContext& ImageBufferCairoSurfaceBackend::context() const
 
 IntSize ImageBufferCairoSurfaceBackend::backendSize() const
 {
-    switch (cairo_surface_get_type(m_surface.get())) {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-        return IntSize { cairo_image_surface_get_width(m_surface.get()), cairo_image_surface_get_height(m_surface.get()) };
-#if ENABLE(ACCELERATED_2D_CANVAS)
-    case CAIRO_SURFACE_TYPE_GL:
-        return IntSize { cairo_gl_surface_get_width(m_surface.get()), cairo_gl_surface_get_height(m_surface.get()) };
-#endif
-    default:
-        break;
-    }
-    return { };
+    return IntSize { cairo_image_surface_get_width(m_surface.get()), cairo_image_surface_get_height(m_surface.get()) };
 }
 
 unsigned ImageBufferCairoSurfaceBackend::bytesPerRow() const
 {
-    // TODO: FIXME
     return cairo_image_surface_get_stride(m_surface.get());
 }
 

@@ -207,6 +207,42 @@ void RTCPeerConnection::createOffer(RTCOfferOptions&& options, Ref<DeferredPromi
         return;
     }
 
+    // https://www.w3.org/TR/webrtc/#legacy-configuration-extensions
+    auto processLegacyOption = [&](auto option, auto trackKind) {
+        if (!option) {
+            for (auto& transceiver : currentTransceivers()) {
+                if (transceiver->stopped())
+                    continue;
+                if (transceiver->sender().trackKind() != trackKind)
+                    continue;
+                if (transceiver->direction() == RTCRtpTransceiverDirection::Sendrecv)
+                    transceiver->setDirection(RTCRtpTransceiverDirection::Sendonly);
+                else if (transceiver->direction() == RTCRtpTransceiverDirection::Recvonly)
+                    transceiver->setDirection(RTCRtpTransceiverDirection::Inactive);
+            }
+            return;
+        }
+
+        for (auto& transceiver : currentTransceivers()) {
+            if (transceiver->stopped())
+                continue;
+            if (transceiver->sender().trackKind() != trackKind)
+                continue;
+            auto direction = transceiver->direction();
+            if (direction == RTCRtpTransceiverDirection::Sendrecv || direction == RTCRtpTransceiverDirection::Recvonly)
+                return;
+        }
+
+        RTCRtpTransceiverInit init { .direction = RTCRtpTransceiverDirection::Recvonly };
+        addTransceiver(trackKind, init);
+    };
+
+    if (options.offerToReceiveVideo)
+        processLegacyOption(options.offerToReceiveVideo.value(), "video"_s);
+
+    if (options.offerToReceiveAudio)
+        processLegacyOption(options.offerToReceiveAudio.value(), "audio"_s);
+
     chainOperation(WTFMove(promise), [this, options = WTFMove(options)](auto&& promise) mutable {
         if (m_signalingState != RTCSignalingState::Stable && m_signalingState != RTCSignalingState::HaveLocalOffer) {
             promise->reject(InvalidStateError);

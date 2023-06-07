@@ -888,8 +888,19 @@ bool HTMLCanvasElement::shouldAccelerate(unsigned area) const
     if (area > settings.maximumAccelerated2dCanvasSize())
         return false;
 
-#if USE(IOSURFACE_CANVAS_BACKING_STORE) || ENABLE(ACCELERATED_2D_CANVAS)
+#if USE(IOSURFACE_CANVAS_BACKING_STORE)
     return settings.canvasUsesAcceleratedDrawing();
+#elif ENABLE(ACCELERATED_2D_CANVAS)
+    if (m_context && !m_context->is2d())
+        return false;
+
+    if (!settings.canvasUsesAcceleratedDrawing())
+        return false;
+
+    if (area < settings.minimumAccelerated2dCanvasSize())
+        return false;
+
+    return true;
 #else
     return false;
 #endif

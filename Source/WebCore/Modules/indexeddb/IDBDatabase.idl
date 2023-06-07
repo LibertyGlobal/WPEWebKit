@@ -26,6 +26,7 @@
 
 [
     ActiveDOMObject,
+    EnabledBySetting=DatabasesEnabled,
     SkipVTableValidation,
     Exposed=(Window,Worker)
 ] interface IDBDatabase : EventTarget {

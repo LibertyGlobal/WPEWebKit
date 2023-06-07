@@ -4,6 +4,7 @@
 #if ENABLE(ACCELERATED_2D_CANVAS)
 
 #include "GLContextEGL.h"
+#include "PixelBuffer.h"
 #include "TextureMapperPlatformLayerBuffer.h"
 #include "TextureMapperPlatformLayerProxyGL.h"
 #include <cairo-gl.h>
@@ -29,6 +30,19 @@ static cairo_device_t* cairoDevice()
         });
 
     return s_device;
+}
+
+static RefPtr<cairo_surface_t>
+cairoGLSurfaceCopyToImageSurface(cairo_surface_t* surface)
+{
+    auto copy = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cairo_gl_surface_get_width(surface), cairo_gl_surface_get_height(surface)));
+
+    auto cr = adoptRef(cairo_create(copy.get()));
+    cairo_set_operator(cr.get(), CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_surface(cr.get(), surface, 0, 0);
+    cairo_paint(cr.get());
+
+    return copy;
 }
 
 class ImageBufferCairoGLDisplayDelegate final : public GraphicsLayerContentsDisplayDelegate {
@@ -72,21 +86,19 @@ std::unique_ptr<ImageBufferCairoGLSurfaceBackend> ImageBufferCairoGLSurfaceBacke
     context->makeContextCurrent();
 
     std::array<uint32_t, 2> textures { 0, 0 };
-    glGenTextures(2, textures.data());
 
-    for (auto texture : textures) {
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backendSize.width(), backendSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    }
+    glGenTextures(1, &textures[0]);
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backendSize.width(), backendSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
     auto* device = cairoDevice();
     if (!device) {
-        glDeleteTextures(2, textures.data());
+        glDeleteTextures(1, &textures[0]);
         return { };
     }
     cairo_gl_device_set_thread_aware(device, FALSE);
@@ -94,17 +106,10 @@ std::unique_ptr<ImageBufferCairoGLSurfaceBackend> ImageBufferCairoGLSurfaceBacke
     std::array<RefPtr<cairo_surface_t>, 2> surfaces;
     surfaces[0] = adoptRef(cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA, textures[0], backendSize.width(), backendSize.height()));
     if (cairo_surface_status(surfaces[0].get()) != CAIRO_STATUS_SUCCESS) {
-        glDeleteTextures(2, textures.data());
+        glDeleteTextures(1, &textures[0]);
         return nullptr;
     }
     clearSurface(surfaces[0].get());
-
-    surfaces[1] = adoptRef(cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA, textures[1], backendSize.width(), backendSize.height()));
-    if (cairo_surface_status(surfaces[1].get()) != CAIRO_STATUS_SUCCESS) {
-        glDeleteTextures(2, textures.data());
-        return nullptr;
-    }
-    clearSurface(surfaces[1].get());
 
     return std::unique_ptr<ImageBufferCairoGLSurfaceBackend>(new ImageBufferCairoGLSurfaceBackend(parameters, textures, surfaces));
 }
@@ -116,8 +121,6 @@ ImageBufferCairoGLSurfaceBackend::ImageBufferCairoGLSurfaceBackend(const Paramet
 {
     m_nicosiaLayer = Nicosia::ContentLayer::create(Nicosia::ContentLayerTextureMapperImpl::createFactory(*this));
     m_layerContentsDisplayDelegate = adoptRef(new ImageBufferCairoGLDisplayDelegate(Ref { *m_nicosiaLayer}));
-
-    m_compositorContext = adoptRef(cairo_create(m_surfaces[1].get()));
 }
 
 ImageBufferCairoGLSurfaceBackend::~ImageBufferCairoGLSurfaceBackend()
@@ -125,8 +128,12 @@ ImageBufferCairoGLSurfaceBackend::~ImageBufferCairoGLSurfaceBackend()
     downcast<Nicosia::ContentLayerTextureMapperImpl>(m_nicosiaLayer->impl()).invalidateClient();
 
     GLContext* previousActiveContext = GLContext::current();
+    auto* context = PlatformDisplay::sharedDisplayForCompositing().sharingGLContext();
+    context->makeContextCurrent();
 
-    glDeleteTextures(2, m_textures.data());
+    glDeleteTextures(1, &m_textures[0]);
+    if (m_textures[1])
+        glDeleteTextures(1, &m_textures[1]);
 
     if (previousActiveContext)
         previousActiveContext->makeContextCurrent();
@@ -137,11 +144,70 @@ RefPtr<GraphicsLayerContentsDisplayDelegate> ImageBufferCairoGLSurfaceBackend::l
     return m_layerContentsDisplayDelegate;
 }
 
+bool ImageBufferCairoGLSurfaceBackend::copyToPlatformTexture(GraphicsContextGL&, GCGLenum target, PlatformGLObject destinationTexture, GCGLenum internalFormat, bool premultiplyAlpha, bool flipY) const
+{
+    if (!premultiplyAlpha || flipY)
+        return false;
+
+    if (!m_textures[0])
+        return false;
+
+    GCGLenum bindTextureTarget;
+    switch (target) {
+    case GL_TEXTURE_2D:
+        bindTextureTarget = GL_TEXTURE_2D;
+        break;
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        bindTextureTarget = GL_TEXTURE_CUBE_MAP;
+        break;
+    default:
+        return false;
+    }
+
+    auto backendSize = this->backendSize();
+    cairo_surface_flush(m_surfaces[0].get());
+
+    std::unique_ptr<GLContext> context = GLContext::createOffscreenContext(&PlatformDisplay::sharedDisplayForCompositing());
+    context->makeContextCurrent();
+    uint32_t fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textures[0], 0);
+    glBindTexture(bindTextureTarget, destinationTexture);
+    glCopyTexImage2D(target, 0, internalFormat, 0, 0, backendSize.width(), backendSize.height(), 0);
+    glBindTexture(bindTextureTarget, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glFlush();
+    glDeleteFramebuffers(1, &fbo);
+    return true;
+}
+
 void ImageBufferCairoGLSurfaceBackend::swapBuffersIfNeeded()
 {
     auto backendSize = this->backendSize();
 
     GLContext* previousActiveContext = GLContext::current();
+
+    if (!m_textures[1]) {
+        auto* context = PlatformDisplay::sharedDisplayForCompositing().sharingGLContext();
+        context->makeContextCurrent();
+
+        glGenTextures(1, &m_textures[1]);
+        glBindTexture(GL_TEXTURE_2D, m_textures[1]);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, backendSize.width(), backendSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        m_surfaces[1] = adoptRef(cairo_gl_surface_create_for_texture(cairoDevice(), CAIRO_CONTENT_COLOR_ALPHA, m_textures[1], backendSize.width(), backendSize.height()));
+        m_compositorContext = adoptRef(cairo_create(m_surfaces[1].get()));
+    }
 
     // It would be great if we could just swap the buffers here as we do with webgl, but that breaks the cases
     // where one frame uses the content already rendered in the previous frame. So we just copy the content
@@ -165,6 +231,55 @@ void ImageBufferCairoGLSurfaceBackend::swapBuffersIfNeeded()
     if (previousActiveContext)
         previousActiveContext->makeContextCurrent();
 }
+
+unsigned ImageBufferCairoGLSurfaceBackend::bytesPerRow() const
+{
+    IntSize backendSize = calculateBackendSize(m_parameters);
+    return calculateBytesPerRow(backendSize);
+}
+
+RefPtr<PixelBuffer> ImageBufferCairoGLSurfaceBackend::getPixelBuffer(const PixelBufferFormat& outputFormat, const IntRect& srcRect, const ImageBufferAllocator& allocator) const
+{
+    auto surface = cairoGLSurfaceCopyToImageSurface(m_surfaces[0].get());
+    return ImageBufferBackend::getPixelBuffer(outputFormat, srcRect, cairo_image_surface_get_data(surface.get()), allocator);
+}
+
+void ImageBufferCairoGLSurfaceBackend::putPixelBuffer(const PixelBuffer& pixelBuffer, const IntRect& srcRect, const IntPoint& destPoint, AlphaPremultiplication destFormat)
+{
+    // Create a new image surface and put the data there. Then copy its contents to the original gl surface in the specified rect.
+    auto surface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cairo_gl_surface_get_width(m_surfaces[0].get()), cairo_gl_surface_get_height(m_surfaces[0].get())));
+    IntRect srcRectScaled = toBackendCoordinates(srcRect);
+    IntPoint destPointScaled = toBackendCoordinates(destPoint);
+    ImageBufferBackend::putPixelBuffer(pixelBuffer, srcRect, destPoint, destFormat, cairo_image_surface_get_data(surface.get()));
+    cairo_surface_mark_dirty_rectangle(surface.get(), destPointScaled.x(), destPointScaled.y(), srcRectScaled.width(), srcRectScaled.height());
+
+    auto cr = adoptRef(cairo_create(m_surfaces[0].get()));
+    cairo_set_operator(cr.get(), CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_surface(cr.get(), surface.get(), destPointScaled.x(), destPointScaled.y());
+    cairo_rectangle(cr.get(), destPointScaled.x(), destPointScaled.y(), srcRectScaled.width(), srcRectScaled.height());
+    cairo_fill(cr.get());
+}
+
+IntSize ImageBufferCairoGLSurfaceBackend::backendSize() const
+{
+    return IntSize { cairo_gl_surface_get_width(m_surfaces[0].get()), cairo_gl_surface_get_height(m_surfaces[0].get()) };
+}
+
+RefPtr<NativeImage> ImageBufferCairoGLSurfaceBackend::copyNativeImage(BackingStoreCopy copyBehavior) const
+{
+    switch (copyBehavior) {
+    case CopyBackingStore: {
+        auto copy = cairoGLSurfaceCopyToImageSurface(m_surfaces[0].get());
+        return NativeImage::create(WTFMove(copy));
+    }
+    case DontCopyBackingStore:
+        return NativeImage::create(RefPtr { m_surface.get() });
+    }
+
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
 
 } // namespace WebCore
 

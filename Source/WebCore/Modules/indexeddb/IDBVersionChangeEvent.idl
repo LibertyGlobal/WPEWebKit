@@ -25,6 +25,7 @@
  */
 
 [
+    EnabledBySetting=DatabasesEnabled,
     Exposed=(Window,Worker)
 ] interface IDBVersionChangeEvent : Event {
     constructor([AtomString] DOMString type, optional IDBVersionChangeEventInit eventInitDict);

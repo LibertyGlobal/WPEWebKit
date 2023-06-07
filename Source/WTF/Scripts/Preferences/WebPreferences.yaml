@@ -565,11 +565,14 @@ DataTransferItemsEnabled:
 DatabasesEnabled:
   type: bool
   webKitLegacyPreferenceKey: WebKitDatabasesEnabledPreferenceKey
-  webcoreBinding: custom
+  humanReadableName: "DatabasesEnabled"
+  humanReadableDescription: "Controls availability of HTML5 databases (indexedDB, webdatabase(deprecated))"
   defaultValue:
     WebKitLegacy:
       default: true
     WebKit:
+      default: true
+    WebCore:
       default: true
 
 DefaultFixedFontSize:

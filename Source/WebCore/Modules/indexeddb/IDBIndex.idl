@@ -29,6 +29,7 @@ typedef (DOMString or sequence<DOMString>) IDBKeyPath;
 
 [
     ActiveDOMObject,
+    EnabledBySetting=DatabasesEnabled,
     GenerateAddOpaqueRoot,
     GenerateIsReachable=Impl,
     SkipVTableValidation,

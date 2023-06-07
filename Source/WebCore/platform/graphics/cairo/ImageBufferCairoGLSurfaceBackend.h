@@ -24,9 +24,16 @@ public:
     virtual ~ImageBufferCairoGLSurfaceBackend();
 
     RefPtr<GraphicsLayerContentsDisplayDelegate> layerContentsDisplayDelegate() const final;
+    bool copyToPlatformTexture(GraphicsContextGL&, GCGLenum, PlatformGLObject, GCGLenum, bool, bool) const final;
 
 private:
     ImageBufferCairoGLSurfaceBackend(const Parameters&, const std::array<uint32_t, 2>&, const std::array<RefPtr<cairo_surface_t>, 2>&);
+
+    unsigned bytesPerRow() const override;
+    RefPtr<PixelBuffer> getPixelBuffer(const PixelBufferFormat& outputFormat, const IntRect&, const ImageBufferAllocator&) const override;
+    void putPixelBuffer(const PixelBuffer&, const IntRect& srcRect, const IntPoint& destPoint, AlphaPremultiplication destFormat) override;
+    IntSize backendSize() const override;
+    RefPtr<NativeImage> copyNativeImage(BackingStoreCopy) const override;
 
     void swapBuffersIfNeeded() final;
 

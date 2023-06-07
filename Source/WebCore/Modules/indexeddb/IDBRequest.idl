@@ -29,6 +29,7 @@
 
 [
     ActiveDOMObject,
+    EnabledBySetting=DatabasesEnabled,
     GenerateIsReachable=Impl,
     JSCustomMarkFunction,
     SkipVTableValidation,

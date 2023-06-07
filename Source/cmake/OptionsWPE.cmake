@@ -1,7 +1,7 @@
 include(GNUInstallDirs)
 include(VersioningUtils)
 
-SET_PROJECT_VERSION(2 38 5)
+SET_PROJECT_VERSION(2 38 6)
 
 # This is required because we use the DEPFILE argument to add_custom_command().
 # Remove after upgrading cmake_minimum_required() to 3.20.
@@ -185,9 +185,9 @@ endif ()
 endif ()
 
 if (WPE_API_VERSION VERSION_EQUAL "1.0")
-    CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT 21 8 18)
+    CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT 21 9 18)
 else ()
-    CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT 2 8 2)
+    CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT 2 9 2)
 endif ()
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
@@ -209,9 +209,11 @@ if (ENABLE_ACCESSIBILITY)
     if (NOT ATK_FOUND)
         message(FATAL_ERROR "atk is needed for ENABLE_ACCESSIBILITY")
     endif ()
-    find_package(ATKBridge)
-    if (NOT ATKBridge_FOUND)
-        message(FATAL_ERROR "at-spi2-atk is needed for ENABLE_ACCESSIBILITY")
+    if (USE_ATK)
+        find_package(ATKBridge)
+        if (NOT ATKBridge_FOUND)
+            message(FATAL_ERROR "at-spi2-atk is needed for ENABLE_ACCESSIBILITY")
+        endif ()
     endif ()
 endif ()
 
@@ -342,6 +344,7 @@ endif ()
 
 SET_AND_EXPOSE_TO_BUILD(HAVE_ACCESSIBILITY ${ENABLE_ACCESSIBILITY})
 SET_AND_EXPOSE_TO_BUILD(USE_ATSPI ${ENABLE_ACCESSIBILITY})
+SET_AND_EXPOSE_TO_BUILD(USE_ATK FALSE)
 SET_AND_EXPOSE_TO_BUILD(USE_CAIRO TRUE)
 SET_AND_EXPOSE_TO_BUILD(USE_EGL TRUE)
 SET_AND_EXPOSE_TO_BUILD(USE_GCRYPT TRUE)

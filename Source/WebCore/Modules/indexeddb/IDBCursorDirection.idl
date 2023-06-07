@@ -24,6 +24,7 @@
  */
 
 [
+    EnabledBySetting=DatabasesEnabled
 ] enum IDBCursorDirection {
     "next",
     "nextunique",

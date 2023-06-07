@@ -29,6 +29,7 @@ typedef (DOMString or sequence<DOMString>) IDBKeyPath;
 
 [
     ActiveDOMObject,
+    EnabledBySetting=DatabasesEnabled,
     GenerateIsReachable=Impl,
     JSCustomMarkFunction,
     SkipVTableValidation,

@@ -44,6 +44,7 @@
 #include <wpe/WebKitNotification.h>
 #include <wpe/WebKitOptionMenu.h>
 #include <wpe/WebKitPermissionRequest.h>
+#include <wpe/WebKitPermissionStateQuery.h>
 #include <wpe/WebKitPolicyDecision.h>
 #include <wpe/WebKitRectangle.h>
 #include <wpe/WebKitScriptDialog.h>
@@ -288,13 +289,15 @@ struct _WebKitWebViewClass {
                                                     WebKitOptionMenu            *menu,
                                                     WebKitRectangle             *rectangle);
 
+    gboolean   (* query_permission_state)      (WebKitWebView               *web_view,
+                                                WebKitPermissionStateQuery  *query);
+
     /*< private >*/
     void (*_webkit_reserved0) (void);
     void (*_webkit_reserved1) (void);
     void (*_webkit_reserved2) (void);
     void (*_webkit_reserved3) (void);
     void (*_webkit_reserved4) (void);
-    void (*_webkit_reserved5) (void);
 };
 
 WEBKIT_API GType

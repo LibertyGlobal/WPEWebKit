@@ -42,6 +42,10 @@
 #include <wtf/RetainPtr.h>
 #endif
 
+#if USE(ATK)
+#include <wtf/glib/GRefPtr.h>
+#endif
+
 #if PLATFORM(COCOA)
 
 OBJC_CLASS NSArray;
@@ -353,8 +357,8 @@ public:
 
     AXCoreObject* focusedUIElement() const override;
 
-    virtual AccessibilityObject* firstChild() const { return nullptr; }
-    virtual AccessibilityObject* lastChild() const { return nullptr; }
+    AccessibilityObject* firstChild() const override { return nullptr; }
+    AccessibilityObject* lastChild() const override { return nullptr; }
     virtual AccessibilityObject* previousSibling() const { return nullptr; }
     virtual AccessibilityObject* nextSibling() const { return nullptr; }
     virtual AccessibilityObject* nextSiblingUnignored(int limit) const;
@@ -775,6 +779,9 @@ public:
     AccessibilityChildrenVector documentLinks() override { return AccessibilityChildrenVector(); }
 
     AccessibilityChildrenVector relatedObjects(AXRelationType) const override;
+
+    virtual bool exposesTitleUIElement() const { return true; }
+
 protected:
     AccessibilityObject() = default;
 
@@ -801,7 +808,6 @@ protected:
 
     static bool isARIAInput(AccessibilityRole);
 
-    virtual bool exposesTitleUIElement() const { return true; }
     FloatRect unobscuredContentRect() const override;
     AccessibilityObject* radioGroupAncestor() const;
 
@@ -878,7 +884,7 @@ inline void AccessibilityObject::updateBackingStore() { }
 inline void AccessibilityObject::detachPlatformWrapper(AccessibilityDetachmentType) { }
 #endif
 
-#if !(ENABLE(ACCESSIBILITY) && USE(ATSPI))
+#if !(ENABLE(ACCESSIBILITY) && (USE(ATK) || USE(ATSPI)))
 inline bool AccessibilityObject::allowsTextRanges() const { return true; }
 inline unsigned AccessibilityObject::getLengthForTextRange() const { return text().length(); }
 #endif
