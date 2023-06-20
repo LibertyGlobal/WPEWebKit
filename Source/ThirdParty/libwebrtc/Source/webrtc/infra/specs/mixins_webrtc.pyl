@@ -170,6 +170,22 @@
       }
     }
   },
+  'quick-perf-tests': {
+    '$mixin_append': {
+      'args': [
+        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+        '--nologs',
+      ],
+    }
+  },
+  'redfin': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'redfin',
+        'os': 'Android'
+      }
+    }
+  },
   'resultdb-gtest-json-format': {
     'args': [
       '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',

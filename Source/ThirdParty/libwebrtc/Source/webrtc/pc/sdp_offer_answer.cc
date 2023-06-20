@@ -3612,6 +3612,18 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
     return error;
   }
 
+  // Validate that there are no collisions of bundled payload types.
+  error = ValidateBundledPayloadTypes(*sdesc->description());
+  // TODO(bugs.webrtc.org/14420): actually reject.
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                        error.ok());
+
+  // Validate that there are no collisions of bundled header extensions ids.
+  error = ValidateBundledRtpHeaderExtensions(*sdesc->description());
+  // TODO(bugs.webrtc.org/14782): actually reject.
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledExtensionIds",
+                        error.ok());
+
   if (!pc_->ValidateBundleSettings(sdesc->description(),
                                    bundle_groups_by_mid)) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,

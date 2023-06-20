@@ -825,11 +825,13 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     }
   }
 
+  bool effectively_new_frame = false;
   if (!queue_.current_frame() ||
       !queue_.current_frame()->size().equals(frame_size_)) {
     std::unique_ptr<DesktopFrame> frame(new BasicDesktopFrame(
         DesktopSize(frame_size_.width(), frame_size_.height())));
     queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
+    effectively_new_frame = true;
   }
 
   bool bufferProcessed = false;

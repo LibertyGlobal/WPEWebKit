@@ -3930,6 +3930,58 @@ TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
   }
 }
 
+TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
+  rtc::AutoThread main_thread;
+  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
+      webrtc::CreateDefaultTaskQueueFactory();
+  rtc::scoped_refptr<webrtc::test::MockAudioDeviceModule> adm =
+      webrtc::test::MockAudioDeviceModule::CreateNice();
+  webrtc::FieldTrialBasedConfig field_trials;
+  FakeAudioSource source;
+  cricket::WebRtcVoiceEngine engine(task_queue_factory.get(), adm.get(),
+                                    webrtc::CreateBuiltinAudioEncoderFactory(),
+                                    webrtc::CreateBuiltinAudioDecoderFactory(),
+                                    nullptr, nullptr, nullptr, field_trials);
+  engine.Init();
+  webrtc::RtcEventLogNull event_log;
+  webrtc::Call::Config call_config(&event_log);
+  call_config.trials = &field_trials;
+  call_config.task_queue_factory = task_queue_factory.get();
+  {
+    webrtc::AudioState::Config config;
+    config.audio_mixer = webrtc::AudioMixerImpl::Create();
+    config.audio_device_module =
+        webrtc::test::MockAudioDeviceModule::CreateNice();
+    call_config.audio_state = webrtc::AudioState::Create(config);
+  }
+  auto call = absl::WrapUnique(webrtc::Call::Create(call_config));
+  cricket::WebRtcVoiceMediaChannel channel(
+      cricket::MediaChannel::Role::kSend, &engine, cricket::MediaConfig(),
+      cricket::AudioOptions(), webrtc::CryptoOptions(), call.get(),
+      webrtc::AudioCodecPairId::Create());
+  {
+    cricket::AudioSendParameters params;
+    params.codecs.push_back(cricket::AudioCodec(1, "opus", 48000, 32000, 2));
+    params.extensions.push_back(webrtc::RtpExtension(
+        webrtc::RtpExtension::kTransportSequenceNumberUri, 1));
+    EXPECT_TRUE(channel.SetSendParameters(params));
+  }
+  constexpr int kSsrc = 1234;
+  {
+    cricket::StreamParams params;
+    params.add_ssrc(kSsrc);
+    channel.AddSendStream(params);
+  }
+  channel.SetAudioSend(kSsrc, true, nullptr, &source);
+  channel.SetSend(true);
+  webrtc::RtpParameters params = channel.GetRtpSendParameters(kSsrc);
+  for (int max_bitrate : {-10, -1, 0, 10000}) {
+    params.encodings[0].max_bitrate_bps = max_bitrate;
+    channel.SetRtpSendParameters(
+        kSsrc, params, [](webrtc::RTCError error) { EXPECT_TRUE(error.ok()); });
+  }
+}
+
 TEST(WebRtcVoiceEngineTest, CollectRecvCodecs) {
   for (bool use_null_apm : {false, true}) {
     std::vector<webrtc::AudioCodecSpec> specs;

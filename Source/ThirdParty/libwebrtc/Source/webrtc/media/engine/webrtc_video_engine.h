@@ -235,6 +235,7 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
     ssrc_list_changed_callback_ = std::move(callback);
   }
 
+
   // Implemented for VideoMediaChannelTest.
   bool sending() const {
     RTC_DCHECK_RUN_ON(&thread_checker_);
@@ -273,6 +274,13 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
                                           : webrtc::RtcpMode::kCompound;
   }
 
+  // Information queries to support SetReceiverFeedbackParameters
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    return send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
+                                          : webrtc::RtcpMode::kCompound;
+  }
+
   bool SendCodecHasLntf() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
     if (!send_codec()) {
@@ -294,6 +302,10 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
     }
     return send_codec()->rtx_time;
   }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override;
 
  private:
   struct ChangedSenderParameters {
@@ -453,6 +465,9 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void FillSendCodecStats(VideoMediaSendInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+  void FillReceiveCodecStats(VideoMediaReceiveInfo* video_media_info)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+
 
   // Accessor function for send_codec_. Introduced in order to ensure
   // that a receive channel does not touch the send codec directly.

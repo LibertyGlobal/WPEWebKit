@@ -259,6 +259,7 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
 
   options.additional_data = packet->additional_data();
 
+  const uint32_t packet_ssrc = packet->Ssrc();
   if (packet->packet_type() != RtpPacketMediaType::kPadding &&
       packet->packet_type() != RtpPacketMediaType::kRetransmission &&
       send_packet_observer_ != nullptr && packet->capture_time().IsFinite()) {

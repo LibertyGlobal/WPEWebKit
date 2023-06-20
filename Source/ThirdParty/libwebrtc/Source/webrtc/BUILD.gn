@@ -65,6 +65,7 @@ if (!build_with_chromium) {
         "modules/video_capture:video_capture_internal_impl",
         "modules/video_coding:video_codec_perf_tests",
         "net/dcsctp:dcsctp_unittests",
+        "pc:peer_connection_mediachannel_split_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
         "pc:slow_peer_connection_unittests",
@@ -745,6 +746,24 @@ if (rtc_include_tests && !build_with_chromium) {
     }
     if (is_ios) {
       deps += [ ":webrtc_perf_tests_bundle_data" ]
+    }
+  }
+
+  if (is_fuchsia) {
+    rtc_test("fuchsia_perf_tests") {
+      testonly = true
+      deps = [
+        #TODO(fxbug.dev/115601) - Enable when fixed
+        "call:call_perf_tests",
+        "modules/audio_coding:audio_coding_perf_tests",
+        "modules/audio_processing:audio_processing_perf_tests",
+        "pc:peerconnection_perf_tests",
+        "test:test_main",
+        "video:video_full_stack_tests",
+        "video:video_pc_full_stack_tests",
+      ]
+
+      data = webrtc_perf_tests_resources
     }
   }
 
