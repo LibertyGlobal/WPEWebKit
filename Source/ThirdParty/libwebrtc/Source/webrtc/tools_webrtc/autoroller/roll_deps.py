@@ -331,6 +331,12 @@ def _FindChangedVars(name, old_version, new_version):
         yield ChangedVersionEntry(name, old_version, new_version)
 
 
+def _FindChangedVars(name, old_version, new_version):
+  if old_version != new_version:
+    logging.debug('Roll dependency %s to %s', name, new_version)
+    yield ChangedVersionEntry(name, old_version, new_version)
+
+
 def _FindNewDeps(old, new):
     """ Gather dependencies only in `new` and return corresponding paths. """
     old_entries = set(BuildDepsentryDict(old))
@@ -433,13 +439,6 @@ def CalculateChangedDeps(webrtc_deps, new_cr_deps):
         cr_deps_entry = new_cr_entries.get(path)
         if cr_deps_entry:
             assert type(cr_deps_entry) is type(webrtc_deps_entry)
-
-            if isinstance(cr_deps_entry, CipdDepsEntry):
-                result.extend(
-                    _FindChangedCipdPackages(path, webrtc_deps_entry.packages,
-                                             cr_deps_entry.packages))
-                continue
-
             if isinstance(cr_deps_entry, VersionEntry):
                 result.extend(
                     _FindChangedVars(path, webrtc_deps_entry.version,

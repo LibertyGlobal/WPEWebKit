@@ -2251,6 +2251,8 @@ void WebRtcVoiceReceiveChannel::SetPlayout(bool playout) {
 bool WebRtcVoiceReceiveChannel::AddRecvStream(const StreamParams& sp) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::AddRecvStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK(role() == MediaChannel::Role::kReceive ||
+             role() == MediaChannel::Role::kBoth);
   RTC_LOG(LS_INFO) << "AddRecvStream: " << sp.ToString();
 
   if (!sp.has_ssrcs()) {

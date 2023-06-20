@@ -499,6 +499,14 @@ HRESULT WgcCaptureSession::ProcessFrame() {
     src_data += map_info.RowPitch;
   }
 
+  DesktopFrame* current_frame = queue_.current_frame();
+
+  // Make a copy of the data pointed to by `map_info.pData` to the preallocated
+  // `current_frame` so we are free to unmap our texture.
+  uint8_t* src_data = static_cast<uint8_t*>(map_info.pData);
+  current_frame->CopyPixelsFrom(src_data, current_frame->stride(),
+                                DesktopRect::MakeSize(current_frame->size()));
+
   d3d_context->Unmap(mapped_texture_.Get(), 0);
 
   if (allow_zero_hertz()) {

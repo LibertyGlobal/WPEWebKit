@@ -427,7 +427,6 @@ struct PacketLossSummary {
   size_t num_lost_packets = 0;
   Timestamp base_time = Timestamp::MinusInfinity();
 };
-
 }  // namespace
 
 EventLogAnalyzer::EventLogAnalyzer(const ParsedRtcEventLog& log,

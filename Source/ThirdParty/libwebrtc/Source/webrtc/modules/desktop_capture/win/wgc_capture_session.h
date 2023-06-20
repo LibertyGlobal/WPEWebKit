@@ -57,7 +57,7 @@ class WgcCaptureSession final {
   // Direct3D11CaptureFramePool.TryGetNextFrame returns NULL and we have to fall
   // back to providing a copy from our external queue instead.
   // We make this public for tests.
-  static constexpr int kNumBuffers = 2;
+  static constexpr int kNumBuffers = 1;
 
  private:
   // Initializes `mapped_texture_` with the properties of the `src_texture`,

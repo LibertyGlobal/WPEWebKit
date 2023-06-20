@@ -1725,5 +1725,69 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest,
   EXPECT_EQ(transport_.packets_sent(), 2);
 }
 
+TEST_F(RtpSenderVideoWithFrameTransformerTest,
+       TransformableFrameHasCorrectCaptureIdentifier) {
+  auto mock_frame_transformer =
+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  auto encoded_image = CreateDefaultEncodedImage();
+  encoded_image->SetCaptureTimeIdentifier(Timestamp::Millis(1));
+  RTPVideoHeader video_header;
+
+  EXPECT_CALL(*mock_frame_transformer, Transform)
+      .WillOnce([&encoded_image](std::unique_ptr<TransformableFrameInterface>
+                                     transformable_frame) {
+        auto* frame = static_cast<TransformableVideoFrameInterface*>(
+            transformable_frame.get());
+        ASSERT_TRUE(frame);
+        EXPECT_EQ(frame->GetCaptureTimeIdentifier(),
+                  encoded_image->CaptureTimeIdentifier());
+      });
+  rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                     *encoded_image, video_header,
+                                     kDefaultExpectedRetransmissionTimeMs);
+}
+
+TEST_F(RtpSenderVideoWithFrameTransformerTest,
+       OnTransformedFrameSendsVideoWhenCloned) {
+  auto mock_frame_transformer =
+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
+  rtc::scoped_refptr<TransformedFrameCallback> callback;
+  EXPECT_CALL(*mock_frame_transformer, RegisterTransformedFrameSinkCallback)
+      .WillOnce(SaveArg<0>(&callback));
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  ASSERT_TRUE(callback);
+
+  auto encoded_image = CreateDefaultEncodedImage();
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  ON_CALL(*mock_frame_transformer, Transform)
+      .WillByDefault(
+          [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
+            auto clone = CloneVideoFrame(
+                static_cast<TransformableVideoFrameInterface*>(frame.get()));
+            EXPECT_TRUE(clone);
+            callback->OnTransformedFrame(std::move(clone));
+          });
+  auto encoder_queue = time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+      "encoder_queue", TaskQueueFactory::Priority::NORMAL);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 1);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 2);
+}
+
 }  // namespace
 }  // namespace webrtc

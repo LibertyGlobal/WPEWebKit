@@ -113,3 +113,10 @@ wheel: <
   name: "infra/python/wheels/asn1crypto-py2_py3"
   version: "version:1.0.1"
 >
+
+# Used by:
+#   tools_webrtc/sslroots
+wheel: <
+  name: "infra/python/wheels/asn1crypto-py2_py3"
+  version: "version:1.0.1"
+>

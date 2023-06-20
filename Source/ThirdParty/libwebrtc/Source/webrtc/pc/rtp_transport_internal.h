@@ -76,6 +76,11 @@ class RtpTransportInternal : public sigslot::has_slots<> {
     callback_undemuxable_rtp_packet_received_ = std::move(callback);
   }
 
+  // Called whenever a RTP packet that can not be demuxed by the transport is
+  // received.
+  sigslot::signal<const webrtc::RtpPacketReceived&>
+      SignalUnDemuxableRtpPacketReceived;
+
   // Called whenever the network route of the P2P layer transport changes.
   // The argument is an optional network route.
   void SubscribeNetworkRouteChanged(

@@ -369,6 +369,7 @@ TCPConnection::TCPConnection(rtc::WeakPtr<Port> tcp_port,
     RTC_LOG(LS_VERBOSE) << ToString() << ": socket ipaddr: "
                         << socket_->GetLocalAddress().ToSensitiveString()
                         << ", port() Network:" << port()->Network()->ToString();
+
 #if defined(WEBRTC_WEBKIT_BUILD)
     RTC_DCHECK(socket->GetLocalAddress().IsLoopbackIP() || absl::c_any_of(
 #else
