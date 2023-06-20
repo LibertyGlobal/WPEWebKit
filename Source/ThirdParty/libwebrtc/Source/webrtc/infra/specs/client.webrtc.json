@@ -8695,15 +8695,6 @@
           "--xcode-build-version",
           "14c18"
         ],
-        "merge": {
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "dcsctp_unittests iPhone X 16.2",
-        "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
-        },
-        "swarming": {
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
@@ -8801,10 +8792,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "cipd_packages": [
-            {
-              "cipd_package": "infra/tools/mac_toolchain/${platform}",
-              "location": ".",
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],

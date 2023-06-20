@@ -213,8 +213,7 @@
           "idempotent": false,
           "io_timeout": 10800
         },
-        "test": "webrtc_perf_tests",
-        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+        "test_id_prefix": "ninja://:fuchsia_perf_tests/"
       }
     ]
   },

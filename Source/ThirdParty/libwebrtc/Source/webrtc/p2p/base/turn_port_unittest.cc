@@ -1956,4 +1956,60 @@ TEST_F(TurnPortWithMockDnsResolverTest, TestHostnameResolvedIPv6Network) {
   TestTurnAllocateSucceeds(kSimulatedRtt * 2);
 }
 
+class TurnPortWithMockDnsResolverTest : public TurnPortTest {
+ public:
+  TurnPortWithMockDnsResolverTest()
+      : TurnPortTest(), socket_factory_(ss_.get()) {}
+
+  rtc::PacketSocketFactory* socket_factory() override {
+    return &socket_factory_;
+  }
+
+  void SetDnsResolverExpectations(
+      rtc::MockDnsResolvingPacketSocketFactory::Expectations expectations) {
+    socket_factory_.SetExpectations(expectations);
+  }
+
+ private:
+  rtc::MockDnsResolvingPacketSocketFactory socket_factory_;
+};
+
+// Test an allocation from a TURN server specified by a hostname.
+TEST_F(TurnPortWithMockDnsResolverTest, TestHostnameResolved) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnPortValidHostnameProtoAddr);
+  SetDnsResolverExpectations(
+      [](webrtc::MockAsyncDnsResolver* resolver,
+         webrtc::MockAsyncDnsResolverResult* resolver_result) {
+        EXPECT_CALL(*resolver, Start(kTurnValidAddr, /*family=*/AF_INET, _))
+            .WillOnce(InvokeArgument<2>());
+        EXPECT_CALL(*resolver, result)
+            .WillRepeatedly(ReturnPointee(resolver_result));
+        EXPECT_CALL(*resolver_result, GetError).WillRepeatedly(Return(0));
+        EXPECT_CALL(*resolver_result, GetResolvedAddress(AF_INET, _))
+            .WillOnce(DoAll(SetArgPointee<1>(kTurnUdpIntAddr), Return(true)));
+      });
+  TestTurnAllocateSucceeds(kSimulatedRtt * 2);
+}
+
+// Test an allocation from a TURN server specified by a hostname on an IPv6
+// network.
+TEST_F(TurnPortWithMockDnsResolverTest, TestHostnameResolvedIPv6Network) {
+  turn_server_.AddInternalSocket(kTurnUdpIPv6IntAddr, PROTO_UDP);
+  CreateTurnPort(kLocalIPv6Addr, kTurnUsername, kTurnPassword,
+                 kTurnPortValidHostnameProtoAddr);
+  SetDnsResolverExpectations(
+      [](webrtc::MockAsyncDnsResolver* resolver,
+         webrtc::MockAsyncDnsResolverResult* resolver_result) {
+        EXPECT_CALL(*resolver, Start(kTurnValidAddr, /*family=*/AF_INET6, _))
+            .WillOnce(InvokeArgument<2>());
+        EXPECT_CALL(*resolver, result)
+            .WillRepeatedly(ReturnPointee(resolver_result));
+        EXPECT_CALL(*resolver_result, GetError).WillRepeatedly(Return(0));
+        EXPECT_CALL(*resolver_result, GetResolvedAddress(AF_INET6, _))
+            .WillOnce(
+                DoAll(SetArgPointee<1>(kTurnUdpIPv6IntAddr), Return(true)));
+      });
+  TestTurnAllocateSucceeds(kSimulatedRtt * 2);
+}
+
 }  // namespace cricket

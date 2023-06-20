@@ -31,6 +31,7 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
+      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },
@@ -69,6 +70,7 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
+      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },
@@ -262,6 +264,26 @@
     'linux_desktop_tests_with_video_capture': [
       'desktop_tests',
       'desktop_tests_linux_specific',
+      'video_capture_tests',
+    ],
+    'desktop_tests_tryserver': [
+      'desktop_tests',
+      'video_capture_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
+    ],
+    'desktop_tests_with_video_capture': [
+      'desktop_tests',
+      'video_capture_tests',
+    ],
+    'linux_desktop_tests_tryserver': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
+      'video_capture_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
+    ],
+    'linux_desktop_tests_with_video_capture': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
       'video_capture_tests',
     ],
     'linux_tests': [

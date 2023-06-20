@@ -113,7 +113,6 @@ class RtpSenderEgress {
   void AddPacketToTransportFeedback(uint16_t packet_id,
                                     const RtpPacketToSend& packet,
                                     const PacedPacketInfo& pacing_info);
-
   // Sends packet on to `transport_`, leaving the RTP module.
   bool SendPacketToNetwork(const RtpPacketToSend& packet,
                            const PacketOptions& options,

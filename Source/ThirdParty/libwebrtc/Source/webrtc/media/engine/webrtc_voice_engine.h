@@ -432,6 +432,22 @@ class WebRtcVoiceReceiveChannel final
   void SetReceiveNackEnabled(bool enabled) override;
   void SetReceiveNonSenderRttEnabled(bool enabled) override;
 
+  bool SenderNackEnabled() const override {
+    if (!send_codec_spec_) {
+      return false;
+    }
+    return send_codec_spec_->nack_enabled;
+  }
+  bool SenderNonSenderRttEnabled() const override {
+    if (!send_codec_spec_) {
+      return false;
+    }
+    return send_codec_spec_->enable_non_sender_rtt;
+  }
+
+  void SetReceiveNackEnabled(bool enabled) override;
+  void SetReceiveNonSenderRttEnabled(bool enabled) override;
+
  private:
   bool SetOptions(const AudioOptions& options);
   bool SetRecvCodecs(const std::vector<AudioCodec>& codecs);

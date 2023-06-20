@@ -32,6 +32,9 @@ class RestoreTokenManager {
   // Returns a source ID which does not have any token associated with it yet.
   DesktopCapturer::SourceId GetUnusedId();
 
+  // Returns a source ID which does not have any token associated with it yet.
+  DesktopCapturer::SourceId GetUnusedId();
+
  private:
   RestoreTokenManager() = default;
   ~RestoreTokenManager() = default;

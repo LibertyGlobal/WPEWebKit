@@ -177,6 +177,41 @@ TEST(AudioMixer, UpdatesSourceCountHistogram) {
   }
 }
 
+TEST(AudioMixer, UpdatesSourceCountHistogram) {
+  constexpr int kAudioSourcesGroup1 = 5;
+  constexpr int kAudioSourcesGroup2 = 3;
+
+  const auto mixer = AudioMixerImpl::Create();
+
+  MockMixerAudioSource participants[kAudioSourcesGroup1 + kAudioSourcesGroup2];
+
+  // Add the sources in group 1.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(i + 1, metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
+  }
+  // Remove the sources again.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    mixer->RemoveSource(&participants[i]);
+  }
+  // Add the first group again. This should not add anything new to the
+  // histogram.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(kAudioSourcesGroup1,
+              metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
+  }
+  // Add the second group. This adds to the histogram again.
+  for (int i = kAudioSourcesGroup1;
+       i < kAudioSourcesGroup1 + kAudioSourcesGroup2; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(i + 1, metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
+  }
+}
+
 TEST(AudioMixer, FrameNotModifiedForSingleParticipant) {
   const auto mixer = AudioMixerImpl::Create();
 

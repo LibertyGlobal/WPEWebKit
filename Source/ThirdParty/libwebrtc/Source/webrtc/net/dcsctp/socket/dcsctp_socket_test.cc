@@ -211,6 +211,45 @@ MATCHER_P(IsReconfigurationResponse, properties, "") {
   return ExplainMatchResult(properties, *parameter, result_listener);
 }
 
+MATCHER_P(HasReconfigWithResponse, result, "") {
+  absl::optional<SctpPacket> packet = SctpPacket::Parse(arg, kDefaultOptions);
+  if (!packet.has_value()) {
+    *result_listener << "data didn't parse as an SctpPacket";
+    return false;
+  }
+
+  if (packet->descriptors()[0].type != ReConfigChunk::kType) {
+    *result_listener << "the first chunk in the packet is not a reconfig chunk";
+    return false;
+  }
+
+  absl::optional<ReConfigChunk> reconfig =
+      ReConfigChunk::Parse(packet->descriptors()[0].data);
+  if (!reconfig.has_value()) {
+    *result_listener << "The first chunk didn't parse as a reconfig chunk";
+    return false;
+  }
+
+  const Parameters& parameters = reconfig->parameters();
+  if (parameters.descriptors().size() != 1 ||
+      parameters.descriptors()[0].type !=
+          ReconfigurationResponseParameter::kType) {
+    *result_listener << "Expected the reconfig chunk to have a "
+                        "ReconfigurationResponse Parameter";
+    return false;
+  }
+
+  absl::optional<ReconfigurationResponseParameter> p =
+      ReconfigurationResponseParameter::Parse(parameters.descriptors()[0].data);
+  if (p->result() != result) {
+    *result_listener << "ReconfigurationResponse Parameter doesn't contain the "
+                        "expected result";
+    return false;
+  }
+
+  return true;
+}
+
 TSN AddTo(TSN tsn, int delta) {
   return TSN(*tsn + delta);
 }
