@@ -942,7 +942,7 @@ void AppendPipeline::Track::initializeElements(AppendPipeline* appendPipeline, G
     appsink = makeGStreamerElement("appsink", nullptr);
     gst_app_sink_set_emit_signals(GST_APP_SINK(appsink.get()), TRUE);
     gst_base_sink_set_sync(GST_BASE_SINK(appsink.get()), FALSE);
-    gst_base_sink_set_async_enabled(GST_BASE_SINK(appsink.get()), FALSE); // No prerolls, no async state changes.
+    // gst_base_sink_set_async_enabled(GST_BASE_SINK(appsink.get()), FALSE); // No prerolls, no async state changes.
     gst_base_sink_set_drop_out_of_segment(GST_BASE_SINK(appsink.get()), FALSE);
     gst_base_sink_set_last_sample_enabled(GST_BASE_SINK(appsink.get()), FALSE);
 
