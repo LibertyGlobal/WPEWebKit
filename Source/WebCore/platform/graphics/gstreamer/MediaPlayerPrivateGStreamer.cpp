@@ -1264,11 +1264,10 @@ void MediaPlayerPrivateGStreamer::loadingFailed(MediaPlayer::NetworkState networ
 
 GstElement* MediaPlayerPrivateGStreamer::createAudioSink()
 {
-#if PLATFORM(BROADCOM) || USE(WESTEROS_SINK) || PLATFORM(AMLOGIC) || PLATFORM(REALTEK)
-    // If audio is being controlled by an another pipeline, creating sink here may interfere with
-    // audio playback. Instead, check if an audio sink was setup in handleMessage and use it.
-    return nullptr;
-#endif
+#if PLATFORM(BCM_NEXUS)
+    GstElement* audioSink = gst_element_factory_make( "brcmaudiosink", nullptr);
+    return audioSink;
+#else
 
     // For platform specific audio sinks, they need to be properly upranked so that they get properly autoplugged.
 
@@ -1285,6 +1284,7 @@ GstElement* MediaPlayerPrivateGStreamer::createAudioSink()
     return audioSinkBin;
 #else
     return audioSink;
+#endif
 #endif
 }
 
