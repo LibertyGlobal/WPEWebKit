@@ -175,6 +175,7 @@ MediaPlayerPrivateGStreamerMSE::MediaPlayerPrivateGStreamerMSE(MediaPlayer* play
     : MediaPlayerPrivateGStreamer(player)
 {
     GST_TRACE("creating the player (%p)", this);
+    g_setenv("GST_PLAYBIN3", "1", TRUE);
 }
 
 MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()
@@ -182,6 +183,7 @@ MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()
     GST_TRACE("destroying the player (%p)", this);
 
     m_source.clear();
+    g_setenv("GST_PLAYBIN3", "0", TRUE);
 }
 
 void MediaPlayerPrivateGStreamerMSE::load(const String&)
