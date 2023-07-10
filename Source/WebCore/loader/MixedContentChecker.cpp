@@ -44,6 +44,8 @@
 
 namespace WebCore {
 
+WTF::Vector<WTF::KeyValuePair<WTF::String, WTF::String>> MixedContentChecker::m_whitelist = {};
+
 // static
 bool MixedContentChecker::isMixedContent(SecurityOrigin& securityOrigin, const URL& url)
 {
@@ -69,7 +71,7 @@ bool MixedContentChecker::canDisplayInsecureContent(Frame& frame, SecurityOrigin
     if (!frame.document()->contentSecurityPolicy()->allowRunningOrDisplayingInsecureContent(url))
         return false;
 
-    if (SecurityPolicy::isAccessAllowed(securityOrigin, url)) {
+    if (isWhitelisted(securityOrigin.toString(), url.protocolHostAndPort())) {
         logWarning(frame, true, "display"_s, url);
         return true;
     }
@@ -97,7 +99,7 @@ bool MixedContentChecker::canRunInsecureContent(Frame& frame, SecurityOrigin& se
     if (!frame.document()->contentSecurityPolicy()->allowRunningOrDisplayingInsecureContent(url))
         return false;
 
-    if (SecurityPolicy::isAccessAllowed(securityOrigin, url)) {
+    if (isWhitelisted(securityOrigin.toString(), url.protocolHostAndPort())) {
         logWarning(frame, true, "run"_s, url);
         return true;
     }
@@ -149,6 +151,64 @@ std::optional<String> MixedContentChecker::checkForMixedContentInFrameTree(const
     }
     
     return std::nullopt;
+}
+
+bool wildcardMatch(const String& pattern, const String& url)
+{
+    int patternLen = pattern.length();
+    int patternPos = 0;
+    int urlLen = url.length();
+    int urlPos = 0;
+    int wildcardPos = -1;
+    int wildcardMatchEnd = 0;
+
+    while (urlPos < urlLen) {
+        if (patternPos < patternLen && pattern[patternPos] == url[urlPos]) {
+            // characters match
+            patternPos++;
+            urlPos++;
+        } else if (patternPos < patternLen && pattern[patternPos] == '*') {
+            // mark wildcard position, start matching the rest of the pattern
+            wildcardPos = patternPos;
+            wildcardMatchEnd = urlPos;
+            patternPos++;
+        } else if (wildcardPos != -1) {
+            // no match, but we have a wildcard - assume wildcard handles a match to this position,
+            // revert patternPos to after last *
+            patternPos = wildcardPos + 1;
+            wildcardMatchEnd++;
+            urlPos = wildcardMatchEnd;
+        } else {
+            // no match, no wildcard - pattern does not match
+            return false;
+        }
+    }
+
+    // url matches so far, and we're at the end of it
+    // skip any remaining wildcards
+    while (patternPos < patternLen && pattern[patternPos] == '*') {
+        patternPos++;
+    }
+    // if we're at the end of pattern, that's a match
+    // otherwise, the remaining part of the pattern can't be matched
+    return patternPos == patternLen;
+}
+
+//static
+bool MixedContentChecker::isWhitelisted(const String& origin, const String& domain)
+{
+    for (auto kvPair : m_whitelist) {
+        if (wildcardMatch(kvPair.key, origin) && wildcardMatch(kvPair.value, domain)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//static
+void MixedContentChecker::addMixedContentWhitelistEntry(const String& origin, const String& domain)
+{
+    MixedContentChecker::m_whitelist.append(makeKeyValuePair(origin, domain));
 }
 
 } // namespace WebCore
