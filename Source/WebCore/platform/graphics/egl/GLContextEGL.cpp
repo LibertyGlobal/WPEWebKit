@@ -46,6 +46,7 @@
 #endif
 
 #include <wtf/Vector.h>
+#include <unistd.h>
 
 namespace WebCore {
 
