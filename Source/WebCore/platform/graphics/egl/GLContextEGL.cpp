@@ -46,7 +46,6 @@
 #endif
 
 #include <wtf/Vector.h>
-#include <unistd.h>
 
 namespace WebCore {
 
@@ -403,7 +402,6 @@ GLContextEGL::~GLContextEGL()
     destroyWPETarget();
 #endif
 
-    WTFLogAlways("ONEM-30704: release egl thread, pid = %d tid = %d", getpid(), gettid());
     eglReleaseThread();
 }
 
