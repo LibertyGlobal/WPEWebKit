@@ -33,6 +33,8 @@
 #include <optional>
 #include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/KeyValuePair.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
@@ -59,6 +61,14 @@ public:
     static void checkFormForMixedContent(Frame&, SecurityOrigin&, const URL&);
     static bool isMixedContent(SecurityOrigin&, const URL&);
     static std::optional<String> checkForMixedContentInFrameTree(const Frame&, const URL&);
+
+    static void addMixedContentWhitelistEntry(const String& origin, const String& domain);
+    static void removeMixedContentWhitelistEntry(const String& origin, const String& domain);
+    static void resetMixedContentWhitelist();
+
+private:
+    static bool isWhitelisted(const String& origin, const String& domain);
+    static WTF::Vector<WTF::KeyValuePair<WTF::String, WTF::String>> m_whitelist;
 };
 
 } // namespace WebCore
