@@ -44,6 +44,7 @@
 #include "GPUBasedCanvasRenderingContext.h"
 #include "GeometryUtilities.h"
 #include "GraphicsContext.h"
+#include "HostWindow.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
 #include "ImageBitmapRenderingContext.h"
@@ -898,6 +899,10 @@ bool HTMLCanvasElement::shouldAccelerate(unsigned area) const
         return false;
 
     if (area < settings.minimumAccelerated2dCanvasSize())
+        return false;
+
+    // Do not accelerate canvases that are smaller than 1/4 of the display size
+    if (area < document().view()->root()->hostWindow()->screenSize().area() / 4)
         return false;
 
     return true;
