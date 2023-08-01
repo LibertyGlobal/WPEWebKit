@@ -5,6 +5,7 @@
 
 #include "GLContextEGL.h"
 #include "PixelBuffer.h"
+#include "PixelBufferConversion.h"
 #include "TextureMapperPlatformLayerBuffer.h"
 #include "TextureMapperPlatformLayerProxyGL.h"
 #include <cairo-gl.h>
@@ -246,17 +247,43 @@ RefPtr<PixelBuffer> ImageBufferCairoGLSurfaceBackend::getPixelBuffer(const Pixel
 
 void ImageBufferCairoGLSurfaceBackend::putPixelBuffer(const PixelBuffer& pixelBuffer, const IntRect& srcRect, const IntPoint& destPoint, AlphaPremultiplication destFormat)
 {
-    // Create a new image surface and put the data there. Then copy its contents to the original gl surface in the specified rect.
-    auto surface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cairo_gl_surface_get_width(m_surfaces[0].get()), cairo_gl_surface_get_height(m_surfaces[0].get())));
-    IntRect srcRectScaled = toBackendCoordinates(srcRect);
-    IntPoint destPointScaled = toBackendCoordinates(destPoint);
-    ImageBufferBackend::putPixelBuffer(pixelBuffer, srcRect, destPoint, destFormat, cairo_image_surface_get_data(surface.get()));
-    cairo_surface_mark_dirty_rectangle(surface.get(), destPointScaled.x(), destPointScaled.y(), srcRectScaled.width(), srcRectScaled.height());
+    auto sourceRectClipped = intersection({ IntPoint::zero(), pixelBuffer.size() }, srcRect);
+    auto destinationRect = sourceRectClipped;
+    destinationRect.moveBy(destPoint);
+
+    if (srcRect.x() < 0)
+        destinationRect.setX(destinationRect.x() - srcRect.x());
+
+    if (srcRect.y() < 0)
+        destinationRect.setY(destinationRect.y() - srcRect.y());
+
+    destinationRect.intersect(backendRect());
+    sourceRectClipped.setSize(destinationRect.size());
+
+    // Create an intermediate surface with the size of the rectangle that we need to copy. Then we can use convertImagePixels
+    // to properly convert and copy the relevant pixels into this intermediate surface. Once this is done, use cairo to paint the
+    // intermediate surface into the buffer surface in the appropriate position.
+    auto surface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, destinationRect.width(), destinationRect.height()));
+
+    ConstPixelBufferConversionView source {
+        pixelBuffer.format(),
+        static_cast<unsigned>(4 * pixelBuffer.size().width()),
+        pixelBuffer.bytes() + sourceRectClipped.y() * source.bytesPerRow + sourceRectClipped.x() * 4
+    };
+
+    PixelBufferConversionView destination {
+        { destFormat, pixelFormat(), colorSpace() },
+        static_cast<unsigned>(4 * destinationRect.width()),
+        static_cast<uint8_t*>(cairo_image_surface_get_data(surface.get()))
+    };
+
+    convertImagePixels(source, destination, destinationRect.size());
+    cairo_surface_mark_dirty_rectangle(surface.get(), 0, 0, destinationRect.width(), destinationRect.height());
 
     auto cr = adoptRef(cairo_create(m_surfaces[0].get()));
     cairo_set_operator(cr.get(), CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(cr.get(), surface.get(), destPointScaled.x(), destPointScaled.y());
-    cairo_rectangle(cr.get(), destPointScaled.x(), destPointScaled.y(), srcRectScaled.width(), srcRectScaled.height());
+    cairo_set_source_surface(cr.get(), surface.get(), destinationRect.x(), destinationRect.y());
+    cairo_rectangle(cr.get(), destinationRect.x(), destinationRect.y(), destinationRect.width(), destinationRect.height());
     cairo_fill(cr.get());
 }
 
