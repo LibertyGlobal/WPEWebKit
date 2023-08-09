@@ -32,6 +32,7 @@ const WTF::Seconds WEBCORE_GSTREAMER_EME_LICENSE_KEY_RESPONSE_TIMEOUT = WTF::Sec
 namespace WebCore {
 
 const char* GStreamerEMEUtilities::s_ClearKeyUUID = WEBCORE_GSTREAMER_EME_UTILITIES_CLEARKEY_UUID;
+const char* GStreamerEMEUtilities::s_ClearKeyUUID1 = WEBCORE_GSTREAMER_EME_UTILITIES_CLEARKEY_UUID1;
 const char* GStreamerEMEUtilities::s_ClearKeyKeySystem = "org.w3.clearkey";
 const char* GStreamerEMEUtilities::s_UnspecifiedUUID = GST_PROTECTION_UNSPECIFIED_SYSTEM_ID;
 const char* GStreamerEMEUtilities::s_UnspecifiedKeySystem = "org.webkit.unspecifiedkeysystem";
