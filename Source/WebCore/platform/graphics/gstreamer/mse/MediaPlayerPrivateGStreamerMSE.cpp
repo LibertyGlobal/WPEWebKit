@@ -218,6 +218,23 @@ void MediaPlayerPrivateGStreamerMSE::pause()
     updateStates();
 }
 
+bool MediaPlayerPrivateGStreamerMSE::paused() const
+{
+    if (!m_pipeline)
+        return true;
+
+    if (m_isEndReached) {
+        GST_DEBUG_OBJECT(pipeline(), "Ignoring pause at EOS");
+        return true;
+    }
+
+    GstState state;
+    gst_element_get_state(m_pipeline.get(), &state, nullptr, 0);
+    bool paused = state <= GST_STATE_PAUSED;
+    GST_LOG_OBJECT(pipeline(), "Paused: %s", toString(paused).utf8().data());
+    return paused;
+}
+
 MediaTime MediaPlayerPrivateGStreamerMSE::durationMediaTime() const
 {
     if (UNLIKELY(!m_pipeline || m_didErrorOccur))
@@ -357,15 +374,18 @@ void MediaPlayerPrivateGStreamerMSE::sourceSetup(GstElement* sourceElement)
 void MediaPlayerPrivateGStreamerMSE::updateStates()
 {
     bool shouldBePlaying = !m_isPaused && readyState() >= MediaPlayer::ReadyState::HaveFutureData;
-    GST_DEBUG_OBJECT(pipeline(), "shouldBePlaying = %s, m_isPipelinePlaying = %s", boolForPrinting(shouldBePlaying), boolForPrinting(m_isPipelinePlaying));
-    if (shouldBePlaying && !m_isPipelinePlaying) {
+
+    GstState currentState, pendingState;
+    gst_element_get_state(m_pipeline.get(), &currentState, &pendingState, 0);
+    bool isPipelinePlaying = currentState == GST_STATE_PLAYING || pendingState == GST_STATE_PLAYING;
+
+    GST_DEBUG_OBJECT(pipeline(), "shouldBePlaying = %s, isPipelinePlaying = %s gst_element_get_state:(current:%d,pending:%d)", boolForPrinting(shouldBePlaying), boolForPrinting(isPipelinePlaying), currentState, pendingState);
+    if (shouldBePlaying && !isPipelinePlaying) {
         if (!changePipelineState(GST_STATE_PLAYING))
             GST_ERROR_OBJECT(pipeline(), "Setting the pipeline to PLAYING failed");
-        m_isPipelinePlaying = true;
-    } else if (!shouldBePlaying && m_isPipelinePlaying) {
+    } else if (!shouldBePlaying && isPipelinePlaying) {
         if (!changePipelineState(GST_STATE_PAUSED))
             GST_ERROR_OBJECT(pipeline(), "Setting the pipeline to PAUSED failed");
-        m_isPipelinePlaying = false;
     }
 }
 

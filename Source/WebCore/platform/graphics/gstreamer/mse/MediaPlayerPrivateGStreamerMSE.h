@@ -55,6 +55,7 @@ public:
 
     void play() override;
     void pause() override;
+    bool paused() const override;
     void seek(const MediaTime&) override;
     bool doSeek(const MediaTime&, float rate, GstSeekFlags) override;
 
@@ -110,7 +111,6 @@ private:
     WeakPtr<MediaSourcePrivateClient> m_mediaSource;
     RefPtr<MediaSourcePrivateGStreamer> m_mediaSourcePrivate;
     MediaTime m_mediaTimeDuration { MediaTime::invalidTime() };
-    bool m_isPipelinePlaying = true;
     bool m_hasAllTracks = false;
     Vector<RefPtr<MediaSourceTrackGStreamer>> m_tracks;
 

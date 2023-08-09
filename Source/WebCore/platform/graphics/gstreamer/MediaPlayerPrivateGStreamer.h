@@ -147,7 +147,7 @@ public:
     void prepareToPlay() final;
     void play() override;
     void pause() override;
-    bool paused() const final;
+    bool paused() const;
     bool ended() const final;
     bool seeking() const override { return m_isSeeking; }
     void seek(const MediaTime&) override;
