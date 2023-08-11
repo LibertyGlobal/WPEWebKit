@@ -456,7 +456,7 @@ static void webkitMediaCommonEncryptionDecryptProcessProtectionEvents(WebKitMedi
         gst_event_parse_protection(event.get(), &eventKeySystemUUID, &buffer, &origin);
         const char* eventKeySystem = WebCore::GStreamerEMEUtilities::uuidToKeySystem(eventKeySystemUUID);
 
-        GST_TRACE_OBJECT(self, "handling protection event %u for %s", GST_EVENT_SEQNUM(event.get()), eventKeySystem);
+        GST_DEBUG_OBJECT(self, "handling protection event %u for %s eventKeySystemUUID:%s", GST_EVENT_SEQNUM(event.get()), eventKeySystem, eventKeySystemUUID);
 
         if (isCDMInstanceAvailable && g_strcmp0(WebCore::GStreamerEMEUtilities::keySystemToUuid(eventKeySystem), WebCore::GStreamerEMEUtilities::keySystemToUuid(priv->m_cdmInstance->keySystem()))) {
             GST_TRACE_OBJECT(self, "protection event for a different key system");

@@ -29,6 +29,7 @@
 #include <wtf/Seconds.h>
 
 #define WEBCORE_GSTREAMER_EME_UTILITIES_CLEARKEY_UUID "58147ec8-0423-4659-92e6-f52c5ce8c3cc"
+#define WEBCORE_GSTREAMER_EME_UTILITIES_CLEARKEY_UUID1 "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b"
 #if USE(OPENCDM)
 #define WEBCORE_GSTREAMER_EME_UTILITIES_PLAYREADY_UUID "9a04f079-9840-4286-ab92-e65be0885f95"
 #endif
@@ -47,6 +48,7 @@ class GStreamerEMEUtilities {
 
 public:
     static const char* s_ClearKeyUUID;
+    static const char* s_ClearKeyUUID1;
     static const char* s_ClearKeyKeySystem;
     static const char* s_UnspecifiedUUID;
     static const char* s_UnspecifiedKeySystem;
@@ -90,6 +92,9 @@ public:
         if (isClearKeyKeySystem(keySystem))
             return s_ClearKeyUUID;
 
+	if (isClearKeyKeySystem(keySystem))
+            return s_ClearKeyUUID1;
+
         if (isUnspecifiedKeySystem(keySystem)) {
 #if USE(OPENCDM)
             return s_WidevineUUID;
@@ -113,6 +118,9 @@ public:
     static const char* uuidToKeySystem(const String& uuid)
     {
         if (equalIgnoringASCIICase(uuid, s_ClearKeyUUID))
+            return s_ClearKeyKeySystem;
+
+	if (equalIgnoringASCIICase(uuid, s_ClearKeyUUID1))
             return s_ClearKeyKeySystem;
 
         if (equalIgnoringASCIICase(uuid, s_UnspecifiedUUID))
