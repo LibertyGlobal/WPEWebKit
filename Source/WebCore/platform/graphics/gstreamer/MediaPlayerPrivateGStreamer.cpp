@@ -230,7 +230,6 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
     m_tracker = MediaPlayerGStreamerEncryptedPlayTracker::create();
 #endif
     m_odhReporter.start_report_thread();
-    m_odhReporter.start_statistics_thread();
 }
 
 MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
@@ -301,7 +300,6 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DESTROY, "", OdhMediaType::NONE, m_avContextGetter);
     m_odhReporter.unset_reporting_callbacks();
     m_odhReporter.report_all_and_stop();
-    m_odhReporter.stop_collecting_odh_statistics();
     m_avContextGetter.setPipeline(nullptr);
 }
 
