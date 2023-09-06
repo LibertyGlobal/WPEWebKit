@@ -2293,6 +2293,8 @@ void MediaPlayerPrivateGStreamer::updateBufferingStatus(GstBufferingMode mode, d
         m_fillTimer.startRepeating(200_ms);
     }
 
+    // Force buffering flag to be always false so we don't enter buffering state at all
+    m_isBuffering = false;
     m_bufferingPercentage = percentage;
 
     // resetHistory is used to forget about the past values and set them like the new ones. This is useful when resetting
