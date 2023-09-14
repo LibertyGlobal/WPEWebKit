@@ -297,6 +297,7 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
         g_signal_handlers_disconnect_matched(m_pipeline.get(), G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, this);
     }
 
+    m_odhReporter.watch_odh_statistics(m_avContextGetter);
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DESTROY, "", OdhMediaType::NONE, m_avContextGetter);
     m_odhReporter.unset_reporting_callbacks();
     m_odhReporter.report_all_and_stop();
@@ -573,6 +574,7 @@ void MediaPlayerPrivateGStreamer::play()
             totalBytes();
         setDownloadBuffering();
         GST_INFO("Play");
+        m_odhReporter.watch_odh_statistics(m_avContextGetter);
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAY, "", {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     } else
         loadingFailed(MediaPlayer::Empty);
@@ -589,6 +591,7 @@ void MediaPlayerPrivateGStreamer::pause()
     if (changePipelineState(GST_STATE_PAUSED)) {
         m_paused = true;
         GST_INFO("Pause");
+        m_odhReporter.watch_odh_statistics(m_avContextGetter);
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PAUSE, "", {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     } else
         loadingFailed(MediaPlayer::Empty);
@@ -670,6 +673,7 @@ void MediaPlayerPrivateGStreamer::seek(const MediaTime& mediaTime)
     char json_str[100];
     int len = snprintf(json_str, 100, "{\"seek_from\":%f, \"seek_to\":%f}", playbackPosition().toDouble(), time.toDouble());
     if (len > 0 && len < 100) {
+        m_odhReporter.watch_odh_statistics(m_avContextGetter);
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_START, json_str, {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
     }
 
@@ -1350,6 +1354,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
 
         m_errorMessage = err->message;
         error = MediaPlayer::Empty;
+        m_odhReporter.watch_odh_statistics(m_avContextGetter);
         m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_PLAYBACK_ERROR, m_errorMessage.utf8().data(), {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
         if (g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_CODEC_NOT_FOUND)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT)
@@ -2259,6 +2264,7 @@ void MediaPlayerPrivateGStreamer::asyncStateChangeDone()
             char json_str[100];
             int len = snprintf(json_str, 100, "{\"seek_to\":%f}", m_seekTime.toDouble());
             if (len > 0 && len < 100) {
+                m_odhReporter.watch_odh_statistics(m_avContextGetter);
                 m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_SEEK_DONE, json_str, {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
             }
 
@@ -2496,6 +2502,7 @@ void MediaPlayerPrivateGStreamer::handleDecryptionError(const GstStructure* stru
     loadingFailed(MediaPlayer::FormatError);
     m_player->decryptErrorEncountered(); // override the error code
 
+    m_odhReporter.watch_odh_statistics(m_avContextGetter);
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_DECRYPT_ERROR, m_errorMessage.utf8().data(), {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
 }
 
@@ -2709,6 +2716,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
         m_player->timeChanged();
     }
 
+    m_odhReporter.watch_odh_statistics(m_avContextGetter);
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_END_OF_STREAM, "", OdhMediaType::NONE, m_avContextGetter);
 }
 
@@ -3231,6 +3239,7 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const gchar* playbinName, con
     }
 
     m_avContextGetter.setPipeline(m_pipeline);
+    m_odhReporter.watch_odh_statistics(m_avContextGetter);
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_CREATE, "", OdhMediaType::NONE, m_avContextGetter);
 }
 
