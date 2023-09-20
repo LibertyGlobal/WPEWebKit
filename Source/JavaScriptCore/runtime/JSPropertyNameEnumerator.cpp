@@ -100,7 +100,7 @@ void getEnumerablePropertyNames(JSGlobalObject* globalObject, JSObject* base, Pr
 
     auto getOwnPropertyNames = [&](JSObject* object) {
         auto mode = DontEnumPropertiesMode::Exclude;
-        if (object->type() == ProxyObjectType) {
+        if (object->type() == ProxyObjectType || object->type() == ErrorInstanceType) {
             // This ensures Proxy's [[GetOwnProperty]] trap is invoked only once per property, by OpHasEnumerableProperty.
             // Although doing this for all objects is spec-conformant, collecting DontEnum properties isn't free.
             mode = DontEnumPropertiesMode::Include;

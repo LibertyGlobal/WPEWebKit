@@ -241,13 +241,14 @@ bool ErrorInstance::materializeErrorInfoIfNeeded(VM& vm)
     computeErrorInfo(vm);
 
     if (!m_stackString.isNull()) {
-        auto attributes = static_cast<unsigned>(PropertyAttribute::DontEnum);
+        auto attributes = static_cast<unsigned>(PropertyAttribute::ReadOnly);
 
         putDirect(vm, vm.propertyNames->line, jsNumber(m_line), attributes);
         putDirect(vm, vm.propertyNames->column, jsNumber(m_column), attributes);
         if (!m_sourceURL.isEmpty())
             putDirect(vm, vm.propertyNames->sourceURL, jsString(vm, WTFMove(m_sourceURL)), attributes);
 
+        attributes = static_cast<unsigned>(PropertyAttribute::DontEnum);
         putDirect(vm, vm.propertyNames->stack, jsString(vm, WTFMove(m_stackString)), attributes);
     }
 

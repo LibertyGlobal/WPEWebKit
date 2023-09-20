@@ -76,7 +76,7 @@ String StackFrame::sourceURL(VM& vm) const
 
     if (!sourceURL.isNull())
         return sourceURL;
-    return emptyString();
+    return aboutBlankURL().string();
 }
 
 String StackFrame::functionName(VM& vm) const
