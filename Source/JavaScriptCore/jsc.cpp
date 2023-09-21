@@ -2546,6 +2546,7 @@ void CommandLine::parseArguments(int argc, char** argv)
         }
         if (!strcmp(arg, "-s")) {
 #if HAVE(SIGNAL_H)
+	    fprintf(stderr, "Suresh CommandLine::parseArguments: raise SIGFPE, SIGBUS signal\n");
             signal(SIGILL, _exit);
             signal(SIGFPE, _exit);
             signal(SIGBUS, _exit);
