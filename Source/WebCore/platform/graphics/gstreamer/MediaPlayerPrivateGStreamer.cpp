@@ -475,7 +475,7 @@ MediaTime MediaPlayerPrivateGStreamer::playbackPosition() const
         gst_query_parse_position(query, 0, &position);
     gst_query_unref(query);
 
-    GST_TRACE_OBJECT(pipeline(), "Position %" GST_TIME_FORMAT, GST_TIME_ARGS(position));
+    GST_ERROR_OBJECT(pipeline(), "Position %" GST_TIME_FORMAT, GST_TIME_ARGS(position));
 
     MediaTime playbackPosition = MediaTime::zeroTime();
     GstClockTime gstreamerPosition = static_cast<GstClockTime>(position);
@@ -1394,6 +1394,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         }
         break;
     case GST_MESSAGE_EOS:
+    	GST_DEBUG("suresh GST_MESSAGE_EOS->calling didEnd");
         didEnd();
         fprintf(stderr, "HTML5 video: End of Stream [%s]\n",m_url.string().utf8().data());
         m_reportedPlaybackEOS = true;
@@ -1739,7 +1740,7 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
                 if (gst_structure_get_uint(gst_value_get_structure(gst_value_array_get_value(queues, i)), "bytes", &bytes))
                     multiqueueBufferedBytes += bytes;
             }
-            GST_TRACE("[Buffering] buffered bytes by multiqueue: %d", multiqueueBufferedBytes);
+            GST_ERROR("[Buffering] buffered bytes by multiqueue: %d", multiqueueBufferedBytes);
         }
 
         size_t currentLevelBytes = (size_t)maxSizeBytes * (size_t)m_bufferingPercentage / (size_t)100
@@ -1757,7 +1758,7 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
         }
     } else
 #endif
-        GST_TRACE("[Buffering] max loaded time: %s, current playback position: %s",
+        GST_ERROR("[Buffering] max loaded time: %s, current playback position: %s",
                   toString(m_maxTimeLoaded).utf8().data(),
                   toString(playbackPosition()).utf8().data());
     if (m_isShoutcastStreaming) {
@@ -2693,7 +2694,7 @@ void MediaPlayerPrivateGStreamer::timeChanged()
 
 void MediaPlayerPrivateGStreamer::didEnd()
 {
-    GST_INFO("Playback ended");
+    GST_INFO("Playback ended ->didEnd()->start");
 
     // Synchronize position and duration values to not confuse the
     // HTMLMediaElement. In some cases like reverse playback the
@@ -2718,6 +2719,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
 
     m_odhReporter.watch_odh_statistics(m_avContextGetter);
     m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_END_OF_STREAM, "", OdhMediaType::NONE, m_avContextGetter);
+     GST_INFO("Playback ended ->didEnd()->End");
 }
 
 void MediaPlayerPrivateGStreamer::durationChanged()

@@ -481,6 +481,7 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek()
 
 void MediaPlayerPrivateGStreamerMSE::maybeFinishSeek()
 {
+	GST_DEBUG("[Seek] MediaPlayerPrivateGStreamerMSE::maybeFinishSeek");
     if (!m_seeking || !m_mseSeekCompleted || !m_gstSeekCompleted)
         return;
 
@@ -581,9 +582,9 @@ void MediaPlayerPrivateGStreamerMSE::setReadyState(MediaPlayer::ReadyState ready
     }
 
     if (m_readyState == MediaPlayer::HaveMetadata && oldReadyState > MediaPlayer::HaveMetadata && isPlaying && !playbackPipelineHasFutureData()) {
-        GST_TRACE("Changing pipeline to PAUSED...");
+        GST_ERROR("Changing pipeline to PAUSED...");
         bool ok = changePipelineState(GST_STATE_PAUSED);
-        GST_TRACE("Changed pipeline to PAUSED: %s", ok ? "Success" : "Error");
+        GST_ERROR("Changed pipeline to PAUSED: %s", ok ? "Success" : "Error");
     }
 }
 
@@ -1207,7 +1208,7 @@ void MediaPlayerPrivateGStreamerMSE::markEndOfStream(MediaSourcePrivate::EndOfSt
     if (status != MediaSourcePrivate::EosNoError)
         return;
 
-    GST_DEBUG("Marking end of stream");
+    GST_DEBUG("suresh MediaPlayerPrivateGStreamerMSE: Marking end of stream");
     m_eosMarked = true;
     updateStates();
 }

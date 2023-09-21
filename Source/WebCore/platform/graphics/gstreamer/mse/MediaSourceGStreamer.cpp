@@ -96,6 +96,7 @@ void MediaSourceGStreamer::durationChanged()
 
 void MediaSourceGStreamer::markEndOfStream(EndOfStreamStatus status)
 {
+     fprintf(stderr, "MediaSourceGStreamer::markEndOfStream");
     m_client->markEndOfStream(status);
 }
 

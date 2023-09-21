@@ -228,13 +228,13 @@ static bool webKitMediaOpenCDMDecryptorDecrypt(WebKitMediaCommonEncryptionDecryp
         auto& cdmInstanceOpenCDM = downcast<WebCore::CDMInstanceOpenCDM>(*cdmInstance);
         priv->m_openCdmSession.reset(opencdm_get_system_session(cdmInstanceOpenCDM.ocdmSystem(), mappedKeyID.data(), mappedKeyID.size(), WEBCORE_GSTREAMER_EME_LICENSE_KEY_RESPONSE_TIMEOUT.millisecondsAs<uint32_t>()));
         if (!priv->m_openCdmSession) {
-            GST_ELEMENT_ERROR (self, STREAM, DECRYPT, ("Session is empty or unusable."), (NULL));
+            GST_ELEMENT_ERROR (self, STREAM, DECRYPT, ("Session is :wqempty or unusable."), (NULL));
             return false;
         }
     }
 
     // Decrypt cipher.
-    GST_TRACE_OBJECT(self, "decrypting");
+    GST_ERROR_OBJECT(self, "decrypting");
     if (int errorCode = opencdm_gstreamer_session_decrypt(priv->m_openCdmSession.get(), buffer, subSamplesBuffer, subSampleCount, ivBuffer, keyIDBuffer, 0)) {
         GUniquePtr<gchar> errorMessage (g_strdup_printf("Subsample decryption failed (code=%d)", errorCode));
         gst_element_post_message(

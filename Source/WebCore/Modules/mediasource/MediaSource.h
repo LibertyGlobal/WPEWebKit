@@ -38,11 +38,12 @@
 #include "GenericEventQueue.h"
 #include "MediaSourcePrivateClient.h"
 #include "URLRegistry.h"
+#include "HTMLMediaElement.h"
 
 namespace WebCore {
 
 class ContentType;
-class HTMLMediaElement;
+//class HTMLMediaElement;
 class SourceBuffer;
 class SourceBufferList;
 class SourceBufferPrivate;
@@ -87,8 +88,8 @@ public:
     ReadyState readyState() const { return m_readyState; }
     ExceptionOr<void> endOfStream(std::optional<EndOfStreamError>);
 
-    HTMLMediaElement* mediaElement() const { return m_mediaElement; }
-
+    //HTMLMediaElement* mediaElement() const { return m_mediaElement; }
+    HTMLMediaElement* mediaElement() const { return m_mediaElement.get(); }
     SourceBufferList* sourceBuffers() { return m_sourceBuffers.get(); }
     SourceBufferList* activeSourceBuffers() { return m_activeSourceBuffers.get(); }
     ExceptionOr<Ref<SourceBuffer>> addSourceBuffer(const String& type);
@@ -146,7 +147,8 @@ private:
     RefPtr<SourceBufferList> m_activeSourceBuffers;
     mutable std::unique_ptr<PlatformTimeRanges> m_buffered;
     std::unique_ptr<PlatformTimeRanges> m_liveSeekable;
-    HTMLMediaElement* m_mediaElement { nullptr };
+    //HTMLMediaElement* m_mediaElement { nullptr };
+    WeakPtr<HTMLMediaElement> m_mediaElement;
     MediaTime m_duration;
     MediaTime m_pendingSeekTime;
     ReadyState m_readyState { ReadyState::Closed };

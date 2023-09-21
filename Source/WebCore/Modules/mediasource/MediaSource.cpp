@@ -550,6 +550,7 @@ void MediaSource::setReadyState(ReadyState state)
 
 ExceptionOr<void> MediaSource::endOfStream(std::optional<EndOfStreamError> error)
 {
+     LOG(MediaSource, "suresh MediaSource::endOfStream");
     // 2.2 https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html#widl-MediaSource-endOfStream-void-EndOfStreamError-error
     // 1. If the readyState attribute is not in the "open" state then throw an
     // InvalidStateError exception and abort these steps.
@@ -594,6 +595,7 @@ void MediaSource::streamEndedWithError(std::optional<EndOfStreamError> error)
         // 2. Notify the media element that it now has all of the media data.
         for (auto& sourceBuffer : *m_sourceBuffers)
             sourceBuffer->trySignalAllSamplesEnqueued();
+        LOG(MediaSource, "MediaSource::streamEndedWithError->calling markEndOfStream");
         m_private->markEndOfStream(MediaSourcePrivate::EosNoError);
     } else if (error == EndOfStreamError::Network) {
         // ↳ If error is set to "network"
@@ -921,7 +923,8 @@ bool MediaSource::attachToElement(HTMLMediaElement& element)
 
     ASSERT(isClosed());
 
-    m_mediaElement = &element;
+    //m_mediaElement = &element;
+    m_mediaElement = makeWeakPtr(&element);
     return true;
 }
 

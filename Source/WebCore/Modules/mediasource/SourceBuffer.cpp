@@ -1757,6 +1757,7 @@ void SourceBuffer::sourceBufferPrivateDidReceiveSample(MediaSample& sample)
         MediaTime presentationStartTime = MediaTime::zeroTime();
         if (presentationTimestamp < presentationStartTime) {
             LOG(MediaSource, "SourceBuffer::sourceBufferPrivateDidReceiveSample(%p) - failing because presentationTimestamp < presentationStartTime", this);
+            LOG(MediaSource, "calling streamEndedWithError");
             m_source->streamEndedWithError(MediaSource::EndOfStreamError::Decode);
             return;
         }

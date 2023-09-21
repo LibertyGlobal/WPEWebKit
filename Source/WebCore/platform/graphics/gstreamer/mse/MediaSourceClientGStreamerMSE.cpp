@@ -152,6 +152,7 @@ bool MediaSourceClientGStreamerMSE::append(RefPtr<SourceBufferPrivateGStreamer> 
 
 void MediaSourceClientGStreamerMSE::markEndOfStream(MediaSourcePrivate::EndOfStreamStatus status)
 {
+     GST_DEBUG("MediaSourceClientGStreamerMSE::markEndOfStream");
     ASSERT(WTF::isMainThread());
 
     if (!m_playerPrivate)
