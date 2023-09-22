@@ -3280,7 +3280,9 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
     GST_DEBUG("Element set-up for %s", GST_ELEMENT_NAME(element));
 #if PLATFORM(BROADCOM)
     if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink")) {
-        g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
+        GST_INFO("Skip enabling async mode for brcmaduiosink");
+        // ASYNC mode is disabled for playbin2 after integrating playbin3 patches
+        //g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
     }
 #endif
 
