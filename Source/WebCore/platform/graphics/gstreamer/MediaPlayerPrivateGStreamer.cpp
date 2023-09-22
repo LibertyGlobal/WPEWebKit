@@ -3279,9 +3279,17 @@ void MediaPlayerPrivateGStreamer::elementSetupCallback(MediaPlayerPrivateGStream
 {
     GST_DEBUG("Element set-up for %s", GST_ELEMENT_NAME(element));
 #if PLATFORM(BROADCOM)
+/*
+ * ONEM-31442: RDK HAL version 14 includes playbin3 patches from Broadcom which redesigned audiosink
+ * implementation and has impact on playbin2.
+ * "async" mode for brcmaudiosink doesn't work anymore for playbin2.
+ * Temporarily disable "async" when RDK HAL 14 is detected.
+ */
+#ifndef RDK_HAL_VER_14
     if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink")) {
         g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
     }
+#endif
 #endif
 
 #if USE(WESTEROS_SINK)
