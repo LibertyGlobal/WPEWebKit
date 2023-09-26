@@ -2304,8 +2304,15 @@ void MediaPlayerPrivateGStreamer::configureElementPlatformQuirks(GstElement* ele
 #endif
 
 #if PLATFORM(BROADCOM)
-    if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink"))
-        g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
+   if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink")) {
+        const char* usePlaybin3 = g_getenv("WEBKIT_GST_USE_PLAYBIN3");
+        if (usePlaybin3 && !strcmp(usePlaybin3, "1")) {
+            GST_INFO_OBJECT(pipeline(), "Enable async mode for brcmaduiosink");
+            g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
+        } else {
+            GST_INFO_OBJECT(pipeline(), "Skip enabling async mode for brcmaduiosink");
+        }
+    }
 #if ENABLE(MEDIA_STREAM)
     if (m_streamPrivate && !g_strcmp0(G_OBJECT_TYPE_NAME(G_OBJECT(element)), "GstBrcmPCMSink") && gstObjectHasProperty(element, "low_latency")) {
         GST_DEBUG_OBJECT(pipeline(), "Set 'low_latency' in brcmpcmsink");
