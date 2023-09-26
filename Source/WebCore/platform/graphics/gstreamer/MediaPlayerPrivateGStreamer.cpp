@@ -2468,6 +2468,48 @@ void MediaPlayerPrivateGStreamer::configureElementPlatformQuirks(GstElement* ele
         characteristics.add({ ElementRuntimeCharacteristics::IsLiveStream });
 
     GStreamerQuirksManager::singleton().configureElement(element, WTFMove(characteristics));
+#if PLATFORM(BROADCOM)
+    if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiosink")) {
+        const char* usePlaybin3 = g_getenv("WEBKIT_GST_USE_PLAYBIN3");
+        if (usePlaybin3 && !strcmp(usePlaybin3, "1")) {
+            GST_INFO_OBJECT(pipeline(), "Enable async mode for brcmaduiosink");
+            g_object_set(G_OBJECT(element), "async", TRUE, nullptr);
+        } else {
+            GST_INFO_OBJECT(pipeline(), "Skip enabling async mode for brcmaduiosink");
+        }
+    } else if (g_str_has_prefix(GST_ELEMENT_NAME(element), "brcmaudiodecoder")) {
+        if (m_isLiveStream.value_or(false)) {
+            // Limit BCM audio decoder buffering to 1sec so live progressive playback can start faster.
+            g_object_set(G_OBJECT(element), "limit_buffering_ms", 1000, nullptr);
+        }
+    }
+#if ENABLE(MEDIA_STREAM)
+    if (m_streamPrivate && !g_strcmp0(G_OBJECT_TYPE_NAME(G_OBJECT(element)), "GstBrcmPCMSink") && gstObjectHasProperty(element, "low_latency")) {
+        GST_DEBUG_OBJECT(pipeline(), "Set 'low_latency' in brcmpcmsink");
+        g_object_set(element, "low_latency", TRUE, "low_latency_max_queued_ms", 60, nullptr);
+    }
+#endif
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+    if (m_streamPrivate && !g_strcmp0(G_OBJECT_TYPE_NAME(G_OBJECT(element)), "GstWesterosSink") && gstObjectHasProperty(element, "immediate-output")) {
+        GST_DEBUG_OBJECT(pipeline(), "Enable 'immediate-output' in WesterosSink");
+        g_object_set(element, "immediate-output", TRUE, nullptr);
+    }
+#endif
+
+#if ENABLE(MEDIA_STREAM) && PLATFORM(REALTEK)
+    if (m_streamPrivate) {
+        if (gstObjectHasProperty(element, "media-tunnel")) {
+            GST_INFO_OBJECT(pipeline(), "Enable 'immediate-output' in rtkaudiosink");
+            g_object_set(element, "media-tunnel", FALSE, "audio-service", TRUE, "lowdelay-sync-mode", TRUE, nullptr);
+        }
+        if (gstObjectHasProperty(element, "lowdelay-mode")) {
+            GST_INFO_OBJECT(pipeline(), "Enable 'lowdelay-mode' in rtk omx decoder");
+            g_object_set(element, "lowdelay-mode", TRUE, nullptr);
+        }
+    }
+#endif
 }
 
 void MediaPlayerPrivateGStreamer::configureDownloadBuffer(GstElement* element)
