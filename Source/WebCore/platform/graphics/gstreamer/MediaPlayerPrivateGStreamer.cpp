@@ -2824,6 +2824,12 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamer::supportsType(const MediaE
     auto& gstRegistryScanner = GStreamerRegistryScanner::singleton();
     result = gstRegistryScanner.isContentTypeSupported(GStreamerRegistryScanner::Configuration::Decoding, parameters.type, parameters.contentTypesRequiringHardwareSupport);
 
+#if PLATFORM(BROADCOM)
+    if (String::fromLatin1("video/webm") == parameters.type.containerType()) {
+        result = MediaPlayer::SupportsType::IsNotSupported;
+    }
+#endif
+
     GST_DEBUG("Supported: %s", convertEnumerationToString(result).utf8().data());
     return result;
 }
