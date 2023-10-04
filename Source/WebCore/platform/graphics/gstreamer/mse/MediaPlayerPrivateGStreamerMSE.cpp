@@ -161,7 +161,7 @@ MediaPlayerPrivateGStreamerMSE::MediaPlayerPrivateGStreamerMSE(MediaPlayer* play
     if (gActivePlayerNum > 1)
         GCController::singleton().garbageCollectOnNextRunLoop();
     fprintf(stderr, "HTML5 video: Player constructed [%p]\n",this);
-    GST_TRACE("creating the player (%p)", this);
+    GST_ERROR("creating the player (%p)", this);
 }
 
 MediaPlayerPrivateGStreamerMSE::~MediaPlayerPrivateGStreamerMSE()

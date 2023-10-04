@@ -237,6 +237,7 @@ protected:
     GRefPtr<GstElement> m_source;
     bool m_volumeAndMuteInitialized;
     MediaTime m_previousDuration;
+    bool m_didFirstSeek = false;
 
     // ODH AV telemetry reports
     class AvContextGetterImpl: public AvContextGetter {
@@ -250,6 +251,7 @@ protected:
 
     private:
         GRefPtr<GstElement> m_pipeline;
+        //bool m_didFirstSeek = false;
     };
     AvContextGetterImpl m_avContextGetter;
     AvOdhReporter m_odhReporter;

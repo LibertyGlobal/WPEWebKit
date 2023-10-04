@@ -1456,7 +1456,7 @@ void MediaPlayerPrivateGStreamerBase::handleProtectionEvents(const Vector<GstEve
         gst_event_parse_protection(event, &eventKeySystemUUID, &buffer, nullptr);
         isSystemUUIDUnspecified = !g_strcmp0(eventKeySystemUUID, GStreamerEMEUtilities::s_UnspecifiedUUID);
 
-        GST_TRACE("handling protection event %u for %s", GST_EVENT_SEQNUM(event), eventKeySystemUUID);
+        GST_ERROR("handling protection event %u for %s", GST_EVENT_SEQNUM(event), eventKeySystemUUID);
         if (m_cdmInstance && g_strcmp0(eventKeySystemUUID, GStreamerEMEUtilities::keySystemToUuid(m_cdmInstance->keySystem()))) {
             GST_TRACE("protection event for a different key system");
             continue;
@@ -1547,7 +1547,7 @@ void MediaPlayerPrivateGStreamerBase::attemptToDecryptWithInstance(CDMInstance& 
     }
 
     ASSERT(m_cdmInstance.get() == &instance);
-    GST_TRACE("instance %p, current stored %p", &instance, m_cdmInstance.get());
+    GST_ERROR("instance %p, current stored %p", &instance, m_cdmInstance.get());
     attemptToDecryptWithLocalInstance();
 }
 

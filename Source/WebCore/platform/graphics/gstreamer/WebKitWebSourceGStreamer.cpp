@@ -355,7 +355,7 @@ static void webKitWebSrcGetProperty(GObject* object, guint propID, GValue* value
 static void webKitWebSrcStop(WebKitWebSrc* src)
 {
     WebKitWebSrcPrivate* priv = src->priv;
-
+     GST_DEBUG("suresh webKitWebSrcStop");
     if (priv->resource || (priv->loader && !priv->keepAlive)) {
         GRefPtr<WebKitWebSrc> protector = WTF::ensureGRef(src);
         priv->notifier->cancelPendingNotifications(MainThreadSourceNotification::NeedData | MainThreadSourceNotification::EnoughData | MainThreadSourceNotification::Seek);
@@ -397,6 +397,7 @@ static void webKitWebSrcStop(WebKitWebSrc* src)
     }
 
     GST_DEBUG_OBJECT(src, "Stopped request. Was seeking: %s", wasSeeking ? "yes":"no");
+     GST_DEBUG("webKitWebSrcStop:END -> Stopped request. Was seeking: %s", wasSeeking ? "yes":"no");
 }
 
 static bool webKitWebSrcSetExtraHeader(GQuark fieldId, const GValue* value, gpointer userData)
@@ -545,8 +546,10 @@ static GstStateChangeReturn webKitWebSrcChangeState(GstElement* element, GstStat
     WebKitWebSrc* src = WEBKIT_WEB_SRC(element);
     WebKitWebSrcPrivate* priv = src->priv;
 
+    GST_DEBUG("suresh webKitWebSrcChangeState transition:%d ",transition);
     switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+    GST_DEBUG("suresh GST_STATE_CHANGE_NULL_TO_READY");
         if (!priv->appsrc) {
             gst_element_post_message(element,
                                      gst_missing_element_message_new(element, "appsrc"));
@@ -568,12 +571,14 @@ static GstStateChangeReturn webKitWebSrcChangeState(GstElement* element, GstStat
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
         GST_DEBUG_OBJECT(src, "READY->PAUSED");
+        GST_DEBUG("suresh GST_STATE_CHANGE_READY_TO_PAUSED->CALLING webKitWebSrcStart");
         webKitWebSrcStart(src);
         break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
         GST_DEBUG_OBJECT(src, "PAUSED->READY");
+         GST_DEBUG("suresh GST_STATE_CHANGE_PAUSED_TO_READY->calling webKitWebSrcStop");
         webKitWebSrcStop(src);
         break;
     }
@@ -723,7 +728,7 @@ static void webKitWebSrcUriHandlerInit(gpointer gIface, gpointer)
 
 static void webKitWebSrcNeedData(WebKitWebSrc* src)
 {
-    GST_LOG_OBJECT(src, "Need more data");
+    GST_DEBUG_OBJECT(src, "Need more data");
     GRefPtr<WebKitWebSrc> protector = WTF::ensureGRef(src);
     src->priv->notifier->notify(MainThreadSourceNotification::NeedData, [protector] {
         WebKitWebSrcPrivate* priv = protector->priv;
@@ -738,7 +743,7 @@ static void webKitWebSrcNeedData(WebKitWebSrc* src)
 
 static void webKitWebSrcEnoughData(WebKitWebSrc* src)
 {
-    GST_LOG_OBJECT(src, "Have enough data");
+    GST_DEBUG_OBJECT(src, "Have enough data");
     GRefPtr<WebKitWebSrc> protector = WTF::ensureGRef(src);
     src->priv->notifier->notify(MainThreadSourceNotification::EnoughData, [protector] {
         WebKitWebSrcPrivate* priv = protector->priv;
@@ -754,7 +759,7 @@ static void webKitWebSrcEnoughData(WebKitWebSrc* src)
 static gboolean webKitWebSrcSeek(WebKitWebSrc* src, guint64 offset)
 {
     WebKitWebSrcPrivate* priv = src->priv;
-
+	 GST_DEBUG("suresh webKitWebSrcSeek");
     if (offset == priv->offset && priv->requestedOffset == priv->offset)
         return TRUE;
 
@@ -843,6 +848,7 @@ void CachedResourceStreamingClient::responseReceived(PlatformMediaResource&, con
     if (response.httpStatusCode() >= 400) {
         GST_ELEMENT_ERROR(src, RESOURCE, READ, ("Received %d HTTP error code", response.httpStatusCode()), (nullptr));
         gst_app_src_end_of_stream(priv->appsrc);
+        GST_DEBUG("suresh responseReceived->calling webKitWebSrcStop");
         webKitWebSrcStop(src);
         return;
     }
@@ -861,6 +867,7 @@ void CachedResourceStreamingClient::responseReceived(PlatformMediaResource&, con
             // Range request completely failed.
             GST_ELEMENT_ERROR(src, RESOURCE, READ, ("Received unexpected %d HTTP status code", response.httpStatusCode()), (nullptr));
             gst_app_src_end_of_stream(priv->appsrc);
+            GST_DEBUG("suresh *** responseReceived->calling webKitWebSrcStop");
             webKitWebSrcStop(src);
             return;
         }
@@ -933,7 +940,7 @@ void CachedResourceStreamingClient::dataReceived(PlatformMediaResource&, const c
 {
     WebKitWebSrc* src = WEBKIT_WEB_SRC(m_src.get());
     WebKitWebSrcPrivate* priv = src->priv;
-
+	GST_DEBUG("suresh dataReceived");
     GST_LOG_OBJECT(src, "Have %lld bytes of data", priv->buffer ? static_cast<long long>(gst_buffer_get_size(priv->buffer.get())) : length);
 
     ASSERT(!priv->buffer || data == getGstBufferDataPointer(priv->buffer.get()));
@@ -1068,6 +1075,7 @@ void CachedResourceStreamingClient::loadFailed(PlatformMediaResource&, const Res
 
 void CachedResourceStreamingClient::loadFinished(PlatformMediaResource&)
 {
+	GST_DEBUG("suresh loadFinished");
     WebKitWebSrc* src = WEBKIT_WEB_SRC(m_src.get());
     WebKitWebSrcPrivate* priv = src->priv;
 

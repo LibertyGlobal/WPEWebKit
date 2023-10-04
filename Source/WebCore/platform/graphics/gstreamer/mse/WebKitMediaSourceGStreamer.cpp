@@ -425,8 +425,10 @@ GstStateChangeReturn webKitMediaSrcChangeState(GstElement* element, GstStateChan
     WebKitMediaSrc* source = WEBKIT_MEDIA_SRC(element);
     WebKitMediaSrcPrivate* priv = source->priv;
 
+    GST_DEBUG("suresh webKitMediaSrcChangeState: transition:%d", transition);
     switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+    GST_DEBUG("suresh *** GST_STATE_CHANGE_READY_TO_PAUSED");
         priv->allTracksConfigured = false;
         webKitMediaSrcDoAsyncStart(source);
         break;
@@ -443,9 +445,11 @@ GstStateChangeReturn webKitMediaSrcChangeState(GstElement* element, GstStateChan
 
     switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+    	GST_DEBUG("suresh GST_STATE_CHANGE_READY_TO_PAUSED");
         result = GST_STATE_CHANGE_ASYNC;
         break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    GST_DEBUG("suresh GST_STATE_CHANGE_PAUSED_TO_READY");
         webKitMediaSrcDoAsyncDone(source);
         priv->allTracksConfigured = false;
         break;
@@ -571,13 +575,13 @@ GstElement* createDecryptor(const char* requestedProtectionSystemUuid)
             GRefPtr<GstCaps> caps = adoptGRef(gst_static_pad_template_get_caps(staticPadTemplate));
             unsigned length = gst_caps_get_size(caps.get());
 
-            GST_TRACE("factory %s caps has size %u", GST_OBJECT_NAME(factory), length);
+            GST_ERROR("factory %s caps has size %u", GST_OBJECT_NAME(factory), length);
             for (unsigned i = 0; !decryptor && i < length; ++i) {
                 GstStructure* structure = gst_caps_get_structure(caps.get(), i);
                 GST_TRACE("checking structure %s", gst_structure_get_name(structure));
                 if (gst_structure_has_field_typed(structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD, G_TYPE_STRING)) {
                     const char* protectionSystemUuid = gst_structure_get_string(structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD);
-                    GST_TRACE("structure %s has protection system %s", gst_structure_get_name(structure), protectionSystemUuid);
+                    GST_ERROR("structure %s has protection system %s", gst_structure_get_name(structure), protectionSystemUuid);
                     if (!g_ascii_strcasecmp(requestedProtectionSystemUuid, protectionSystemUuid)) {
                         GST_DEBUG("found decryptor %s for %s", GST_OBJECT_NAME(factory), requestedProtectionSystemUuid);
                         decryptor = gst_element_factory_create(factory, nullptr);
@@ -588,7 +592,7 @@ GstElement* createDecryptor(const char* requestedProtectionSystemUuid)
         }
     }
     gst_plugin_feature_list_free(decryptors);
-    GST_TRACE("returning decryptor %p", decryptor);
+    GST_ERROR("returning decryptor %p", decryptor);
     return decryptor;
 }
 
