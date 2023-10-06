@@ -390,25 +390,25 @@ static void restartLoaderIfNeeded(WebKitWebSrc* src, DataMutexLocker<WebKitWebSr
         return;
     }
 
-    GST_TRACE_OBJECT(src, "is download suspended %s, does have EOS %s, does have size %s, is seekable %s, size %" G_GUINT64_FORMAT
+    GST_ERROR_OBJECT(src, "is download suspended %s, does have EOS %s, does have size %s, is seekable %s, size %" G_GUINT64_FORMAT
         " (min %u)", boolForPrinting(members->isDownloadSuspended), boolForPrinting(members->doesHaveEOS), boolForPrinting(members->haveSize)
         , boolForPrinting(members->isSeekable), members->size, SMALL_MEDIA_RESOURCE_MAX_SIZE);
     if (members->doesHaveEOS || !members->haveSize || !members->isSeekable || members->size <= SMALL_MEDIA_RESOURCE_MAX_SIZE) {
-        GST_TRACE_OBJECT(src, "download cannot be stopped/restarted");
+        GST_DEBUG_OBJECT(src, "download cannot be stopped/restarted");
         return;
     }
-    GST_TRACE_OBJECT(src, "read position %" G_GUINT64_FORMAT ", state %s", members->readPosition, gst_element_state_get_name(GST_STATE(src)));
+    GST_ERROR_OBJECT(src, "read position %" G_GUINT64_FORMAT ", state %s", members->readPosition, gst_element_state_get_name(GST_STATE(src)));
     if (!members->readPosition || members->readPosition == members->size || GST_STATE(src) < GST_STATE_PAUSED) {
-        GST_TRACE_OBJECT(src, "can't restart download");
+        GST_ERROR_OBJECT(src, "can't restart download");
         return;
     }
 
     size_t queueSize = gst_adapter_available(members->adapter.get());
-    GST_TRACE_OBJECT(src, "queue size %zu (min %1.0f)", queueSize
+    GST_ERROR_OBJECT(src, "queue size %zu (min %1.0f)", queueSize
         , members->size * HIGH_QUEUE_FACTOR_THRESHOLD * LOW_QUEUE_FACTOR_THRESHOLD);
 
     if (queueSize >= members->size * HIGH_QUEUE_FACTOR_THRESHOLD * LOW_QUEUE_FACTOR_THRESHOLD) {
-        GST_TRACE_OBJECT(src, "queue size above low watermark, not restarting download");
+        GST_DEBUG_OBJECT(src, "queue size above low watermark, not restarting download");
         return;
     }
 
@@ -425,27 +425,27 @@ static void stopLoaderIfNeeded(WebKitWebSrc* src, DataMutexLocker<WebKitWebSrcPr
     ASSERT(isMainThread());
 
     if (members->isDownloadSuspended) {
-        GST_TRACE_OBJECT(src, "download already suspended");
+        GST_DEBUG_OBJECT(src, "download already suspended");
         return;
     }
 
-    GST_TRACE_OBJECT(src, "is download suspended %s, does have size %s, is seekable %s, size %" G_GUINT64_FORMAT " (min %u)"
+    GST_ERROR_OBJECT(src, "is download suspended %s, does have size %s, is seekable %s, size %" G_GUINT64_FORMAT " (min %u)"
         , boolForPrinting(members->isDownloadSuspended), boolForPrinting(members->haveSize), boolForPrinting(members->isSeekable), members->size
         , SMALL_MEDIA_RESOURCE_MAX_SIZE);
     if (!members->isSeekable || members->size <= SMALL_MEDIA_RESOURCE_MAX_SIZE) {
-        GST_TRACE_OBJECT(src, "download cannot be stopped/restarted");
+        GST_DEBUG_OBJECT(src, "download cannot be stopped/restarted");
         return;
     }
 
     size_t queueSize = gst_adapter_available(members->adapter.get());
-    GST_TRACE_OBJECT(src, "queue size %zu (max %1.0f)", queueSize, members->size * HIGH_QUEUE_FACTOR_THRESHOLD);
+    GST_ERROR_OBJECT(src, "queue size %zu (max %1.0f)", queueSize, members->size * HIGH_QUEUE_FACTOR_THRESHOLD);
     if (queueSize <= members->size * HIGH_QUEUE_FACTOR_THRESHOLD) {
-        GST_TRACE_OBJECT(src, "queue size under high watermark, not stopping download");
+        GST_DEBUG_OBJECT(src, "queue size under high watermark, not stopping download");
         return;
     }
 
     if (members->readPosition == members->size) {
-        GST_TRACE_OBJECT(src, "just downloaded the last chunk in the file, loadFinished() is about to be called");
+        GST_DEBUG_OBJECT(src, "just downloaded the last chunk in the file, loadFinished() is about to be called");
         return;
     }
 
@@ -487,7 +487,7 @@ static GstFlowReturn webKitWebSrcCreate(GstPushSrc* pushSrc, GstBuffer** buffer)
         return GST_FLOW_ERROR;
     }
 
-    GST_TRACE_OBJECT(src, "readPosition = %" G_GUINT64_FORMAT " requestedPosition = %" G_GUINT64_FORMAT, members->readPosition, members->requestedPosition);
+    GST_ERROR_OBJECT(src, "webKitWebSrcCreate: readPosition = %" G_GUINT64_FORMAT " requestedPosition = %" G_GUINT64_FORMAT, members->readPosition, members->requestedPosition);
 
     if (members->isRequestPending) {
         members->isRequestPending = false;
@@ -528,13 +528,13 @@ static GstFlowReturn webKitWebSrcCreate(GstPushSrc* pushSrc, GstBuffer** buffer)
     // We don't use the GstAdapter methods marked as fast anymore because sometimes it was slower. The reason why this was slower is that we can be
     // waiting for more "fast" (that could be retrieved with the _fast API) buffers to be available even in cases where the queue is not empty. These
     // other buffers can be retrieved with the "non _fast" API.
-    GST_TRACE_OBJECT(src, "doesHaveEOS: %s, isDownloadSuspended: %s", boolForPrinting(members->doesHaveEOS), boolForPrinting(members->isDownloadSuspended));
+    GST_ERROR_OBJECT(src, "doesHaveEOS: %s, isDownloadSuspended: %s", boolForPrinting(members->doesHaveEOS), boolForPrinting(members->isDownloadSuspended));
 
     unsigned size = gst_base_src_get_blocksize(baseSrc);
     size_t queueSize = gst_adapter_available(members->adapter.get());
-    GST_TRACE_OBJECT(src, "available bytes %" G_GSIZE_FORMAT ", block size %u", queueSize, size);
+    GST_ERROR_OBJECT(src, "available bytes %" G_GSIZE_FORMAT ", block size %u", queueSize, size);
     if (!queueSize) {
-        GST_TRACE_OBJECT(src, "let's wait for data or EOS");
+        GST_DEBUG_OBJECT(src, "let's wait for data or EOS");
         members->responseCondition.wait(members.mutex(), [&] {
             return members->isFlushing || gst_adapter_available(members->adapter.get()) || members->doesHaveEOS;
         });
@@ -542,23 +542,23 @@ static GstFlowReturn webKitWebSrcCreate(GstPushSrc* pushSrc, GstBuffer** buffer)
             return GST_FLOW_FLUSHING;
 
         queueSize = gst_adapter_available(members->adapter.get());
-        GST_TRACE_OBJECT(src, "available %" G_GSIZE_FORMAT, queueSize);
+        GST_ERROR_OBJECT(src, "available %" G_GSIZE_FORMAT, queueSize);
     }
 
     if (queueSize) {
         if (queueSize < size) {
-            GST_TRACE_OBJECT(src, "Did not get the %u blocksize bytes, let's push the %" G_GSIZE_FORMAT " bytes we got", size, queueSize);
+            GST_ERROR_OBJECT(src, "Did not get the %u blocksize bytes, let's push the %" G_GSIZE_FORMAT " bytes we got", size, queueSize);
             size = queueSize;
         } else
-            GST_TRACE_OBJECT(src, "Taking %u bytes from adapter", size);
+            GST_ERROR_OBJECT(src, "Taking %u bytes from adapter", size);
 
         *buffer = gst_adapter_take_buffer(members->adapter.get(), size);
         RELEASE_ASSERT(*buffer);
 
         GST_BUFFER_OFFSET(*buffer) = baseSrc->segment.position;
         GST_BUFFER_OFFSET_END(*buffer) = GST_BUFFER_OFFSET(*buffer) + size;
-        GST_TRACE_OBJECT(src, "Buffer bounds set to %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, GST_BUFFER_OFFSET(*buffer), GST_BUFFER_OFFSET_END(*buffer));
-        GST_TRACE_OBJECT(src, "buffer size: %u, total content size: %" G_GUINT64_FORMAT, size, members->size);
+        GST_ERROR_OBJECT(src, "Buffer bounds set to %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, GST_BUFFER_OFFSET(*buffer), GST_BUFFER_OFFSET_END(*buffer));
+        GST_ERROR_OBJECT(src, "buffer size: %u, total content size: %" G_GUINT64_FORMAT, size, members->size);
 
         restartLoaderIfNeeded(src, members);
         return GST_FLOW_OK;
@@ -747,7 +747,7 @@ static gboolean webKitWebSrcIsSeekable(GstBaseSrc* baseSrc)
 {
     WebKitWebSrc* src = WEBKIT_WEB_SRC(baseSrc);
     DataMutexLocker members { src->priv->dataMutex };
-    GST_DEBUG_OBJECT(src, "isSeekable: %s", boolForPrinting(members->isSeekable));
+    GST_DEBUG_OBJECT(src, "webKitWebSrcIsSeekable: isSeekable: %s", boolForPrinting(members->isSeekable));
     return members->isSeekable;
 }
 
@@ -765,7 +765,7 @@ static gboolean webKitWebSrcDoSeek(GstBaseSrc* baseSrc, GstSegment* segment)
     WebKitWebSrc* src = WEBKIT_WEB_SRC(baseSrc);
     DataMutexLocker members { src->priv->dataMutex };
 
-    GST_DEBUG_OBJECT(src, "Seek segment: (%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT ") Position previous to seek: %" G_GUINT64_FORMAT, segment->start, segment->stop, members->readPosition);
+    GST_DEBUG_OBJECT(src, "webKitWebSrcDoSeek: Seek segment: (%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT ") Position previous to seek: %" G_GUINT64_FORMAT, segment->start, segment->stop, members->readPosition);
 
     // Before attempting to seek, basesrc will call isSeekable(). If isSeekable() is true, a flush will be made and
     // this function will be called. basesrc still gives us the chance here to return FALSE and cancel the seek.
@@ -960,7 +960,7 @@ void CachedResourceStreamingClient::checkUpdateBlocksize(unsigned bytesRead)
     WebKitWebSrcPrivate* priv = src->priv;
 
     unsigned blocksize = gst_base_src_get_blocksize(baseSrc);
-    GST_LOG_OBJECT(src, "Checking to update blocksize. Read: %u, current blocksize: %u", bytesRead, blocksize);
+    GST_INFO_OBJECT(src, "Checking to update blocksize. Read: %u, current blocksize: %u", bytesRead, blocksize);
 
     if (bytesRead > blocksize * s_growBlocksizeLimit) {
         m_reduceBlocksizeCount = 0;
@@ -1042,6 +1042,7 @@ void CachedResourceStreamingClient::responseReceived(PlatformMediaResource&, con
     members->pendingHttpHeadersMessage = adoptGRef(gst_message_new_element(GST_OBJECT_CAST(src), gst_structure_copy(httpHeaders.get())));
     members->pendingHttpHeadersEvent = adoptGRef(gst_event_new_custom(GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, httpHeaders.release()));
 
+    GST_DEBUG_OBJECT(src,"response.httpStatusCode():%d",response.httpStatusCode());
     if (response.httpStatusCode() >= 400) {
         GST_ELEMENT_ERROR(src, RESOURCE, READ, ("R%u: Received %d HTTP error code", m_requestNumber, response.httpStatusCode()), (nullptr));
         members->doesHaveEOS = true;
@@ -1055,6 +1056,7 @@ void CachedResourceStreamingClient::responseReceived(PlatformMediaResource&, con
         if (response.httpStatusCode() != 206) {
             // Range request completely failed.
             GST_ELEMENT_ERROR(src, RESOURCE, READ, ("R%u: Received unexpected %d HTTP status code for range request", m_requestNumber, response.httpStatusCode()), (nullptr));
+            GST_DEBUG_OBJECT(src,"R%u: Received unexpected %d HTTP status code for range request", m_requestNumber, response.httpStatusCode());
             members->doesHaveEOS = true;
             members->responseCondition.notifyOne();
             completionHandler(ShouldContinuePolicyCheck::No);
@@ -1101,6 +1103,7 @@ void CachedResourceStreamingClient::dataReceived(PlatformMediaResource&, const S
     WebKitWebSrcPrivate* priv = src->priv;
 
     DataMutexLocker members { priv->dataMutex };
+    GST_DEBUG_OBJECT(src, "dataReceived");
     if (members->requestNumber != m_requestNumber)
         return;
 
@@ -1110,14 +1113,14 @@ void CachedResourceStreamingClient::dataReceived(PlatformMediaResource&, const S
     if (!std::isnan(members->downloadStartTime)) {
         members->totalDownloadedBytes += data.size();
         double timeSinceStart = (WallTime::now() - members->downloadStartTime).seconds();
-        GST_TRACE_OBJECT(src, "R%u: downloaded %" G_GUINT64_FORMAT " bytes in %f seconds =~ %1.0f bytes/second", m_requestNumber, members->totalDownloadedBytes, timeSinceStart
+        GST_ERROR_OBJECT(src, "R%u: downloaded %" G_GUINT64_FORMAT " bytes in %f seconds =~ %1.0f bytes/second", m_requestNumber, members->totalDownloadedBytes, timeSinceStart
             , timeSinceStart ? members->totalDownloadedBytes / timeSinceStart : 0);
     } else {
         members->downloadStartTime = WallTime::now();
     }
 
     int length = data.size();
-    GST_LOG_OBJECT(src, "R%u: Have %d bytes of data", m_requestNumber, length);
+    GST_DEBUG_OBJECT(src, "R%u: Have %d bytes of data", m_requestNumber, length);
 
     members->readPosition += length;
     ASSERT(!members->haveSize || members->readPosition <= members->size);
@@ -1158,7 +1161,7 @@ void CachedResourceStreamingClient::loadFailed(PlatformMediaResource&, const Res
         GST_ERROR_OBJECT(src, "R%u: Have failure: %s", m_requestNumber, error.localizedDescription().utf8().data());
         GST_ELEMENT_ERROR(src, RESOURCE, FAILED, ("R%u: %s", m_requestNumber, error.localizedDescription().utf8().data()), (nullptr));
     } else
-        GST_LOG_OBJECT(src, "R%u: Request cancelled: %s", m_requestNumber, error.localizedDescription().utf8().data());
+        GST_ERROR_OBJECT(src, "R%u: Request cancelled: %s", m_requestNumber, error.localizedDescription().utf8().data());
 
     members->doesHaveEOS = true;
     members->responseCondition.notifyOne();
@@ -1172,7 +1175,7 @@ void CachedResourceStreamingClient::loadFinished(PlatformMediaResource&, const N
     if (members->requestNumber != m_requestNumber)
         return;
 
-    GST_LOG_OBJECT(src, "R%u: Load finished. Read position: %" G_GUINT64_FORMAT, m_requestNumber, members->readPosition);
+    GST_ERROR_OBJECT(src, "R%u: Load finished. Read position: %" G_GUINT64_FORMAT, m_requestNumber, members->readPosition);
 
     members->doesHaveEOS = true;
     members->responseCondition.notifyOne();

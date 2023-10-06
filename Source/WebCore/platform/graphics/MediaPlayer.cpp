@@ -1019,6 +1019,7 @@ std::unique_ptr<PlatformTimeRanges> MediaPlayer::buffered()
 
 std::unique_ptr<PlatformTimeRanges> MediaPlayer::seekable()
 {
+    fprintf(stderr, "MediaPlayer::seekable() ->m_private->seekable()\n");
     return m_private->seekable();
 }
 

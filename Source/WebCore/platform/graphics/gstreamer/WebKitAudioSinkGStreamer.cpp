@@ -256,7 +256,7 @@ static GstStateChangeReturn webKitAudioSinkChangeState(GstElement* element, GstS
     auto* sink = WEBKIT_AUDIO_SINK(element);
     auto* priv = sink->priv;
 
-    GST_DEBUG_OBJECT(sink, "Handling %s transition", gst_state_change_get_name(stateChange));
+    GST_DEBUG_OBJECT(sink, "webKitAudioSinkChangeState: Handling %s transition", gst_state_change_get_name(stateChange));
 
     auto& mixer = GStreamerAudioMixer::singleton();
     if (priv->interAudioSink && stateChange == GST_STATE_CHANGE_NULL_TO_READY)
@@ -273,6 +273,7 @@ static GstStateChangeReturn webKitAudioSinkChangeState(GstElement* element, GstS
         if ((stateChange == GST_STATE_CHANGE_PLAYING_TO_PAUSED) && !isEOS) {
             wpe_audio_source_pause(priv->wpeAudioSource.get(), priv->m_streamId);
             priv->sourceState = GST_STATE_PAUSED;
+            GST_DEBUG_OBJECT(sink, "webKitAudioSinkChangeState: priv->sourceState = GST_STATE_PAUSED");
         }
         if (stateChange == GST_STATE_CHANGE_PAUSED_TO_READY && isEOS)
             priv->sourceState = GST_STATE_NULL;
@@ -287,6 +288,7 @@ static GstStateChangeReturn webKitAudioSinkChangeState(GstElement* element, GstS
     if (priv->appsink && priv->sourceState == GST_STATE_PAUSED && stateChange == GST_STATE_CHANGE_PAUSED_TO_PLAYING && result > GST_STATE_CHANGE_FAILURE) {
         wpe_audio_source_resume(priv->wpeAudioSource.get(), priv->m_streamId);
         priv->sourceState = GST_STATE_PLAYING;
+        GST_DEBUG_OBJECT(sink, "webKitAudioSinkChangeState: priv->sourceState = GST_STATE_PLAYING");
     }
 #endif
 

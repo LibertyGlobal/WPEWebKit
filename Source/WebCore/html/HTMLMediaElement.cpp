@@ -2541,6 +2541,7 @@ void HTMLMediaElement::setReadyState(MediaPlayer::ReadyState state)
     if (m_networkState == NETWORK_EMPTY)
         return;
 
+
     if (m_seeking) {
         // 4.8.10.9, step 11
         if (wasPotentiallyPlaying && m_readyState < HAVE_FUTURE_DATA)
@@ -3159,7 +3160,7 @@ void HTMLMediaElement::seekInternal(const MediaTime& time)
 
 void HTMLMediaElement::seekWithTolerance(const MediaTime& inTime, const MediaTime& negativeTolerance, const MediaTime& positiveTolerance, bool fromDOM)
 {
-    INFO_LOG(LOGIDENTIFIER, "time = ", inTime, ", negativeTolerance = ", negativeTolerance, ", positiveTolerance = ", positiveTolerance);
+    ALWAYS_LOG(LOGIDENTIFIER, "time = ", inTime, ", negativeTolerance = ", negativeTolerance, ", positiveTolerance = ", positiveTolerance);
     // 4.8.10.9 Seeking
     MediaTime time = inTime;
 
@@ -3177,12 +3178,13 @@ void HTMLMediaElement::seekWithTolerance(const MediaTime& inTime, const MediaTim
     // Get the current time before setting m_seeking, m_lastSeekTime is returned once it is set.
     refreshCachedTime();
     MediaTime now = currentMediaTime();
-
+    
+    ALWAYS_LOG(LOGIDENTIFIER, "now: ", now);
     // 3 - If the element's seeking IDL attribute is true, then another instance of this algorithm is
     // already running. Abort that other instance of the algorithm without waiting for the step that
     // it is running to complete.
     if (m_seekTaskCancellationGroup.hasPendingTask()) {
-        INFO_LOG(LOGIDENTIFIER, "cancelling pending seeks");
+        ALWAYS_LOG(LOGIDENTIFIER, "cancelling pending seeks");
         m_seekTaskCancellationGroup.cancel();
         if (m_pendingSeek) {
             now = m_pendingSeek->now;
@@ -3204,10 +3206,12 @@ void HTMLMediaElement::seekWithTolerance(const MediaTime& inTime, const MediaTim
     // the script. The remainder of these steps must be run asynchronously.
     m_pendingSeek = makeUnique<PendingSeek>(now, time, negativeTolerance, positiveTolerance);
     if (fromDOM) {
-        INFO_LOG(LOGIDENTIFIER, "enqueuing seek from ", now, " to ", time);
+        ALWAYS_LOG(LOGIDENTIFIER, "enqueuing seek from ", now, " to ", time);
         queueCancellableTaskKeepingObjectAlive(*this, TaskSource::MediaElement, m_seekTaskCancellationGroup, std::bind(&HTMLMediaElement::seekTask, this));
-    } else
+    } else {
+    	ALWAYS_LOG(LOGIDENTIFIER, "not fromDOM ", now, " to ", time, "m_lastSeekTime", m_lastSeekTime);
         seekTask();
+    }
 
     if (processingUserGestureForMedia())
         mediaSession().removeBehaviorRestriction(MediaElementSession::RequireUserGestureToControlControlsManager);
@@ -3217,7 +3221,7 @@ void HTMLMediaElement::seekWithTolerance(const MediaTime& inTime, const MediaTim
 
 void HTMLMediaElement::seekTask()
 {
-    INFO_LOG(LOGIDENTIFIER);
+    ALWAYS_LOG(LOGIDENTIFIER);
 
     if (!m_player) {
         clearSeeking();
@@ -3238,12 +3242,17 @@ void HTMLMediaElement::seekTask()
 
     // 6 - If the new playback position is later than the end of the media resource, then let it be the end
     // of the media resource instead.
+    ALWAYS_LOG(LOGIDENTIFIER, "targetTime: time: ", time);
     time = std::min(time, durationMediaTime());
-
+   
+    ALWAYS_LOG(LOGIDENTIFIER, "Min between targetTime and durationMediaTime: time: ", time);
     // 7 - If the new playback position is less than the earliest possible position, let it be that position instead.
     MediaTime earliestTime = m_player->startTime();
+    
+    ALWAYS_LOG(LOGIDENTIFIER, "Before Max timebetween time and startTime: time: ", time, " earliestTime ", earliestTime);
     time = std::max(time, earliestTime);
-
+    
+    ALWAYS_LOG(LOGIDENTIFIER, "After Max timebetween time and startTime: time: ", time, " earliestTime ", earliestTime);
     // Ask the media engine for the time value in the movie's time scale before comparing with current time. This
     // is necessary because if the seek time is not equal to currentTime but the delta is less than the movie's
     // time scale, we will ask the media engine to "seek" to the current movie time, which may be a noop and
@@ -3256,28 +3265,34 @@ void HTMLMediaElement::seekTask()
     }
 
     time = m_player->mediaTimeForTimeValue(time);
-
+    
+     ALWAYS_LOG(LOGIDENTIFIER, "mediaTimeForTimeValue: time: ", time);
     // 8 - If the (possibly now changed) new playback position is not in one of the ranges given in the
     // seekable attribute, then let it be the position in one of the ranges given in the seekable attribute
     // that is the nearest to the new playback position. ... If there are no ranges given in the seekable
     // attribute then set the seeking IDL attribute to false and abort these steps.
     RefPtr<TimeRanges> seekableRanges = seekable();
     bool noSeekRequired = !seekableRanges->length();
-
+    ALWAYS_LOG(LOGIDENTIFIER, "noSeekRequired ", noSeekRequired, "seekableRanges->length()", seekableRanges->length());
     // Short circuit seeking to the current time by just firing the events if no seek is required.
     // Don't skip calling the media engine if 1) we are in poster mode (because a seek should always cancel
     // poster display), or 2) if there is a pending fast seek, or 3) if this seek is not an exact seek
     SeekType thisSeekType = (negativeTolerance == MediaTime::zeroTime() && positiveTolerance == MediaTime::zeroTime()) ? Precise : Fast;
-    if (!noSeekRequired && time == now && thisSeekType == Precise && m_pendingSeekType != Fast && !showPosterFlag())
+    if (!noSeekRequired && time == now && thisSeekType == Precise && m_pendingSeekType != Fast && !showPosterFlag()) {
         noSeekRequired = true;
+        ALWAYS_LOG(LOGIDENTIFIER, "noSeekRequired is set to TRUE");
+     }
 
 #if ENABLE(MEDIA_SOURCE)
     // Always notify the media engine of a seek if the source is not closed and there is seekable ranges.
     // This ensures that the source is always in a flushed state when the 'seeking' event fires.
-    if (m_mediaSource && !m_mediaSource->isClosed() && seekableRanges->length())
+    if (m_mediaSource && !m_mediaSource->isClosed() && seekableRanges->length()) {
         noSeekRequired = false;
+        ALWAYS_LOG(LOGIDENTIFIER, "noSeekRequired is set to FALSE");  
+     }
 #endif
-
+    
+    ALWAYS_LOG(LOGIDENTIFIER, "noSeekRequired ", noSeekRequired);
     if (noSeekRequired) {
         ALWAYS_LOG(LOGIDENTIFIER, "ignored seek to ", time);
         if (time == now) {
@@ -3730,7 +3745,7 @@ void HTMLMediaElement::play(DOMPromiseDeferred<void>&& promise)
 void HTMLMediaElement::play()
 {
     ALWAYS_LOG(LOGIDENTIFIER);
-
+    ALWAYS_LOG(LOGIDENTIFIER, "HTMLMediaElement::play()=>called playInternal");
     auto permitted = mediaSession().playbackStateChangePermitted(MediaPlaybackState::Playing);
     if (!permitted) {
         ERROR_LOG(LOGIDENTIFIER, "playback not permitted: ", permitted.error());
@@ -5534,15 +5549,22 @@ double HTMLMediaElement::liveUpdateInterval() const
 
 bool HTMLMediaElement::potentiallyPlaying() const
 {
-    if (isBlockedOnMediaController())
+    ALWAYS_LOG(LOGIDENTIFIER, "potentiallyPlaying");
+    if (isBlockedOnMediaController()) {
+    	ALWAYS_LOG(LOGIDENTIFIER, "potentiallyPlaying return false");
         return false;
+    }
 
-    if (!couldPlayIfEnoughData())
+    if (!couldPlayIfEnoughData()) {
+    ALWAYS_LOG(LOGIDENTIFIER, "1.1 potentiallyPlaying return false");
         return false;
+     }
 
     if (m_readyState >= HAVE_FUTURE_DATA)
+    {
+    ALWAYS_LOG(LOGIDENTIFIER, "potentiallyPlaying return true:", "m_readyState", m_readyState);
         return true;
-
+}
     return m_readyStateMaximum >= HAVE_FUTURE_DATA && m_readyState < HAVE_FUTURE_DATA;
 }
 
@@ -5734,6 +5756,7 @@ void HTMLMediaElement::updatePlayState()
 void HTMLMediaElement::playPlayer()
 {
     ASSERT(m_player);
+    ALWAYS_LOG(LOGIDENTIFIER, "HTMLMediaElement::playPlayer ->m_player->play()");
     if (!m_player)
         return;
 
@@ -8460,6 +8483,7 @@ void HTMLMediaElement::updateShouldAutoplay()
 
 void HTMLMediaElement::updateShouldPlay()
 {
+	ALWAYS_LOG(LOGIDENTIFIER, "updateShouldPlay");
     if (!paused() && !mediaSession().playbackStateChangePermitted(MediaPlaybackState::Playing)) {
         scheduleRejectPendingPlayPromises(DOMException::create(NotAllowedError));
         pauseInternal();
@@ -8589,6 +8613,7 @@ bool HTMLMediaElement::hasMediaStreamSource() const
 #if ENABLE(MEDIA_STREAM)
 void HTMLMediaElement::mediaStreamCaptureStarted()
 {
+ALWAYS_LOG(LOGIDENTIFIER, "mediaStreamCaptureStarted->calling play");
     if (canTransitionFromAutoplayToPlay())
         play();
 }

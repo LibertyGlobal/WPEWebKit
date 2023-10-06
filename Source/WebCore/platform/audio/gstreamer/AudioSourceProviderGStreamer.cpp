@@ -241,7 +241,7 @@ void AudioSourceProviderGStreamer::provideInput(AudioBus* bus, size_t framesToPr
 
 GstFlowReturn AudioSourceProviderGStreamer::handleSample(GstAppSink* sink, bool isPreroll)
 {
-    GST_TRACE("Pulling audio sample from the sink");
+    GST_ERROR("Pulling audio sample from the sink");
     auto sample = adoptGRef(isPreroll ? gst_app_sink_try_pull_preroll(sink, 0) : gst_app_sink_try_pull_sample(sink, 0));
     if (!sample)
         return gst_app_sink_is_eos(sink) ? GST_FLOW_EOS : GST_FLOW_ERROR;
@@ -253,7 +253,7 @@ GstFlowReturn AudioSourceProviderGStreamer::handleSample(GstAppSink* sink, bool 
     if (!buffer)
         return GST_FLOW_ERROR;
 
-    GST_TRACE("Storing audio sample %" GST_PTR_FORMAT, sample.get());
+    GST_ERROR("Storing audio sample %" GST_PTR_FORMAT, sample.get());
     {
         Locker locker { m_adapterLock };
         GQuark quark = g_quark_from_static_string("channel-id");

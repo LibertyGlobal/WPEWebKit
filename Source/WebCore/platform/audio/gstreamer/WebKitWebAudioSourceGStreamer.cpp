@@ -418,13 +418,15 @@ static GstStateChangeReturn webKitWebAudioSrcChangeState(GstElement* element, Gs
     auto* src = WEBKIT_WEB_AUDIO_SRC(element);
     auto* priv = src->priv;
 
-    GST_DEBUG_OBJECT(element, "%s", gst_state_change_get_name(transition));
+    GST_DEBUG_OBJECT(element, "webKitWebAudioSrcChangeState: %s  transition:%d ", gst_state_change_get_name(transition),transition);
 
     switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+    	GST_DEBUG_OBJECT(src, "GST_STATE_CHANGE_NULL_TO_READY");
         priv->numberOfSamples = 0;
         break;
     case GST_STATE_CHANGE_READY_TO_PAUSED: {
+    GST_DEBUG_OBJECT(src, "GST_STATE_CHANGE_READY_TO_PAUSED");
         priv->pool = adoptGRef(gst_buffer_pool_new());
         GstStructure* config = gst_buffer_pool_get_config(priv->pool.get());
         gst_buffer_pool_config_set_params(config, nullptr, priv->bufferSize * priv->bus->numberOfChannels(), 0, 0);
@@ -447,6 +449,7 @@ static GstStateChangeReturn webKitWebAudioSrcChangeState(GstElement* element, Gs
 
     switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    GST_DEBUG_OBJECT(src, "GST_STATE_CHANGE_PAUSED_TO_READY");
         {
             Locker locker { priv->dispatchLock };
             priv->dispatchDone = false;

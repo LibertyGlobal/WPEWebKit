@@ -249,14 +249,17 @@ void MediaSource::completeSeek()
 
 Ref<TimeRanges> MediaSource::seekable()
 {
+    fprintf(stderr, "MediaSource::seekable");
     // 6. HTMLMediaElement Extensions, seekable
     // W3C Editor's Draft 16 September 2016
     // https://rawgit.com/w3c/media-source/45627646344eea0170dd1cbc5a3d508ca751abb8/media-source-respec.html#htmlmediaelement-extensions
 
     // ↳ If duration equals NaN:
     // Return an empty TimeRanges object.
-    if (m_duration.isInvalid())
+    if (m_duration.isInvalid()) {
+    	fprintf(stderr, "MediaSource::seekable ->(m_duration.isInvalid()");
         return TimeRanges::create();
+    }
 
     // ↳ If duration equals positive Infinity:
     if (m_duration.isPositiveInfinite()) {
@@ -268,21 +271,26 @@ Ref<TimeRanges> MediaSource::seekable()
             // Return a single range with a start time equal to the earliest start time in union ranges
             // and an end time equal to the highest end time in union ranges and abort these steps.
             buffered->add(buffered->start(0), buffered->maximumBufferedTime());
+            fprintf(stderr, "MediaSource::seekable ->TimeRanges::create(*buffered)");
             return TimeRanges::create(*buffered);
         }
 
         // If the HTMLMediaElement.buffered attribute returns an empty TimeRanges object, then return
         // an empty TimeRanges object and abort these steps.
-        if (!buffered->length())
+        if (!buffered->length()) {
+        	fprintf(stderr, "MediaSource::seekable ->TimeRanges::create();");
             return TimeRanges::create();
+         }
 
         // Return a single range with a start time of 0 and an end time equal to the highest end time
         // reported by the HTMLMediaElement.buffered attribute.
+        fprintf(stderr, "MediaSource::seekable ->TimeRanges::create({MediaTime::zeroTime(), buffered->maximumBufferedTime()});");
         return TimeRanges::create({MediaTime::zeroTime(), buffered->maximumBufferedTime()});
     }
 
     // ↳ Otherwise:
     // Return a single range with a start time of 0 and an end time equal to duration.
+    fprintf(stderr, "MediaSource::seekable ->TimeRanges::create({MediaTime::zeroTime(), m_duration})");
     return TimeRanges::create({MediaTime::zeroTime(), m_duration});
 }
 

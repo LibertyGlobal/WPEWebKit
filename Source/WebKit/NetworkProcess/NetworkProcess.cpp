@@ -118,6 +118,15 @@
 #include <WebCore/CurlContext.h>
 #endif
 
+
+namespace {
+#if ENABLE(RDK_LOGGER)
+void glibLogHandler(const gchar*, GLogLevelFlags, const gchar *message, gpointer) {
+    RDK_LOG(RDK_LOG_DEBUG, RDK_LOG_CHANNEL(GLib-GIO), message);
+}
+#endif // USE(RDK_LOGGER)
+} // namespace
+
 namespace WebKit {
 using namespace WebCore;
 
@@ -2469,8 +2478,17 @@ void NetworkProcess::requestStorageSpace(PAL::SessionID sessionID, const ClientO
 #if !PLATFORM(COCOA)
 void NetworkProcess::initializeProcess(const AuxiliaryProcessInitializationParameters&)
 {
+	fprintf(stderr, "initializeProcess: rdk logger for GLib-GIO");
 #if ENABLE(RDK_LOGGER)
+    fprintf(stderr, "rdk logger for GLib-GIO");
     rdk_logger_init("/etc/debug.ini");
+    if (rdk_dbg_enabled(RDK_LOG_CHANNEL(GLib-GIO), RDK_LOG_DEBUG)) {
+     	fprintf(stderr, "rdk logger for GLib-GIO-setting a log handler");
+        g_log_set_handler("GLib-GIO", G_LOG_LEVEL_DEBUG, glibLogHandler, nullptr);
+    }
+#else
+	fprintf(stderr, "rdk logger for GLib-GIO->RDK_LOGGER is not enabled");
+
 #endif
 }
 
