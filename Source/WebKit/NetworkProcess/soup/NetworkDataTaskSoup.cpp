@@ -559,6 +559,16 @@ void NetworkDataTaskSoup::dispatchDidCompleteWithError(const ResourceError& erro
     m_networkLoadMetrics.responseEnd = MonotonicTime::now() - m_startTime;
     m_networkLoadMetrics.markComplete();
 
+    LOG(Network, "NetworkDataTaskSoup::dispatchDidCompleteWithError %s DNS lookup:%f to %fs, connect:%f to %fs, requestStart:%fs, response:%f to %fs\n",
+        m_currentRequest.url().string().utf8().data(),
+        m_networkLoadMetrics.domainLookupStart.seconds(),
+        m_networkLoadMetrics.domainLookupEnd.seconds(),
+        m_networkLoadMetrics.connectStart.seconds(),
+        m_networkLoadMetrics.connectEnd.seconds(),
+        m_networkLoadMetrics.requestStart.seconds(),
+        m_networkLoadMetrics.responseStart.seconds(),
+        m_networkLoadMetrics.responseEnd.seconds());
+
     m_client->didCompleteWithError(error, m_networkLoadMetrics);
 }
 
