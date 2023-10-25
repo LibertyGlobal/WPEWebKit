@@ -53,6 +53,8 @@ void FontCascade::drawGlyphs(GraphicsContext& context, const Font& font, const G
 {
     if (!font.platformData().size())
         return;
+    
+    renderingStarted();
 
     auto xOffset = point.x();
     Vector<cairo_glyph_t> cairoGlyphs(numGlyphs);

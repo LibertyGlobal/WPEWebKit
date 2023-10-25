@@ -356,11 +356,11 @@ void MediaPlayerPrivateGStreamer::load(const String& urlString)
     m_player->readyStateChanged();
     m_areVolumeAndMuteInitialized = false;
     m_hasTaintedOrigin = std::nullopt;
-
+/*
 #if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
     m_isShoutcastStreaming = false;
 #endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-
+*/
     if (!m_isDelayingLoad)
         commitLoad();
 }
@@ -1880,13 +1880,13 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
             }
         }
 #endif
-
+/*
 #if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
         if (currentState == GST_STATE_NULL && newState == GST_STATE_READY && g_strstr_len(GST_MESSAGE_SRC_NAME(message), 8, "icydemux")) {
             m_isShoutcastStreaming = true;
         }
 #endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-
+*/
         if (!messageSourceIsPlaybin || m_isDelayingLoad)
             break;
 
@@ -2080,15 +2080,15 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
     gst_message_parse_buffering(message, &percentage);
 
     updateBufferingStatus(mode, percentage);
-
+/*
 #if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
     if (m_isShoutcastStreaming) {
         GstObject *queue2 = GST_MESSAGE_SRC(message);
         tryReduceQueueSize(queue2);
     }
 #endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
+*/
 }
-
 void MediaPlayerPrivateGStreamer::updateMaxTimeLoaded(double percentage)
 {
     MediaTime mediaDuration = durationMediaTime();
@@ -4545,6 +4545,7 @@ void MediaPlayerPrivateGStreamer::checkPlayingConsistency()
     }
 }
 
+/*
 #if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
 void MediaPlayerPrivateGStreamer::tryReduceQueueSize(GstObject* queue)
 {
@@ -4560,7 +4561,7 @@ void MediaPlayerPrivateGStreamer::tryReduceQueueSize(GstObject* queue)
     }
 }
 #endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-
+*/
 }
-
 #endif // USE(GSTREAMER)
+
