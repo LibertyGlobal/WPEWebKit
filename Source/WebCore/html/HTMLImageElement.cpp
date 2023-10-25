@@ -470,6 +470,8 @@ void HTMLImageElement::removedFromAncestor(RemovalType removalType, ContainerNod
         selectImageSource(RelevantMutation::Yes);
     }
 
+    m_imageLoader->clearImage();
+
     m_form = nullptr;
     HTMLElement::removedFromAncestor(removalType, oldParentOfRemovedTree);
 }
