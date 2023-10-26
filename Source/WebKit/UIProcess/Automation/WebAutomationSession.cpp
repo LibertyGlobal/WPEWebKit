@@ -335,6 +335,7 @@ static Inspector::Protocol::Automation::BrowsingContextPresentation toProtocol(A
 
 void WebAutomationSession::createBrowsingContext(std::optional<Inspector::Protocol::Automation::BrowsingContextPresentation>&& presentationHint, Ref<CreateBrowsingContextCallback>&& callback)
 {
+    fprintf(stderr, "wbd WebAutomationSession::createBrowsingContext\n");
     ASSERT(m_client);
     if (!m_client)
         ASYNC_FAIL_WITH_PREDEFINED_ERROR_AND_DETAILS(InternalError, "The remote session could not request a new browsing context.");

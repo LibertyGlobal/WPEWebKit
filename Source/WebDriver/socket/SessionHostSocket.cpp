@@ -55,6 +55,7 @@ void SessionHost::sendWebInspectorEvent(const String& event)
 
 void SessionHost::connectToBrowser(Function<void (std::optional<String> error)>&& completionHandler)
 {
+    fprintf(stderr, "wbd SessionHostSocket::connectToBrowser\n");
     String targetIp;
     uint16_t targetPort = 0;
 
@@ -76,6 +77,7 @@ void SessionHost::connectToBrowser(Function<void (std::optional<String> error)>&
         completionHandler(makeString(targetIp.utf8().data(), ":", String::number(targetPort), " is not reachable."));
     else
         completionHandler(std::nullopt);
+    fprintf(stderr, "wbd SessionHostSocket::connectToBrowser2\n");
 }
 
 bool SessionHost::isConnected() const
@@ -85,6 +87,7 @@ bool SessionHost::isConnected() const
 
 void SessionHost::didClose(Inspector::RemoteInspectorSocketEndpoint&, Inspector::ConnectionID)
 {
+    fprintf(stderr, "wbd SessionHostSocket::didClose\n");
     inspectorDisconnected();
 
     m_clientID = std::nullopt;
@@ -92,6 +95,7 @@ void SessionHost::didClose(Inspector::RemoteInspectorSocketEndpoint&, Inspector:
 
 std::optional<Vector<SessionHost::Target>> SessionHost::parseTargetList(const struct Event& event)
 {
+    fprintf(stderr, "wbd SessionHostSocket::parseTargetList\n");
     auto result = parseTargetListJSON(*event.message);
     if (!result)
         return std::nullopt;
@@ -148,6 +152,7 @@ void SessionHost::receivedStartAutomationSessionReturn(const struct Event&)
 
 void SessionHost::startAutomationSession(Function<void (bool, std::optional<String>)>&& completionHandler)
 {
+    fprintf(stderr, "wbd SessionHostSocket::startAutomationSession\n");
     ASSERT(!m_startSessionCompletionHandler);
     m_startSessionCompletionHandler = WTFMove(completionHandler);
     m_sessionID = createVersion4UUIDString();

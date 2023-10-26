@@ -52,12 +52,14 @@ RemoteInspector& RemoteInspector::singleton()
 
 RemoteInspector::RemoteInspector()
 {
+    fprintf(stderr, "wbd RemoteInspector::RemoteInspector\n");
     if (!s_inspectorServerAddress.isNull())
         start();
 }
 
 void RemoteInspector::start()
 {
+    fprintf(stderr, "wbd RemoteInspector::start0\n");
     Locker locker { m_mutex };
 
     if (m_enabled)
@@ -66,15 +68,26 @@ void RemoteInspector::start()
     m_enabled = true;
     m_cancellable = adoptGRef(g_cancellable_new());
 
+    fprintf(stderr, "wbd RemoteInspector::start0+1\n");
     GRefPtr<GSocketClient> socketClient = adoptGRef(g_socket_client_new());
     g_socket_client_connect_to_host_async(socketClient.get(), s_inspectorServerAddress.data(), 0, m_cancellable.get(),
         [](GObject* client, GAsyncResult* result, gpointer userData) {
             RemoteInspector* inspector = static_cast<RemoteInspector*>(userData);
             GUniqueOutPtr<GError> error;
             if (GRefPtr<GSocketConnection> connection = adoptGRef(g_socket_client_connect_to_host_finish(G_SOCKET_CLIENT(client), result, &error.outPtr())))
+            {
+                fprintf(stderr, "wbd RemoteInspector::start1\n");
                 inspector->setupConnection(SocketConnection::create(WTFMove(connection), messageHandlers(), inspector));
+            }
             else if (!g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
+            {
+                fprintf(stderr, "wbd RemoteInspector::start2\n");
                 g_warning("RemoteInspector failed to connect to inspector server at: %s: %s", s_inspectorServerAddress.data(), error->message);
+            }
+            else
+            {
+                fprintf(stderr, "wbd RemoteInspector::start3\n");
+            }
         }, this);
 }
 

@@ -41,6 +41,7 @@ void SessionHost::inspectorDisconnected()
 
 long SessionHost::sendCommandToBackend(const String& command, RefPtr<JSON::Object>&& parameters, Function<void (CommandResponse&&)>&& responseHandler)
 {
+    fprintf(stderr, "wbd SessionHost::sendCommandToBackend %s\n", command);
     static long lastSequenceID = 0;
     long sequenceID = ++lastSequenceID;
     m_commandRequests.add(sequenceID, WTFMove(responseHandler));

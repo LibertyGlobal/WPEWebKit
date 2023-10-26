@@ -65,12 +65,14 @@ Session::Session(std::unique_ptr<SessionHost>&& host)
     , m_pageLoadTimeout(defaultPageLoadTimeout)
     , m_implicitWaitTimeout(defaultImplicitWaitTimeout)
 {
+    fprintf(stderr, "Session::Session\n");
     if (capabilities().timeouts)
         setTimeouts(capabilities().timeouts.value(), [](CommandResult&&) { });
 }
 
 Session::~Session()
 {
+    fprintf(stderr, "Session::~Session\n");
 }
 
 const String& Session::id() const

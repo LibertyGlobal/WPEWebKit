@@ -66,6 +66,7 @@ static bool parseVersion(const String& version, uint64_t& major, uint64_t& minor
 
 bool WebDriverService::platformCompareBrowserVersions(const String& requiredVersion, const String& proposedVersion)
 {
+    fprintf(stderr, "wbd GLIB: WebDriverService::platformCompareBrowserVersions\n");
     // We require clients to use format major.micro.minor as version string.
     uint64_t requiredMajor, requiredMinor, requiredMicro;
     if (!parseVersion(requiredVersion, requiredMajor, requiredMinor, requiredMicro))
@@ -75,6 +76,7 @@ bool WebDriverService::platformCompareBrowserVersions(const String& requiredVers
     if (!parseVersion(proposedVersion, proposedMajor, proposedMinor, proposedMicro))
         return false;
 
+    fprintf(stderr, "wbd GLIB: WebDriverService::platformCompareBrowserVersions2\n");
     return proposedMajor > requiredMajor
         || (proposedMajor == requiredMajor && proposedMinor > requiredMinor)
         || (proposedMajor == requiredMajor && proposedMinor == requiredMinor && proposedMicro >= requiredMicro);

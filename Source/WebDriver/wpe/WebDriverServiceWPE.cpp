@@ -46,21 +46,26 @@ Capabilities WebDriverService::platformCapabilities()
 
 bool WebDriverService::platformValidateCapability(const String& name, const Ref<JSON::Value>& value) const
 {
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability\n");
     if (name != "wpe:browserOptions"_s)
         return true;
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability2\n");
     auto browserOptions = value->asObject();
     if (!browserOptions)
         return false;
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability3\n");
     if (browserOptions->isNull())
         return true;
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability4\n");
     // If browser options are provided, binary is required.
     auto binary = browserOptions->getString("binary"_s);
     if (!binary)
         return false;
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability5\n");
     if (auto browserArgumentsValue = browserOptions->getValue("args"_s)) {
         auto browserArguments = browserArgumentsValue->asArray();
         if (!browserArguments)
@@ -74,6 +79,7 @@ bool WebDriverService::platformValidateCapability(const String& name, const Ref<
         }
     }
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability6\n");
     if (auto certificatesValue = browserOptions->getValue("certificates"_s)) {
         auto certificates = certificatesValue->asArray();
         if (!certificates)
@@ -95,6 +101,7 @@ bool WebDriverService::platformValidateCapability(const String& name, const Ref<
         }
     }
 
+    fprintf(stderr, "wbd WebDriverService::platformValidateCapability7\n");
     return true;
 }
 
@@ -105,31 +112,43 @@ bool WebDriverService::platformMatchCapability(const String&, const Ref<JSON::Va
 
 void WebDriverService::platformParseCapabilities(const JSON::Object& matchedCapabilities, Capabilities& capabilities) const
 {
-    capabilities.browserBinary = String("MiniBrowser"_s);
-    capabilities.browserArguments = Vector<String> { "--automation"_s };
+    fprintf(stderr, "wbd WebDriverService::platformParseCapabilities\n");
+    //capabilities.browserBinary = String("MiniBrowser"_s);
+    //capabilities.browserArguments = Vector<String> { "--automation"_s };
+    capabilities.browserBinary = String("/usr/bin/rdkbrowser2.sh"_s);
+    capabilities.browserArguments = Vector<String> { "http://www.example.com"_s };
 
     auto browserOptions = matchedCapabilities.getObject("wpe:browserOptions"_s);
     if (!browserOptions)
+    {
+        fprintf(stderr, "wbd WebDriverService::platformParseCapabilities no browser options\n");
         return;
+    }
 
+    fprintf(stderr, "wbd WebDriverService::platformParseCapabilities2\n");
     auto browserBinary = browserOptions->getString("binary"_s);
     if (!!browserBinary) {
+        fprintf(stderr, "wbd WebDriverService::platformParseCapabilities6\n");
         capabilities.browserBinary = browserBinary;
         capabilities.browserArguments = std::nullopt;
     }
 
+    fprintf(stderr, "wbd WebDriverService::platformParseCapabilities3\n");
     auto browserArguments = browserOptions->getArray("args"_s);
     if (browserArguments && browserArguments->length()) {
+        fprintf(stderr, "wbd WebDriverService::platformParseCapabilities7\n");
         unsigned browserArgumentsLength = browserArguments->length();
         capabilities.browserArguments = Vector<String>();
         capabilities.browserArguments->reserveInitialCapacity(browserArgumentsLength);
         for (unsigned i = 0; i < browserArgumentsLength; ++i) {
+            fprintf(stderr, "wbd WebDriverService::platformParseCapabilities8\n");
             auto argument = browserArguments->get(i)->asString();
             ASSERT(!argument.isNull());
             capabilities.browserArguments->uncheckedAppend(WTFMove(argument));
         }
     }
 
+    fprintf(stderr, "wbd WebDriverService::platformParseCapabilities4\n");
     auto certificates = browserOptions->getArray("certificates"_s);
     if (certificates && certificates->length()) {
         unsigned certificatesLength = certificates->length();
@@ -148,6 +167,7 @@ void WebDriverService::platformParseCapabilities(const JSON::Object& matchedCapa
             capabilities.certificates->uncheckedAppend({ WTFMove(host), WTFMove(certificateFile) });
         }
     }
+    fprintf(stderr, "wbd WebDriverService::platformParseCapabilities5\n");
 }
 
 } // namespace WebDriver

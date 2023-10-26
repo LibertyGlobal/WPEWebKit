@@ -49,18 +49,23 @@ const SocketConnection::MessageHandlers& SessionHost::messageHandlers()
     static NeverDestroyed<const SocketConnection::MessageHandlers> messageHandlers = SocketConnection::MessageHandlers({
     { "DidClose", std::pair<CString, SocketConnection::MessageCallback> { { },
         [](SocketConnection&, GVariant*, gpointer userData) {
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> DidClose - start\n");
             auto& sessionHost = *static_cast<SessionHost*>(userData);
             sessionHost.connectionDidClose();
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> DidClose - end\n");
         }}
     },
     { "DidStartAutomationSession", std::pair<CString, SocketConnection::MessageCallback> { "(ss)",
         [](SocketConnection&, GVariant* parameters, gpointer userData) {
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> DidStartAutomationSession - start\n");
             auto& sessionHost = *static_cast<SessionHost*>(userData);
             sessionHost.didStartAutomationSession(parameters);
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> DidStartAutomationSession - end\n");
         }}
     },
     { "SetTargetList", std::pair<CString, SocketConnection::MessageCallback> { "(ta(tsssb))",
         [](SocketConnection&, GVariant* parameters, gpointer userData) {
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> SetTargetList - start\n");
             auto& sessionHost = *static_cast<SessionHost*>(userData);
             guint64 connectionID;
             GUniqueOutPtr<GVariantIter> iter;
@@ -78,15 +83,18 @@ const SocketConnection::MessageHandlers& SessionHost::messageHandlers()
                     targetList.uncheckedAppend({ targetID, name, static_cast<bool>(isPaired) });
             }
             sessionHost.setTargetList(connectionID, WTFMove(targetList));
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> SetTargetList - end\n");            
         }}
     },
     { "SendMessageToFrontend", std::pair<CString, SocketConnection::MessageCallback> { "(tts)",
         [](SocketConnection&, GVariant* parameters, gpointer userData) {
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> SendMessageToFrontend - start\n");
             auto& sessionHost = *static_cast<SessionHost*>(userData);
             guint64 connectionID, targetID;
             const char* message;
             g_variant_get(parameters, "(tt&s)", &connectionID, &targetID, &message);
             sessionHost.sendMessageToFrontend(connectionID, targetID, message);
+            fprintf(stderr, "wbd SessionHost::messageHandlers -> SendMessageToFrontend - end\n");
         }}
     }
     });
@@ -112,6 +120,7 @@ struct ConnectToBrowserAsyncData {
         , cancellable(cancellable)
         , completionHandler(WTFMove(completionHandler))
     {
+        fprintf(stderr, "wbd GLIB: ConnectToBrowserAsyncData::ConnectToBrowserAsyncData\n");
     }
 
     SessionHost* sessionHost;
@@ -134,76 +143,112 @@ static guint16 freePort()
 
 void SessionHost::launchBrowser(Function<void (std::optional<String> error)>&& completionHandler)
 {
+    fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser\n");
     m_cancellable = adoptGRef(g_cancellable_new());
     GRefPtr<GSubprocessLauncher> launcher = adoptGRef(g_subprocess_launcher_new(G_SUBPROCESS_FLAGS_NONE));
-    guint16 port = freePort();
-    GUniquePtr<char> inspectorAddress(g_strdup_printf("127.0.0.1:%u", port));
+    guint16 port = 0;
+    if(g_getenv("LAUNCH_STANDALONE_RDK_BROWSER"))
+        port = freePort();
+    else
+        port = 8080;
+
+    fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser %i\n", port);        
+    GUniquePtr<char> inspectorAddress(g_strdup_printf("0.0.0.0:%u", port));
     g_subprocess_launcher_setenv(launcher.get(), "WEBKIT_INSPECTOR_SERVER", inspectorAddress.get(), TRUE);
 #if PLATFORM(GTK)
     g_subprocess_launcher_setenv(launcher.get(), "GTK_OVERLAY_SCROLLING", m_capabilities.useOverlayScrollbars.value() ? "1" : "0", TRUE);
 #endif
 
-    size_t browserArgumentsSize = m_capabilities.browserArguments ? m_capabilities.browserArguments->size() : 0;
-    GUniquePtr<char*> args(g_new0(char*, browserArgumentsSize + 2));
-    args.get()[0] = g_strdup(m_capabilities.browserBinary.value().utf8().data());
-    for (unsigned i = 0; i < browserArgumentsSize; ++i)
-        args.get()[i + 1] = g_strdup(m_capabilities.browserArguments.value()[i].utf8().data());
+    if(g_getenv("LAUNCH_STANDALONE_RDK_BROWSER"))
+    {
+        fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser2\n");
+        size_t browserArgumentsSize = m_capabilities.browserArguments ? m_capabilities.browserArguments->size() : 0;
+        GUniquePtr<char*> args(g_new0(char*, browserArgumentsSize + 2));
+        args.get()[0] = g_strdup(m_capabilities.browserBinary.value().utf8().data());
+        for (unsigned i = 0; i < browserArgumentsSize; ++i)
+        {
+            fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser6 %s\n", m_capabilities.browserArguments.value()[i].utf8().data());
+            args.get()[i + 1] = g_strdup(m_capabilities.browserArguments.value()[i].utf8().data());
+        }
 
-    GUniqueOutPtr<GError> error;
-    m_browser = adoptGRef(g_subprocess_launcher_spawnv(launcher.get(), args.get(), &error.outPtr()));
-    if (error) {
-        completionHandler(String::fromUTF8(error->message));
-        return;
+        fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser3\n");
+        GUniqueOutPtr<GError> error;
+        m_browser = adoptGRef(g_subprocess_launcher_spawnv(launcher.get(), args.get(), &error.outPtr()));
+        if (error) {
+            fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser error: %s\n", error->message);
+            completionHandler(String::fromUTF8(error->message));
+            return;
+        }
+
+        fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser4\n");
+        g_subprocess_wait_async(m_browser.get(), m_cancellable.get(), [](GObject* browser, GAsyncResult* result, gpointer userData) {
+            GUniqueOutPtr<GError> error;
+            g_subprocess_wait_finish(G_SUBPROCESS(browser), result, &error.outPtr());
+            if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                return;
+            auto* sessionHost = static_cast<SessionHost*>(userData);
+            sessionHost->m_browser = nullptr;
+        }, this);
     }
 
-    g_subprocess_wait_async(m_browser.get(), m_cancellable.get(), [](GObject* browser, GAsyncResult* result, gpointer userData) {
-        GUniqueOutPtr<GError> error;
-        g_subprocess_wait_finish(G_SUBPROCESS(browser), result, &error.outPtr());
-        if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
-            return;
-        auto* sessionHost = static_cast<SessionHost*>(userData);
-        sessionHost->m_browser = nullptr;
-    }, this);
-
+    fprintf(stderr, "wbd GLIB: SessionHost::launchBrowser5\n");
     connectToBrowser(makeUnique<ConnectToBrowserAsyncData>(this, WTFMove(inspectorAddress), m_cancellable.get(), WTFMove(completionHandler)));
 }
 
 void SessionHost::connectToBrowser(std::unique_ptr<ConnectToBrowserAsyncData>&& data)
 {
-    if (!m_browser)
-        return;
+    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser\n");
+    if(false)
+    {
+        if (!m_browser)
+            return;
+    }
 
     RunLoop::main().dispatchAfter(100_ms, [connectToBrowserData = WTFMove(data)]() mutable {
         auto* data = connectToBrowserData.release();
+        fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser2\n");
         if (g_cancellable_is_cancelled(data->cancellable.get()))
             return;
 
+        fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser2+1\n");
         GRefPtr<GSocketClient> socketClient = adoptGRef(g_socket_client_new());
+        fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser3+1\n");
         g_socket_client_connect_to_host_async(socketClient.get(), data->inspectorAddress.get(), 0, data->cancellable.get(),
             [](GObject* client, GAsyncResult* result, gpointer userData) {
+                fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser3\n");
                 auto data = std::unique_ptr<ConnectToBrowserAsyncData>(static_cast<ConnectToBrowserAsyncData*>(userData));
                 GUniqueOutPtr<GError> error;
                 GRefPtr<GSocketConnection> connection = adoptGRef(g_socket_client_connect_to_host_finish(G_SOCKET_CLIENT(client), result, &error.outPtr()));
                 if (!connection) {
+                    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser4\n");
                     if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
                         return;
-
+                    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser5\n");
                     if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CONNECTION_REFUSED)) {
                         data->sessionHost->connectToBrowser(WTFMove(data));
                         return;
                     }
-
+                    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser6\n");
                     data->completionHandler(String::fromUTF8(error->message));
                     return;
                 }
+                if(data)
+                    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser7\n");
                 data->sessionHost->setupConnection(SocketConnection::create(WTFMove(connection), messageHandlers(), data->sessionHost));
+                if(data)
+                    fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser8\n");
+                fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser9\n");
+                // fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser9 %s\n", error->message);
                 data->completionHandler(std::nullopt);
+                fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser10\n");
+                // fprintf(stderr, "wbd GLIB: SessionHost::connectToBrowser10 %s\n", error->message);
         }, data);
     });
 }
 
 void SessionHost::connectionDidClose()
 {
+    fprintf(stderr, "wbd SessionHost::connectionDidClose\n");
     m_browser = nullptr;
     inspectorDisconnected();
     m_socketConnection = nullptr;
@@ -231,18 +276,24 @@ bool SessionHost::matchCapabilities(GVariant* capabilities)
     const char* name;
     const char* version;
     g_variant_get(capabilities, "(&s&s)", &name, &version);
+    fprintf(stderr, "wbd GLIB: SessionHost::matchCapabilities\n");
 
     auto browserName = String::fromUTF8(name);
+    fprintf(stderr, "wbd GLIB: SessionHost::matchCapabilities // browserName %s\n", name);
     auto browserVersion = String::fromUTF8(version);
+    fprintf(stderr, "wbd GLIB: SessionHost::matchCapabilities // browserVersion %s\n", version);
     bool didMatch = matchBrowserOptions(browserName, browserVersion, m_capabilities);
     m_capabilities.browserName = browserName;
     m_capabilities.browserVersion = browserVersion;
 
+
+    fprintf(stderr, "wbd GLIB: SessionHost::matchCapabilities-%i\n", didMatch);
     return didMatch;
 }
 
 bool SessionHost::buildSessionCapabilities(GVariantBuilder* builder) const
 {
+    fprintf(stderr, "wbd GLIB: SessionHost::buildSessionCapabilities1\n");
     if (!m_capabilities.acceptInsecureCerts && !m_capabilities.certificates && !m_capabilities.proxy)
         return false;
 
@@ -300,30 +351,37 @@ bool SessionHost::buildSessionCapabilities(GVariantBuilder* builder) const
         g_variant_builder_add(builder, "{sv}", "proxy", g_variant_builder_end(&dictBuilder));
     }
 
+    fprintf(stderr, "wbd GLIB: SessionHost::buildSessionCapabilities2\n");
     return true;
 }
 
 void SessionHost::startAutomationSession(Function<void (bool, std::optional<String>)>&& completionHandler)
 {
+    fprintf(stderr, "wbd SessionHost::startAutomationSession1\n");
     ASSERT(m_socketConnection);
     ASSERT(!m_startSessionCompletionHandler);
     m_startSessionCompletionHandler = WTFMove(completionHandler);
     m_sessionID = createVersion4UUIDString();
     GVariantBuilder builder;
     m_socketConnection->sendMessage("StartAutomationSession", g_variant_new("(sa{sv})", m_sessionID.utf8().data(), buildSessionCapabilities(&builder) ? &builder : nullptr));
+    fprintf(stderr, "wbd SessionHost::startAutomationSession6\n");
 }
 
 void SessionHost::didStartAutomationSession(GVariant* parameters)
 {
+    fprintf(stderr, "wbd SessionHost::didStartAutomationSession\n");
     if (matchCapabilities(parameters))
         return;
 
+    fprintf(stderr, "wbd SessionHost::didStartAutomationSession2\n");
     auto completionHandler = std::exchange(m_startSessionCompletionHandler, nullptr);
     completionHandler(false, std::nullopt);
+    fprintf(stderr, "wbd SessionHost::didStartAutomationSession3\n");
 }
 
 void SessionHost::setTargetList(uint64_t connectionID, Vector<Target>&& targetList)
 {
+    fprintf(stderr, "wbd SessionHost::setTargetList - start\n");
     // The server notifies all its clients when connection is lost by sending an empty target list.
     // We only care about automation connection.
     if (m_connectionID && m_connectionID != connectionID)
@@ -356,6 +414,7 @@ void SessionHost::setTargetList(uint64_t connectionID, Vector<Target>&& targetLi
 
     auto startSessionCompletionHandler = std::exchange(m_startSessionCompletionHandler, nullptr);
     startSessionCompletionHandler(true, std::nullopt);
+    fprintf(stderr, "wbd SessionHost::setTargetList - end\n");
 }
 
 void SessionHost::sendMessageToFrontend(uint64_t connectionID, uint64_t targetID, const char* message)
@@ -370,6 +429,7 @@ void SessionHost::sendMessageToBackend(const String& message)
     ASSERT(m_socketConnection);
     ASSERT(m_connectionID);
     ASSERT(m_target.id);
+    fprintf(stderr, "wbd SessionHost::sendMessageToBackend\n");
     m_socketConnection->sendMessage("SendMessageToBackend", g_variant_new("(tts)", m_connectionID, m_target.id, message.utf8().data()));
 }
 
