@@ -141,6 +141,8 @@ static inline webrtc::SdpType sessionDescriptionType(RTCSdpType sdpType)
     case RTCSdpType::Rollback:
         return webrtc::SdpType::kRollback;
     }
+
+    RELEASE_ASSERT_NOT_REACHED();
 }
 
 void LibWebRTCMediaEndpoint::doSetLocalDescription(const RTCSessionDescription* description)
