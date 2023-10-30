@@ -26,6 +26,7 @@
 
 #pragma once
 
+
 #if USE(CAIRO)
 
 #include "GraphicsTypes.h"
@@ -98,6 +99,9 @@ void flipImageSurfaceVertically(cairo_surface_t*);
 RefPtr<cairo_region_t> toCairoRegion(const Region&);
 
 cairo_matrix_t toCairoMatrix(const AffineTransform&);
+void resetRenderingStartedFlag();
+void setRenderingStartedFlag();
+void renderingStarted();
 
 } // namespace WebCore
 

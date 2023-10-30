@@ -83,7 +83,8 @@ WK_EXPORT void WKPageRunJavaScriptPromptResultListenerCall(WKPageRunJavaScriptPr
 
 WK_EXPORT WKTypeID WKPageRequestStorageAccessConfirmResultListenerGetTypeID(void);
 WK_EXPORT void WKPageRequestStorageAccessConfirmResultListenerCall(WKPageRequestStorageAccessConfirmResultListenerRef listener, bool result);
-    
+
+typedef void (*WKPageWillAddDetailedMessageToConsoleCallback)(WKPageRef page, WKStringRef source, WKStringRef level, uint64_t line, uint64_t column, WKStringRef message, WKStringRef url, const void* clientInfo);
 typedef void (*WKPageUIClientCallback)(WKPageRef page, const void* clientInfo);
 typedef WKPageRef (*WKPageCreateNewPageCallback)(WKPageRef page, WKPageConfigurationRef configuration, WKNavigationActionRef navigationAction, WKWindowFeaturesRef windowFeatures, const void *clientInfo);
 typedef void (*WKPageRunBeforeUnloadConfirmPanelCallback)(WKPageRef page, WKStringRef message, WKFrameRef frame, WKPageRunBeforeUnloadConfirmPanelResultListenerRef listener, const void *clientInfo);
@@ -757,6 +758,7 @@ typedef struct WKPageUIClientV8 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
     
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 } WKPageUIClientV8;
@@ -845,6 +847,7 @@ typedef struct WKPageUIClientV9 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -936,6 +939,7 @@ typedef struct WKPageUIClientV10 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
     
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
     
@@ -1031,6 +1035,7 @@ typedef struct WKPageUIClientV11 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1129,6 +1134,7 @@ typedef struct WKPageUIClientV12 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
     
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
     
@@ -1230,6 +1236,7 @@ typedef struct WKPageUIClientV13 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1334,6 +1341,7 @@ typedef struct WKPageUIClientV14 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1441,6 +1449,7 @@ typedef struct WKPageUIClientV15 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1552,6 +1561,7 @@ typedef struct WKPageUIClientV16 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1666,6 +1676,7 @@ typedef struct WKPageUIClientV17 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 
@@ -1782,6 +1793,7 @@ typedef struct WKPageUIClientV18 {
     WKFullscreenMayReturnToInlineCallback                               fullscreenMayReturnToInline;
 
     // Version 8.
+    WKPageWillAddDetailedMessageToConsoleCallback                       willAddDetailedMessageToConsole;
     WKRequestPointerLockCallback                                        requestPointerLock;
     WKDidLosePointerLockCallback                                        didLosePointerLock;
 

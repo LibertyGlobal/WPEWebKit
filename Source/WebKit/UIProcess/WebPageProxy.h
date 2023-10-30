@@ -1808,6 +1808,8 @@ public:
     void getApplicationManifest(CompletionHandler<void(const std::optional<WebCore::ApplicationManifest>&)>&&);
 #endif
 
+    void willAddDetailedMessageToConsole(const String& src, const String& level, uint64_t line, uint64_t col, const String& message, const String& url);
+
     WebPreferencesStore preferencesStore() const;
 
     void setDefersLoadingForTesting(bool);
