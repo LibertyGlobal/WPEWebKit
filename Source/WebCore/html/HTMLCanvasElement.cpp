@@ -71,6 +71,7 @@
 #include <wtf/IsoMallocInlines.h>
 #include <wtf/RAMSize.h>
 #include <wtf/text/StringBuilder.h>
+#include "CairoUtilities.h"
 
 #if ENABLE(MEDIA_STREAM)
 #include "CanvasCaptureMediaStreamTrack.h"
@@ -506,9 +507,9 @@ WebGLRenderingContextBase* HTMLCanvasElement::getContextWebGL(WebGLVersion type,
             return nullptr;
     }
 
-    if (!m_context)
-        return createContextWebGL(type, WTFMove(attrs));
-    return &downcast<WebGLRenderingContextBase>(*m_context);
+    auto context = (!m_context) ? createContextWebGL(type, WTFMove(attrs)) : &downcast<WebGLRenderingContextBase>(*m_context);
+    WebCore::renderingStarted();
+    return context;
 }
 
 #endif // ENABLE(WEBGL)
