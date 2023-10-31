@@ -309,6 +309,11 @@ void MemoryPressureHandler::measurementTimerFired()
 #if PLATFORM(COCOA)
     RELEASE_LOG(MemoryPressure, "Current memory footprint (PID=%d): %zu MB", getpid(), footprint / MB);
 #endif
+
+    static size_t footprintPeak = 0;
+    if (footprintPeak < footprint)
+        footprintPeak = footprint;
+    RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB", footprint / MB, footprintPeak / MB);
     auto killThreshold = thresholdForMemoryKill(MemoryType::Normal);
     auto killThresholdVideo = thresholdForMemoryKill(MemoryType::Video);
     if ((killThreshold && footprint >= *killThreshold) || (killThresholdVideo && footprintVideo >= *killThresholdVideo)) {
