@@ -552,10 +552,6 @@ private:
     void configureMediaStreamAudioTracks();
     void invalidateCachedPositionOnNextIteration() const;
 
-#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-    void tryReduceQueueSize(GstObject* queue);
-#endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-
     Atomic<bool> m_isPlayerShuttingDown;
     GRefPtr<GstElement> m_textSink;
     GUniquePtr<GstStructure> m_mediaLocations;
@@ -670,10 +666,6 @@ private:
     // Specific to MediaStream playback.
     MediaTime m_startTime;
     MediaTime m_pausedTime;
-
-#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
-    bool m_isShoutcastStreaming = false;
-#endif // PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
 };
 
 }
