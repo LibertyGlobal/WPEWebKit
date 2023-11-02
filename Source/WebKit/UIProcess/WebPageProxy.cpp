@@ -11703,6 +11703,12 @@ bool WebPageProxy::shouldAvoidSynchronouslyWaitingToPreventDeadlock() const
     return false;
 }
 
+void WebPageProxy::willAddDetailedMessageToConsole(const String& src, const String& level, uint64_t line, uint64_t col, const String& message, const String& url)
+{
+    fprintf(stderr, "SK: WebPageProxy::willAddDetailedMessageToConsole ->m_ uiClient->will message:%s\n", message.utf8().data());
+    m_uiClient->willAddDetailedMessageToConsole(*this, src, level, line, col, message, url);
+}
+
 } // namespace WebKit
 
 #undef WEBPAGEPROXY_RELEASE_LOG

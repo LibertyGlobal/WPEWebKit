@@ -281,6 +281,13 @@ void WebFrameLoaderClient::dispatchDidReceiveResponse(DocumentLoader*, ResourceL
         return;
 
     webPage->injectedBundleResourceLoadClient().didReceiveResponseForResource(*webPage, m_frame, identifier, response);
+
+    if (response.httpStatusCode() >= 400) {
+        String message = "Failed to load resource: the server responded with a status of " + String::number(response.httpStatusCode()) + " (" + response.httpStatusText() + ')';
+        fprintf(stderr, "SK: WebFrameLoaderClient::dispatchDidReceiveResponse->webPage->send(WillAddDetailedMessageToConsole: message:%s \n", message.utf8().data());
+	LOG(Loading,"Using Log WebFrameLoaderClient::dispatchDidReceiveResponse");
+	webPage->send(Messages::WebPageProxy::WillAddDetailedMessageToConsole("Network"_s, "Error"_s, 0, 0, message, response.url().string()));
+    }
 }
 
 void WebFrameLoaderClient::dispatchDidReceiveContentLength(DocumentLoader*, ResourceLoaderIdentifier identifier, int dataLength)
@@ -320,6 +327,13 @@ void WebFrameLoaderClient::dispatchDidFailLoading(DocumentLoader*, ResourceLoade
 
     webPage->injectedBundleResourceLoadClient().didFailLoadForResource(*webPage, m_frame, identifier, error);
     webPage->removeResourceRequest(identifier);
+
+    auto errorDescription = error.localizedDescription();
+    auto errorMessage = makeString("Failed to load resource", errorDescription.isEmpty() ? "" : ": ", errorDescription);
+    fprintf(stderr, "SK: **** WebFrameLoaderClient:dispatchDidFailLoading:->webPage->send(WillAddDetailedMessageToConsole: message:%s \n", errorMessage.utf8().data());
+    fprintf(stderr, "dispatchedDidFailLoading: isTimeout=%d, isCancellation=%d, isAccessControl=%d, errorCode=%d description:%s)",error.isTimeout(), error.isCancellation(), error.isAccessControl(), error.errorCode(),error.localizedDescription().utf8().data());
+    LOG(Loading,"Using Log WebFrameLoaderClient::dispatchDidFailLoading");
+    webPage->send(Messages::WebPageProxy::WillAddDetailedMessageToConsole("Network"_s, "Error"_s, 0, 0, errorMessage, error.failingURL().string()));
 }
 
 bool WebFrameLoaderClient::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int /*length*/)
@@ -623,10 +637,12 @@ void WebFrameLoaderClient::dispatchDidFailLoad(const ResourceError& error)
 
     auto& documentLoader = static_cast<WebDocumentLoader&>(*m_frame->coreFrame()->loader().documentLoader());
     auto navigationID = documentLoader.navigationID();
-
+    
+    fprintf(stderr, "WebFrameLoaderClient::dispatchDidFailLoad");
     // Notify the bundle client.
     webPage->injectedBundleLoaderClient().didFailLoadWithErrorForFrame(*webPage, m_frame, error, userData);
-
+    fprintf(stderr, " dispatchDidFailLoad: isTimeout=%d, isCancellation=%d, isAccessControl=%d, errorCode=%d description:%s)",error.isTimeout(), error.isCancellation(), error.isAccessControl(), error.errorCode(),error.localizedDescription().utf8().data());
+    LOG(Loading,"Using Log WebFrameLoaderClient::dispatchDidFailLoad");
     // Notify the UIProcess.
     webPage->send(Messages::WebPageProxy::DidFailLoadForFrame(m_frame->frameID(), m_frame->info(), documentLoader.request(), navigationID, error, UserData(WebProcess::singleton().transformObjectsToHandles(userData.get()).get())));
 

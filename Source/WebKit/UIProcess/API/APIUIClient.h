@@ -231,6 +231,8 @@ public:
     virtual void startXRSession(WebKit::WebPageProxy&, CompletionHandler<void(RetainPtr<id>)>&& completionHandler) { completionHandler(nil); }
     virtual void endXRSession(WebKit::WebPageProxy&) { }
 #endif
+
+    virtual void willAddDetailedMessageToConsole( WebKit::WebPageProxy&, const WTF::String& source, const WTF::String& level, uint64_t line, uint64_t col, const WTF::String& message, const WTF::String& url) { }
 };
 
 } // namespace API
