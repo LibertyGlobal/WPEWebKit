@@ -1279,7 +1279,11 @@ double MediaPlayerPrivateGStreamer::rate() const
 
 void MediaPlayerPrivateGStreamer::setPreservesPitch(bool preservesPitch)
 {
+#if ENABLE(NATIVE_AUDIO)
+    UNUSED_PARAM(preservesPitch);
+#else
     m_preservesPitch = preservesPitch;
+#endif
 }
 
 std::unique_ptr<PlatformTimeRanges> MediaPlayerPrivateGStreamer::buffered() const
