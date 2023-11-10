@@ -236,6 +236,10 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
 {
     GST_DEBUG("Disposing player");
 
+    // Send AVPipelineReport with stop state before destroy to include stream statistics
+    m_odhReporter.watch_odh_statistics(m_avContextGetter);
+    m_odhReporter.report(ODH_REPORT_AVPIPELINE_STATE_STOP, "", {OdhMediaType::VIDEO, OdhMediaType::AUDIO}, m_avContextGetter);
+
 #if ENABLE(ENCRYPTED_MEDIA)
         if(m_cdmInstance) {
             const_cast<CDMInstance*>(m_cdmInstance.get())->setTracker(nullptr);
