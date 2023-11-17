@@ -169,7 +169,7 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
     , m_preload(player->preload())
     , m_maxTimeLoadedAtLastDidLoadingProgress(MediaTime::zeroTime())
     , m_drawTimer(RunLoop::main(), this, &MediaPlayerPrivateGStreamer::repaint)
-    , m_readyTimerHandler(RunLoop::main(), this, &MediaPlayerPrivateGStreamer::readyTimerFired)
+    , m_pausedTimerHandler(RunLoop::main(), this, &MediaPlayerPrivateGStreamer::pausedTimerFired)
 #if USE(TEXTURE_MAPPER_GL) && !USE(NICOSIA)
     , m_platformLayerProxy(adoptRef(new TextureMapperPlatformLayerProxyGL))
 #endif
@@ -182,7 +182,7 @@ MediaPlayerPrivateGStreamer::MediaPlayerPrivateGStreamer(MediaPlayer* player)
 #endif
 {
 #if USE(GLIB)
-    m_readyTimerHandler.setPriority(G_PRIORITY_DEFAULT_IDLE);
+    m_pausedTimerHandler.setPriority(G_PRIORITY_DEFAULT_IDLE);
 #endif
     m_isPlayerShuttingDown.store(false);
 
@@ -231,7 +231,7 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
     if (m_fillTimer.isActive())
         m_fillTimer.stop();
 
-    m_readyTimerHandler.stop();
+    m_pausedTimerHandler.stop();
     for (auto& missingPluginCallback : m_missingPluginCallbacks) {
         if (missingPluginCallback)
             missingPluginCallback->invalidate();
@@ -937,12 +937,14 @@ bool MediaPlayerPrivateGStreamer::changePipelineState(GstState newState)
 
     // Create a timer when entering the READY state so that we can free resources if we stay for too long on READY.
     // Also lets remove the timer if we request a state change for any state other than READY. See also https://bugs.webkit.org/show_bug.cgi?id=117354
-    if (newState == GST_STATE_READY && !m_readyTimerHandler.isActive()) {
-        // Max interval in seconds to stay in the READY state on manual state change requests.
-        static const Seconds readyStateTimerDelay { 1_min };
-        m_readyTimerHandler.startOneShot(readyStateTimerDelay);
-    } else if (newState != GST_STATE_READY)
-        m_readyTimerHandler.stop();
+
+    if (newState == GST_STATE_PAUSED && m_isEndReached && m_player && !m_player->isLooping()
+        && !isMediaSource() && !m_pausedTimerHandler.isActive()) {
+        // Max interval in seconds to stay in the PAUSED state after video finished on manual state change requests.
+        static const Seconds readyStateTimerDelay { 5_min };
+        m_pausedTimerHandler.startOneShot(readyStateTimerDelay);
+    } else if (newState != GST_STATE_PAUSED)
+        m_pausedTimerHandler.stop();
 
     return true;
 }
@@ -1248,7 +1250,7 @@ void MediaPlayerPrivateGStreamer::loadingFailed(MediaPlayer::NetworkState networ
     }
 
     // Loading failed, remove ready timer.
-    m_readyTimerHandler.stop();
+    m_pausedTimerHandler.stop();
 }
 
 GstElement* MediaPlayerPrivateGStreamer::createAudioSink()
@@ -2752,7 +2754,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
 
     if (!m_player->isLooping() && !isMediaSource()) {
         m_isPaused = true;
-        changePipelineState(GST_STATE_READY);
+        changePipelineState(GST_STATE_PAUSED);
         m_didDownloadFinish = false;
         configureMediaStreamAudioTracks();
 
@@ -3104,9 +3106,9 @@ bool MediaPlayerPrivateGStreamer::canSaveMediaData() const
     return false;
 }
 
-void MediaPlayerPrivateGStreamer::readyTimerFired()
+void MediaPlayerPrivateGStreamer::pausedTimerFired()
 {
-    GST_DEBUG_OBJECT(pipeline(), "In READY for too long. Releasing pipeline resources.");
+    GST_DEBUG_OBJECT(pipeline(), "In PAUSED for too long. Releasing pipeline resources.");
     changePipelineState(GST_STATE_NULL);
 }
 
