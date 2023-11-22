@@ -2068,6 +2068,18 @@ void WKPageSetPageUIClient(WKPageRef pageRef, const WKPageUIClientBase* wkClient
             m_client.didResignInputElementStrongPasswordAppearance(toAPI(&page), toAPI(userInfo), m_client.base.clientInfo);
         }
 
+	void willAddDetailedMessageToConsole(WebPageProxy& page, const String& source, const String& level,
+            uint64_t line, uint64_t column, const String& message, const String& url) final
+        {
+	    fprintf(stderr, "SK:WKPage.cpp: *** willAddDetailedMessageToConsole->m_client:message:%s \n", message.utf8().data());
+            if (!m_client.willAddDetailedMessageToConsole)
+                return;
+            
+	    fprintf(stderr, "SK:WKPage.cpp: willAddDetailedMessageToConsole->m_client:message:%s \n", message.utf8().data());
+	    m_client.willAddDetailedMessageToConsole(toAPI(page), toAPI(source.impl()), toAPI(level.impl()),
+                    line, column, toAPI(message.impl()), toAPI(url.impl()), m_client.base.clientInfo);
+        }
+
 #if ENABLE(POINTER_LOCK)
         void requestPointerLock(WebPageProxy* page) final
         {
