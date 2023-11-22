@@ -31,7 +31,6 @@
 
 namespace WebCore {
 
-class CachedResourceRequest;
 class DeferredPromise;
 class Document;
 class ImageLoader;
@@ -119,8 +118,6 @@ private:
     void timerFired();
 
     VisibleInViewportState imageVisibleInViewport(const Document&) const override;
-
-    bool canReuseFromListOfAvailableImages(const CachedResourceRequest&, const String& crossOriginAttribute);
 
     Element& m_element;
     CachedResourceHandle<CachedImage> m_image;
