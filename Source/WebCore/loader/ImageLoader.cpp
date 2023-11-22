@@ -42,7 +42,6 @@
 #include "InspectorInstrumentation.h"
 #include "JSDOMPromiseDeferred.h"
 #include "LazyLoadImageObserver.h"
-#include "MemoryCache.h"
 #include "Page.h"
 #include "RenderImage.h"
 #include "RenderSVGImage.h"
@@ -165,22 +164,6 @@ void ImageLoader::clearImageWithoutConsideringPendingLoadEvent()
         imageResource->resetAnimation();
 }
 
-// https://html.spec.whatwg.org/multipage/images.html#updating-the-image-data:list-of-available-images
-bool ImageLoader::canReuseFromListOfAvailableImages(const CachedResourceRequest& request, const String& crossOriginAttribute)
-{
-    CachedResource* resource = MemoryCache::singleton().resourceForRequest(request.resourceRequest(), document().page()->sessionID());
-    if (!resource || resource->stillNeedsLoad() || resource->isPreloaded())
-        return false;
-
-    if (!crossOriginAttribute.isNull() && !document().securityOrigin().isSameOriginAs(*resource->origin()))
-        return false;
-
-    if (resource->options().credentials == FetchOptions::Credentials::SameOrigin && (crossOriginAttribute.isNull() || equalLettersIgnoringASCIICase(crossOriginAttribute, "use-credentials"_s)))
-        return false;
-
-    return true;
-}
-
 void ImageLoader::updateFromElement(RelevantMutation relevantMutation)
 {
     // If we're not making renderers for the page, then don't load images. We don't want to slow
@@ -231,7 +214,7 @@ void ImageLoader::updateFromElement(RelevantMutation relevantMutation)
         } else {
             if (m_lazyImageLoadState == LazyImageLoadState::None && isImageElement) {
                 auto& imageElement = downcast<HTMLImageElement>(element());
-                if (imageElement.isLazyLoadable() && document.lazyImageLoadingEnabled() && !canReuseFromListOfAvailableImages(request, crossOriginAttribute)) {
+                if (imageElement.isLazyLoadable() && document.lazyImageLoadingEnabled()) {
                     m_lazyImageLoadState = LazyImageLoadState::Deferred;
                     request.setIgnoreForRequestCount(true);
                 }
