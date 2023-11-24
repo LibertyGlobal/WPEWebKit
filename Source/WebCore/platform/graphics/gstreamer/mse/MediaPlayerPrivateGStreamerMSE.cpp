@@ -44,11 +44,13 @@
 #include "VideoTrackPrivateGStreamer.h"
 
 #include <fnmatch.h>
+#include <fstream>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
+#include <sstream>
 #include <wtf/Condition.h>
 #include <wtf/HashSet.h>
 #include <wtf/NeverDestroyed.h>
@@ -960,6 +962,40 @@ void MediaPlayerPrivateGStreamerMSE::trackDetected(RefPtr<AppendPipeline> append
         m_playbackPipeline->reattachTrack(appendPipeline->sourceBufferPrivate(), newTrack, caps);
 }
 
+#if PLATFORM(BCM_NEXUS) && ENABLE(DV)
+bool isDolbyVisionSupportedOnDevice()
+{
+    // hdmi_output file contains current information about available HDR on TV side
+    const char* statusFile("/proc/brcm/hdmi_output");
+    const char* dolbyVisionPattern("Dolby Vision Supported");
+
+    std::ifstream in(statusFile);
+    std::stringstream buffer;
+    buffer << in.rdbuf();
+    std::string content(buffer.str());
+
+    if (content.find(dolbyVisionPattern) != std::string::npos) {
+        WTFLogAlways("DolbyVision is supported");
+        return true;
+    }
+    return false;
+}
+
+bool checkRuntimeCodecSupport(const String& codec)
+{
+    if (isDolbyVisionSupportedOnDevice()) {
+        static Vector<String> dolbyVisionSupportedProfiles{"dvhe.04*", "dvh1.04*", "dvhe.05*", "dvh1.05*", "dvhe.08*", "dvh1.08*", "dvav.09*"};
+        for (auto& supported : dolbyVisionSupportedProfiles) {
+            if (!fnmatch(supported.utf8().data(), codec.utf8().data(), 0))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+#endif
+
 const static HashSet<AtomicString>& codecSet()
 {
     static NeverDestroyed<HashSet<AtomicString>> codecTypes = []()
@@ -1052,12 +1088,6 @@ const static HashSet<AtomicString>& codecSet()
             set.add(AtomicString("vp9.2"));
         }
 #endif
-#if PLATFORM(BROADCOM) && USE(SVP)
-        if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-dvav"))
-            set.add(AtomicString("dvav*"));
-        if (gstRegistryHasElementForMediaType(videoDecoderFactories,"video/x-dvhe"))
-            set.add(AtomicString("dvhe*"));
-#endif
         gst_plugin_feature_list_free(audioDecoderFactories);
         gst_plugin_feature_list_free(videoDecoderFactories);
 
@@ -1087,6 +1117,11 @@ bool MediaPlayerPrivateGStreamerMSE::supportsCodec(String codec)
             return codecMatchesPattern;
         }
     }
+
+#if PLATFORM(BCM_NEXUS) && ENABLE(DV)
+    if (checkRuntimeCodecSupport(codec))
+        return true;
+#endif
 
     return false;
 }
