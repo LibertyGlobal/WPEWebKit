@@ -170,8 +170,8 @@ if ( ENABLE_ENCRYPTED_MEDIA )
     endif()
 endif()
 
-if (ENABLE_DV)
-    add_definitions(-DENABLE_DV=1)
+if (ENABLE_DOLBY_VISION)
+    add_definitions(-DENABLE_DOLBY_VISION=1)
 endif()
 
 if (ENABLE_VP9_HDR)
