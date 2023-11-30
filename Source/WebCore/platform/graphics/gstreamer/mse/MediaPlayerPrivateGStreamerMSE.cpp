@@ -962,7 +962,7 @@ void MediaPlayerPrivateGStreamerMSE::trackDetected(RefPtr<AppendPipeline> append
         m_playbackPipeline->reattachTrack(appendPipeline->sourceBufferPrivate(), newTrack, caps);
 }
 
-#if PLATFORM(BCM_NEXUS) && ENABLE(DV)
+#if PLATFORM(BCM_NEXUS) && ENABLE(DOLBY_VISION)
 bool isDolbyVisionSupportedOnDevice()
 {
     // hdmi_output file contains current information about available HDR on TV side
@@ -1118,7 +1118,7 @@ bool MediaPlayerPrivateGStreamerMSE::supportsCodec(String codec)
         }
     }
 
-#if PLATFORM(BCM_NEXUS) && ENABLE(DV)
+#if PLATFORM(BCM_NEXUS) && ENABLE(DOLBY_VISION)
     if (checkRuntimeCodecSupport(codec))
         return true;
 #endif
