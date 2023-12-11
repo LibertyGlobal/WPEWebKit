@@ -332,9 +332,9 @@ def _FindChangedVars(name, old_version, new_version):
 
 
 def _FindChangedVars(name, old_version, new_version):
-  if old_version != new_version:
-    logging.debug('Roll dependency %s to %s', name, new_version)
-    yield ChangedVersionEntry(name, old_version, new_version)
+    if old_version != new_version:
+        logging.debug('Roll dependency %s to %s', name, new_version)
+        yield ChangedVersionEntry(name, old_version, new_version)
 
 
 def _FindNewDeps(old, new):

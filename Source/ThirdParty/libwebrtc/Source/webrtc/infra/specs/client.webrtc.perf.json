@@ -251,9 +251,11 @@
       },
       {
         "args": [
-          "--test_artifacts_dir=${ISOLATED_OUTDIR}",
-          "--save_worst_frame",
           "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
         "merge": {

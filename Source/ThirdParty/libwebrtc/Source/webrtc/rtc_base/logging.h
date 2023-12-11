@@ -661,8 +661,8 @@ class LogMessage {
   !::rtc::LogMessage::IsNoop<::rtc::sev>() && (condition) && \
       RTC_LOG_FILE_LINE(::rtc::sev, __FILE__, __LINE__)
 
-#define RTC_LOG_IF(sev, condition)                         \
-  !rtc::LogMessage::IsNoop<::rtc::sev>() && (condition) && \
+#define RTC_LOG_IF(sev, condition)                           \
+  !::rtc::LogMessage::IsNoop<::rtc::sev>() && (condition) && \
       RTC_LOG_FILE_LINE(::rtc::sev, __FILE__, __LINE__)
 
 // The _V version is for when a variable is passed in.

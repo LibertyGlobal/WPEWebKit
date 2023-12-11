@@ -50,6 +50,7 @@ void SequenceCheckerImpl::Detach() {
   // reset on the next call to IsCurrent().
 }
 
+#if RTC_DCHECK_IS_ON
 std::string SequenceCheckerImpl::ExpectationToString() const {
   const TaskQueueBase* const current_queue = TaskQueueBase::Current();
   const rtc::PlatformThreadRef current_thread = rtc::CurrentThreadRef();
