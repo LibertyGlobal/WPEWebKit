@@ -121,10 +121,6 @@ class MockVoiceMediaReceiveChannelInterface
               GetBaseMinimumPlayoutDelayMs,
               (uint32_t ssrc),
               (const, override));
-  MOCK_METHOD(bool, SenderNackEnabled, (), (const, override));
-  MOCK_METHOD(bool, SenderNonSenderRttEnabled, (), (const, override));
-  MOCK_METHOD(void, SetReceiveNackEnabled, (bool enabled), (override));
-  MOCK_METHOD(void, SetReceiveNonSenderRttEnabled, (bool enabled), (override));
 };
 
 static_assert(!std::is_abstract_v<MockVoiceMediaReceiveChannelInterface>, "");

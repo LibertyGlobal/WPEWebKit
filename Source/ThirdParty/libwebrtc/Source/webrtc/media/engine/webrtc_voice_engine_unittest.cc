@@ -3941,10 +3941,11 @@ TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
   cricket::WebRtcVoiceEngine engine(task_queue_factory.get(), adm.get(),
                                     webrtc::CreateBuiltinAudioEncoderFactory(),
                                     webrtc::CreateBuiltinAudioDecoderFactory(),
-                                    nullptr, nullptr, nullptr, field_trials);
+                                    nullptr, nullptr, nullptr, nullptr,
+                                    field_trials);
   engine.Init();
   webrtc::RtcEventLogNull event_log;
-  webrtc::Call::Config call_config(&event_log);
+  CallConfig call_config(&event_log);
   call_config.trials = &field_trials;
   call_config.task_queue_factory = task_queue_factory.get();
   {
@@ -3954,17 +3955,16 @@ TEST(WebRtcVoiceEngineTest, SetRtpSendParametersMaxBitrate) {
         webrtc::test::MockAudioDeviceModule::CreateNice();
     call_config.audio_state = webrtc::AudioState::Create(config);
   }
-  auto call = absl::WrapUnique(webrtc::Call::Create(call_config));
-  cricket::WebRtcVoiceMediaChannel channel(
-      cricket::MediaChannel::Role::kSend, &engine, cricket::MediaConfig(),
-      cricket::AudioOptions(), webrtc::CryptoOptions(), call.get(),
-      webrtc::AudioCodecPairId::Create());
+  std::unique_ptr<Call> call = Call::Create(call_config);
+  cricket::WebRtcVoiceSendChannel channel(
+      &engine, cricket::MediaConfig(), cricket::AudioOptions(),
+      webrtc::CryptoOptions(), call.get(), webrtc::AudioCodecPairId::Create());
   {
-    cricket::AudioSendParameters params;
-    params.codecs.push_back(cricket::AudioCodec(1, "opus", 48000, 32000, 2));
+    cricket::AudioSenderParameter params;
+    params.codecs.push_back(cricket::CreateAudioCodec(1, "opus", 48000, 2));
     params.extensions.push_back(webrtc::RtpExtension(
         webrtc::RtpExtension::kTransportSequenceNumberUri, 1));
-    EXPECT_TRUE(channel.SetSendParameters(params));
+    EXPECT_TRUE(channel.SetSenderParameters(params));
   }
   constexpr int kSsrc = 1234;
   {

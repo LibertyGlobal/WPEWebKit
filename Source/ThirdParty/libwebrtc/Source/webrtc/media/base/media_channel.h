@@ -74,7 +74,6 @@ webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
 namespace cricket {
 
 class AudioSource;
-class MediaChannel;  // TODO(bugs.webrtc.org/13931): Delete when irrelevant
 class VideoCapturer;
 struct RtpHeader;
 struct VideoFormat;

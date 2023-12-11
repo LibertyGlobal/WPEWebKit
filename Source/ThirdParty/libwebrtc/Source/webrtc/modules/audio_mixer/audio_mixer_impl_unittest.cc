@@ -178,6 +178,7 @@ TEST(AudioMixer, UpdatesSourceCountHistogram) {
 }
 
 TEST(AudioMixer, UpdatesSourceCountHistogram) {
+  metrics::Reset();
   constexpr int kAudioSourcesGroup1 = 5;
   constexpr int kAudioSourcesGroup2 = 3;
 

@@ -13,14 +13,10 @@
 #include <memory>
 
 namespace webrtc {
-namespace test {
 
 std::unique_ptr<DesktopFrame> CreateDesktopFrameFromCGImage(
     rtc::ScopedCFTypeRef<CGImageRef> cg_image) {
   return DesktopFrameCGImage::CreateFromCGImage(cg_image);
 }
 
-}  // namespace test
 }  // namespace webrtc
-
-#endif  // API_TEST_CREATE_VIDEO_CODEC_TESTER_H_
