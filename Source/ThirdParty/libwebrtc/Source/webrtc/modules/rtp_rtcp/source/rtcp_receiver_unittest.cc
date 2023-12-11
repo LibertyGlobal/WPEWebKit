@@ -1790,11 +1790,7 @@ TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnRemb) {
 
 TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnRemb) {
   ReceiverMocks mocks;
-  RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
-  config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
-  config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
-  RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
+  RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
   rtcp::Remb remb;

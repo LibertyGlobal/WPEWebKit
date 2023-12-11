@@ -373,9 +373,7 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
   // In JavaScript, this is only exposed if HW exposure is allowed.
   // Only implemented for video.
   // TODO(https://crbug.com/webrtc/14178): Implement for audio as well.
-  RTCRestrictedStatsMember<std::string,
-                           StatExposureCriteria::kHardwareCapability>
-      encoder_implementation;
+  RTCStatsMember<std::string> encoder_implementation;
   // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;

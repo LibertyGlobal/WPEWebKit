@@ -9,6 +9,10 @@
  */
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_h265.h"
 
+#include "modules/desktop_capture/mac/desktop_frame_utils.h"
+
+#include <memory>
+
 namespace webrtc {
 void FuzzOneInput(const uint8_t* data, size_t size) {
   if (size > 200000)

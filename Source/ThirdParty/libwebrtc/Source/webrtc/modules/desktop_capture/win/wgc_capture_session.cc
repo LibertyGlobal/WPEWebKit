@@ -502,10 +502,35 @@ HRESULT WgcCaptureSession::ProcessFrame() {
   DesktopFrame* current_frame = queue_.current_frame();
 
   // Make a copy of the data pointed to by `map_info.pData` to the preallocated
-  // `current_frame` so we are free to unmap our texture.
+  // `current_frame` so we are free to unmap our texture. If possible, also
+  // perform a light-weight scan of the vertical line of pixels in the middle
+  // of the screen. A comparison is performed between two 32-bit pixels (RGBA);
+  // one from the current frame and one from the previous, and as soon as a
+  // difference is detected the scan stops and `frame_content_has_changed` is
+  // set to true.
   uint8_t* src_data = static_cast<uint8_t*>(map_info.pData);
-  current_frame->CopyPixelsFrom(src_data, current_frame->stride(),
-                                DesktopRect::MakeSize(current_frame->size()));
+  uint8_t* dst_data = current_frame->data();
+  uint8_t* prev_data =
+      frame_content_can_be_compared ? previous_frame->data() : nullptr;
+
+  const int width_in_bytes =
+      current_frame->size().width() * DesktopFrame::kBytesPerPixel;
+  RTC_DCHECK_GE(current_frame->stride(), width_in_bytes);
+  RTC_DCHECK_GE(map_info.RowPitch, width_in_bytes);
+  const int middle_pixel_offset =
+      (image_width / 2) * DesktopFrame::kBytesPerPixel;
+  for (int i = 0; i < image_height; i++) {
+    memcpy(dst_data, src_data, width_in_bytes);
+    if (prev_data && !frame_content_has_changed) {
+      uint8_t* previous_pixel = prev_data + middle_pixel_offset;
+      uint8_t* current_pixel = dst_data + middle_pixel_offset;
+      frame_content_has_changed =
+          memcmp(previous_pixel, current_pixel, DesktopFrame::kBytesPerPixel);
+      prev_data += current_frame->stride();
+    }
+    dst_data += current_frame->stride();
+    src_data += map_info.RowPitch;
+  }
 
   d3d_context->Unmap(mapped_texture_.Get(), 0);
 

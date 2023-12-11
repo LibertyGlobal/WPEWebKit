@@ -682,18 +682,6 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
     if (media_send_channel()->AddSendStream(new_stream)) {
       RTC_LOG(LS_INFO) << "Add send stream ssrc: " << new_stream.ssrcs[0]
                        << " into " << ToString();
-      // Must also tell the corresponding receive stream to listen for
-      // RRs coming in on the new stream's SSRC
-      if (media_send_channel_impl_) {
-        if (all_streams.size() == 1) {
-          if (!media_receive_channel()->SetLocalSsrc(new_stream)) {
-            error_desc = StringFormat(
-                "Failed to set local ssrc: %u into m-section with mid='%s'",
-                new_stream.first_ssrc(), mid().c_str());
-            ret = false;
-          }
-        }
-      }
     } else {
       error_desc = StringFormat(
           "Failed to add send stream ssrc: %u into m-section with mid='%s'",
@@ -848,29 +836,7 @@ VoiceChannel::VoiceChannel(
                   mid,
                   srtp_required,
                   crypto_options,
-                  ssrc_generator),
-      send_channel_(media_send_channel_impl_->AsVoiceChannel()),
-      receive_channel_(media_receive_channel_impl_->AsVoiceChannel()) {}
-
-VoiceChannel::VoiceChannel(
-    rtc::Thread* worker_thread,
-    rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
-    std::unique_ptr<VoiceMediaChannel> media_channel_impl,
-    absl::string_view mid,
-    bool srtp_required,
-    webrtc::CryptoOptions crypto_options,
-    UniqueRandomIdGenerator* ssrc_generator)
-    : BaseChannel(worker_thread,
-                  network_thread,
-                  signaling_thread,
-                  std::move(media_channel_impl),
-                  mid,
-                  srtp_required,
-                  crypto_options,
-                  ssrc_generator),
-      send_channel_(media_channel_impl_->AsVoiceChannel()),
-      receive_channel_(media_channel_impl_->AsVoiceChannel()) {}
+                  ssrc_generator) {}
 
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");

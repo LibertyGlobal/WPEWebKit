@@ -280,7 +280,7 @@
           'has_native_resultdb_integration', 'chromium-tester-service-account'
         ],
         'test_suites': {
-          'gtest_tests': 'android_perf_tests',
+          'gtest_tests': 'perf_tests',
         },
       },
       'Perf Fuchsia': {
@@ -288,10 +288,10 @@
         'linux',
         'mixins': [
           'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h',
-          'resultdb-gtest-json-format', 'fuchsia-gtest-output'
+          'resultdb-gtest-json-format', 'fuchsia-gtest-output', 'perf-output'
         ],
         'test_suites': {
-          'isolated_scripts': 'fuchsia_compatible_perf_tests',
+          'isolated_scripts': 'perf_tests',
         }
       },
       'Perf Linux Bionic': {

@@ -179,11 +179,6 @@ class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
     RTC_DCHECK(include_rtx);
     return recv_codecs();
   }
-
- private:
-  // Workaround variable for avoiding recursion between old and new APIs.
-  // TODO(bugs.webrtc.org/13931): Remove when old interface is gone.
-  bool recursion_guard_ = false;
 };
 
 // MediaEngineInterface is an abstraction of a media engine which can be

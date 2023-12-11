@@ -171,12 +171,10 @@
     }
   },
   'quick-perf-tests': {
-    '$mixin_append': {
-      'args': [
-        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
-        '--nologs',
-      ],
-    }
+    'args': [
+      '--webrtc_quick_perf_test',
+      '--nologs',
+    ],
   },
   'redfin': {
     'swarming': {
