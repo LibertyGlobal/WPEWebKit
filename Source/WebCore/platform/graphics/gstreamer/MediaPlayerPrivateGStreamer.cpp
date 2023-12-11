@@ -2919,15 +2919,14 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamer::supportsType(const MediaE
     if (parameters.type.containerType() == "video/x-flv")
         return result;
 
-    bool hasCodec = !parameters.type.codecs().isEmpty();
     // spec says we should not return "probably" if the codecs string is empty
     if (mimeTypeSet().contains(parameters.type.containerType()))
-        result = !hasCodec ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
+        result = parameters.type.codecs().isEmpty() ? MediaPlayer::MayBeSupported : MediaPlayer::IsSupported;
 
 #if PLATFORM(BROADCOM)
-    if (result != MediaPlayer::IsNotSupported && hasCodec) {
+    if (result != MediaPlayer::IsNotSupported && AtomicString("video/webm") == parameters.type.containerType()) {
         Vector<String> codecs = parameters.type.codecs();
-        if (!MediaPlayerPrivateGStreamerMSE::supportsAllCodecs(codecs))
+        if (codecs.isEmpty() || !MediaPlayerPrivateGStreamerMSE::supportsAllCodecs(codecs))
             result = MediaPlayer::IsNotSupported;
     }
 #endif
