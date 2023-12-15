@@ -331,6 +331,10 @@ if (ENABLE_BREAKPAD)
     endif ()
 endif ()
 
+if (PLATFORM_EOS)
+    add_definitions(-DWTF_PLATFORM_EOS=1)
+endif()
+
 add_definitions(-DBUILDING_WPE__=1)
 add_definitions(-DGETTEXT_PACKAGE="WPE")
 add_definitions(-DJSC_GLIB_API_ENABLED)

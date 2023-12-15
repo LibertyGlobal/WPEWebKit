@@ -56,6 +56,12 @@
 #include <wtf/text/AtomStringHash.h>
 #include <wtf/text/StringToIntegerConversion.h>
 
+#if PLATFORM(EOS)
+   #define H264_MAX_SIZE 1920.0f
+#else
+   #define H264_MAX_SIZE 3840.0f
+#endif
+
 namespace {
 struct VideoDecodingLimits {
     unsigned mediaMaxWidth = 0;
@@ -485,6 +491,9 @@ MediaPlayer::SupportsType MediaPlayerPrivateGStreamerMSE::supportsType(const Med
     if (ok && videoDecodingLimits && width == videoDecodingLimits->mediaMaxWidth && height == videoDecodingLimits->mediaMaxHeight && frameRate > videoDecodingLimits->mediaMaxFrameRate)
         return result;
 
+    if(isAnyCodecH264AndExceedSupportedSize(parameters.type.codecs(), width, height))
+        return result;
+
     registerWebKitGStreamerElements();
 
     GST_DEBUG("Checking mime-type \"%s\"", parameters.type.raw().utf8().data());
@@ -510,6 +519,16 @@ MediaTime MediaPlayerPrivateGStreamerMSE::maxMediaTimeSeekable() const
     }
 
     return result;
+}
+
+bool MediaPlayerPrivateGStreamerMSE::isAnyCodecH264AndExceedSupportedSize(const Vector<String>& codecs, float width, float height)
+{
+    for (String codec : codecs) {
+        if(codec.startsWith("avc"_s) && (width > H264_MAX_SIZE || height > H264_MAX_SIZE)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace WebCore.

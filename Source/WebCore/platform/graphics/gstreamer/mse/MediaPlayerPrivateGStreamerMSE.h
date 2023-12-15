@@ -106,6 +106,8 @@ private:
 
     void propagateReadyStateToPlayer();
 
+    static bool isAnyCodecH264AndExceedSupportedSize(const Vector<String>& codecs, float width, float height);
+
     WeakPtr<MediaSourcePrivateClient> m_mediaSource;
     RefPtr<MediaSourcePrivateGStreamer> m_mediaSourcePrivate;
     MediaTime m_mediaTimeDuration { MediaTime::invalidTime() };
