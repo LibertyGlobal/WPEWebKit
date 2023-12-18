@@ -3747,6 +3747,7 @@ void HTMLMediaElement::play()
 void HTMLMediaElement::playInternal()
 {
     ALWAYS_LOG(LOGIDENTIFIER);
+    bool wasSeeking = seeking();
 
     if (isSuspended()) {
         ALWAYS_LOG(LOGIDENTIFIER, "returning because context is suspended");
@@ -3761,6 +3762,12 @@ void HTMLMediaElement::playInternal()
     mediaSession().setActive(true);
     if (!mediaSession().clientWillBeginPlayback()) {
         ALWAYS_LOG(LOGIDENTIFIER, "returning because of interruption");
+        return;
+    }
+
+    ALWAYS_LOG(LOGIDENTIFIER, "suresh m_seekRequested:", m_seekRequested, "wasSeeking:" , wasSeeking);
+    if (m_seekRequested) {
+        ALWAYS_LOG(LOGIDENTIFIER, "suresh no need to change the playstate");
         return;
     }
 

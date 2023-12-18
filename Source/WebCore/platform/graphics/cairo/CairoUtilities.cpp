@@ -42,6 +42,7 @@
 #include <wtf/NeverDestroyed.h>
 #include <wtf/UniqueArray.h>
 #include <wtf/Vector.h>
+#include <wtf/Atomics.h>
 
 #if ENABLE(ACCELERATED_2D_CANVAS)
 #include <cairo-gl.h>
@@ -56,6 +57,9 @@ namespace {
 }
 
 namespace WebCore {
+
+static cairo_user_data_key_t s_surfaceUniqueIDKey;
+static Atomic<uintptr_t> s_surfaceUniqueID = 1;
 
 #if USE(FREETYPE)
 RecursiveLock& cairoFontLock()
@@ -401,6 +405,16 @@ void renderingStarted()
     if (!renderingStartedFlag.test_and_set()) {
         WTFLogAlways("renderingStarted\n");
     }
+}
+
+void attachSurfaceUniqueID(cairo_surface_t* surface)
+{
+    cairo_surface_set_user_data(surface, &s_surfaceUniqueIDKey, reinterpret_cast<void*>(s_surfaceUniqueID.exchangeAdd(1)), nullptr);
+}
+
+uintptr_t getSurfaceUniqueID(cairo_surface_t* surface)
+{
+    return reinterpret_cast<uintptr_t>(cairo_surface_get_user_data(surface, &s_surfaceUniqueIDKey));
 }
 
 } // namespace WebCore
