@@ -25,7 +25,7 @@
 #include "CoordinatedGraphicsLayer.h"
 
 #if USE(COORDINATED_GRAPHICS)
-
+#include "CairoUtilities.h"
 #include "FloatQuad.h"
 #include "GraphicsContext.h"
 #include "GraphicsLayer.h"
@@ -903,7 +903,9 @@ void CoordinatedGraphicsLayer::flushCompositingStateForThisLayerOnly()
         ASSERT(m_compositedImage);
         auto& image = *m_compositedImage;
         uintptr_t imageID = reinterpret_cast<uintptr_t>(&image);
-        uintptr_t nativeImageID = reinterpret_cast<uintptr_t>(m_compositedNativeImage->platformImage().get());
+        //uintptr_t nativeImageID = reinterpret_cast<uintptr_t>(m_compositedNativeImage->platformImage().get());
+
+	uintptr_t nativeImageID = getSurfaceUniqueID(m_compositedNativeImage->platformImage().get());
 
         // Respawn the ImageBacking object if the underlying image changed.
         if (m_nicosia.imageBacking) {
@@ -923,7 +925,8 @@ void CoordinatedGraphicsLayer::flushCompositingStateForThisLayerOnly()
         auto& layerState = impl.layerState();
         layerState.imageID = imageID;
         layerState.update.isVisible = transformedVisibleRect().intersects(IntRect(contentsRect()));
-        if (layerState.update.isVisible && layerState.update.nativeImageID != nativeImageID) {
+        if (layerState.update.isVisible && (!nativeImageID || layerState.update.nativeImageID != nativeImageID)) {
+	//if (layerState.update.isVisible && layerState.update.nativeImageID != nativeImageID) {
             layerState.update.nativeImageID = nativeImageID;
             layerState.update.imageBackingStore = m_coordinator->imageBackingStore(nativeImageID,
                 [&] {
