@@ -573,6 +573,8 @@ set(WTF_LIBRARIES
     ICU::data
     ICU::i18n
     ICU::uc
+    OdhErrTelemetry::OdhErrTelemetry
+    OdhOttTelemetry::OdhOttTelemetry
 )
 
 if (NOT USE_SYSTEM_MALLOC)
