@@ -301,11 +301,17 @@ protected:
         Playing, // Pipeline is playing and it should be.
     };
 
+    enum class ChangePipelineStateResult {
+        Ok,
+        Rejected,
+        Failed,
+    };
+    ChangePipelineStateResult changePipelineState(GstState);
+
     static bool isAvailable();
 
     virtual void durationChanged();
     virtual void sourceSetup(GstElement*);
-    virtual bool changePipelineState(GstState);
     virtual void updatePlaybackRate();
 
 #if USE(GSTREAMER_HOLEPUNCH)
@@ -374,6 +380,9 @@ protected:
 
     void setCachedPosition(const MediaTime&) const;
 
+    bool isPipelineSeeking(GstState current, GstState pending, GstStateChangeReturn) const;
+    bool isPipelineSeeking() const;
+
     Ref<MainThreadNotifier<MainThreadNotification>> m_notifier;
     MediaPlayer* m_player;
     String m_referrer;
@@ -386,6 +395,7 @@ protected:
     bool m_didErrorOccur { false };
     mutable bool m_isEndReached { false };
     mutable std::optional<bool> m_isLiveStream;
+    bool m_isPipelinePlaying = false;
     bool m_isPaused { true };
     float m_playbackRate { 1 };
     PlaybackRatePausedState m_playbackRatePausedState { PlaybackRatePausedState::ManuallyPaused };
