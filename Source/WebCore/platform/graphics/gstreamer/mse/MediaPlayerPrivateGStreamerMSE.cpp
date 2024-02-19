@@ -276,7 +276,14 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek(const MediaTime& position, float rat
             m_player->queueTaskOnEventLoop([weakThis = WeakPtr { *this }, this] {
                 if (!weakThis)
                     return;
+                bool mustPreventPositionReset = m_isWaitingForPreroll && m_isSeeking;
+                if (mustPreventPositionReset)
+                    m_cachedPosition = currentMediaTime();
                 didPreroll();
+                if (mustPreventPositionReset) {
+                    propagateReadyStateToPlayer();
+                    invalidateCachedPosition();
+                }
             });
         }
     }
