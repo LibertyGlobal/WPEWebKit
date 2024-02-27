@@ -71,6 +71,17 @@ static GRefPtr<GstPad> findBestUpstreamPad(GRefPtr<GstPad> pad)
     return sinkPad;
 }
 
+static AtomString trimStreamId(StringView streamId)
+{
+    size_t index = streamId.find([](auto c) {
+        return c != '0';
+    });
+
+    if (index == notFound)
+        return AtomString::fromLatin1("0");
+    return AtomString(streamId.substring(index).toString());
+}
+
 TrackPrivateBaseGStreamer::TrackPrivateBaseGStreamer(TrackType type, TrackPrivateBase* owner, unsigned index, GRefPtr<GstPad>&& pad, bool shouldHandleStreamStartEvent)
     : m_notifier(MainThreadNotifier<MainThreadNotification>::create())
     , m_index(index)
@@ -95,7 +106,7 @@ TrackPrivateBaseGStreamer::TrackPrivateBaseGStreamer(TrackType type, TrackPrivat
     , m_owner(owner)
 {
     ASSERT(m_stream);
-    m_id = AtomString::fromLatin1(gst_stream_get_stream_id(m_stream.get()));
+    m_id = trimStreamId(StringView::fromLatin1(gst_stream_get_stream_id(m_stream.get())));
 
     g_signal_connect_swapped(m_stream.get(), "notify::tags", G_CALLBACK(+[](TrackPrivateBaseGStreamer* track) {
         track->tagsChanged();
@@ -261,7 +272,7 @@ void TrackPrivateBaseGStreamer::notifyTrackOfStreamChanged()
         return;
 
     GST_INFO("Track %d got stream start for stream %s.", m_index, streamId.get());
-    m_id = AtomString::fromLatin1(streamId.get());
+    m_id = trimStreamId(StringView::fromLatin1(streamId.get()));
 }
 
 void TrackPrivateBaseGStreamer::streamChanged()
@@ -329,7 +340,7 @@ String TrackPrivateBaseGStreamer::trackIdFromPadStreamStartOrUniqueID(TrackType 
     if (position == notFound || position + 1 == streamIdView.length())
         return generateUniquePlaybin2StreamID(type, index);
 
-    return streamIdView.substring(position + 1).toString();
+    return trimStreamId(streamIdView.substring(position + 1));
 }
 
 GRefPtr<GstTagList> TrackPrivateBaseGStreamer::getAllTags(const GRefPtr<GstPad>& pad)
