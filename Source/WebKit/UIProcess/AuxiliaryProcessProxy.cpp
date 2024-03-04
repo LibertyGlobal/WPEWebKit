@@ -282,8 +282,10 @@ void AuxiliaryProcessProxy::didFinishLaunching(ProcessLauncher*, IPC::Connection
     ASSERT(isMainRunLoop());
 
     auto launchTime = MonotonicTime::now() - m_processStart;
+    printf("ONEM-34263: check pre\n"); fflush(stdout);
     if (launchTime > 1_s)
         RELEASE_LOG_FAULT(Process, "%s process (%p) took %f seconds to launch", processName().characters(), this, launchTime.value());
+    printf("ONEM-34263: check post\n"); fflush(stdout);
     
     if (!IPC::Connection::identifierIsValid(connectionIdentifier))
         return;

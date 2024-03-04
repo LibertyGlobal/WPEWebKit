@@ -288,7 +288,9 @@ WTF_EXPORT_PRIVATE bool WTFIsDebuggerAttached(void);
 } while (0)
 #elif !ENABLE(DEVELOPER_MODE) && !OS(DARWIN)
 #ifdef __cplusplus
-#define CRASH() std::abort()
+#define CRASH() do { \ 
+printf("ONEM-34263: ABORTING\n"); fflush(stdout); std::abort(); \
+} while (0)
 #define CRASH_UNDER_CONSTEXPR_CONTEXT() WTFBreakpointTrapUnderConstexprContext()
 #else
 #define CRASH() abort()
