@@ -80,7 +80,7 @@ public:
 
     // FIXME: These should be pure virtual.
     virtual void pageBackgroundTransparencyChanged() { }
-    virtual void forceRepaint() { }
+    virtual void forceRepaint(bool afterCompositorReconfigure = false) { }
     virtual bool forceRepaintAsync(CallbackID) { return false; }
     virtual void setLayerTreeStateIsFrozen(bool) { }
     virtual bool layerTreeStateIsFrozen() const { return false; }

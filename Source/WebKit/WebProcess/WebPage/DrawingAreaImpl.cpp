@@ -148,7 +148,7 @@ void DrawingAreaImpl::scroll(const IntRect& scrollRect, const IntSize& scrollDel
     m_scrollOffset += scrollDelta;
 }
 
-void DrawingAreaImpl::forceRepaint()
+void DrawingAreaImpl::forceRepaint(bool afterCompositorReconfigure)
 {
     if (m_inUpdateBackingStoreState) {
         m_forceRepaintAfterBackingStoreStateUpdate = true;
@@ -157,7 +157,7 @@ void DrawingAreaImpl::forceRepaint()
     m_forceRepaintAfterBackingStoreStateUpdate = false;
 
     if (m_layerTreeHost) {
-        AcceleratedDrawingArea::forceRepaint();
+        AcceleratedDrawingArea::forceRepaint(afterCompositorReconfigure);
         return;
     }
 

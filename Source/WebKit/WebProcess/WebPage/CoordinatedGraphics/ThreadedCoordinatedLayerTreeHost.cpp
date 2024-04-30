@@ -94,10 +94,10 @@ void ThreadedCoordinatedLayerTreeHost::invalidate()
     m_surface = nullptr;
 }
 
-void ThreadedCoordinatedLayerTreeHost::forceRepaint()
+void ThreadedCoordinatedLayerTreeHost::forceRepaint(bool afterCompositorReconfigure)
 {
     CoordinatedLayerTreeHost::forceRepaint();
-    m_compositor->forceRepaint();
+    m_compositor->forceRepaint(afterCompositorReconfigure);
 }
 
 void ThreadedCoordinatedLayerTreeHost::pauseRendering()

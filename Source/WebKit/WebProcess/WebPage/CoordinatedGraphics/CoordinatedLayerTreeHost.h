@@ -53,7 +53,7 @@ protected:
     void pauseRendering() override;
     void resumeRendering() override;
 
-    void forceRepaint() override;
+    void forceRepaint(bool afterCompositorReconfigure = false) override;
     bool forceRepaintAsync(CallbackID) override;
     void sizeDidChange(const WebCore::IntSize& newSize) override;
 

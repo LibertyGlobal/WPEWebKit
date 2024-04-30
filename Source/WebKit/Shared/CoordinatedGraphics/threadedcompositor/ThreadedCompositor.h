@@ -76,7 +76,7 @@ public:
 
     void invalidate();
 
-    void forceRepaint();
+    void forceRepaint(bool afterCompositorReconfigure = false);
 
 #if USE(REQUEST_ANIMATION_FRAME_DISPLAY_MONITOR)
     RefPtr<WebCore::DisplayRefreshMonitor> displayRefreshMonitor(WebCore::PlatformDisplayID);

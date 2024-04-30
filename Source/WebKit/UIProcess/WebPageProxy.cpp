@@ -4354,6 +4354,14 @@ void WebPageProxy::didExitFullscreen()
     m_uiClient->didExitFullscreen(this);
 }
 
+void WebPageProxy::repaintAfterCompositorReconfigure()
+{
+    if (!isValid())
+        return;
+
+    m_process->send(Messages::WebPage::repaintAfterCompositorReconfigure(), m_pageID);
+}
+
 void WebPageProxy::closePage(bool stopResponsivenessTimer)
 {
     if (stopResponsivenessTimer)

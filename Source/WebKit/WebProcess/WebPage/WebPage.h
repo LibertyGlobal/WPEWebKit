@@ -865,6 +865,7 @@ public:
     float deviceScaleFactor() const;
 
     void forceRepaintWithoutCallback();
+    void repaintAfterCompositorReconfigure();
 
     void unmarkAllMisspellings();
     void unmarkAllBadGrammar();

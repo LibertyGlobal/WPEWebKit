@@ -381,6 +381,8 @@ public:
     void didEnterFullscreen();
     void didExitFullscreen();
 
+    void repaintAfterCompositorReconfigure();
+
     WebInspectorProxy* inspector() const;
 
     void didChangeInspectorFrontendCount(unsigned count) { m_inspectorFrontendCount = count; }

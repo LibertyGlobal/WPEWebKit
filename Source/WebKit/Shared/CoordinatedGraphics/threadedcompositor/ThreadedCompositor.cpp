@@ -220,8 +220,9 @@ void ThreadedCompositor::updateViewport()
     m_compositingRunLoop->scheduleUpdate();
 }
 
-void ThreadedCompositor::forceRepaint()
+void ThreadedCompositor::forceRepaint(bool afterCompositorReconfigure)
 {
+    if(!afterCompositorReconfigure) {
     // FIXME: Enable this for WPE once it's possible to do these forced updates
     // in a way that doesn't starve out the underlying graphics buffers.
 #if PLATFORM(GTK)
@@ -230,6 +231,12 @@ void ThreadedCompositor::forceRepaint()
         renderLayerTree();
     });
 #endif
+    } else {
+        m_compositingRunLoop->performTaskSync([this, protectedThis = makeRef(*this)] {
+            SetForScope<bool> change(m_inForceRepaint, true);
+            renderLayerTree();
+        });
+    }
 }
 
 void ThreadedCompositor::renderNonCompositedWebGL()
