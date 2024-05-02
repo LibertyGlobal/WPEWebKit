@@ -183,9 +183,12 @@ bool SourceBufferPrivateGStreamer::isReadyForMoreSamples(const AtomString& track
 void SourceBufferPrivateGStreamer::notifyClientWhenReadyForMoreSamples(const AtomString& trackId)
 {
     ASSERT(isMainThread());
+    ASSERT(m_tracks.contains(trackId));
     MediaSourceTrackGStreamer* track = m_tracks.get(trackId);
-    track->notifyWhenReadyForMoreSamples([protector = Ref { *this }, this, trackId]() mutable {
-        RunLoop::main().dispatch([protector = WTFMove(protector), this, trackId]() {
+    track->notifyWhenReadyForMoreSamples([weakPtr = WeakPtr { *this }, this, trackId]() mutable {
+        RunLoop::main().dispatch([weakPtr = WTFMove(weakPtr), this, trackId]() {
+            if (!weakPtr)
+                return;
             if (!m_hasBeenRemovedFromMediaSource)
                 provideMediaData(trackId);
         });

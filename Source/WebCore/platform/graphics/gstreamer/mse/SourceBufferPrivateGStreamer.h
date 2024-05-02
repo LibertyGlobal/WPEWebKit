@@ -50,7 +50,7 @@ class AppendPipeline;
 class MediaSourcePrivateGStreamer;
 class MediaSourceTrackGStreamer;
 
-class SourceBufferPrivateGStreamer final : public SourceBufferPrivate {
+class SourceBufferPrivateGStreamer final : public SourceBufferPrivate, public CanMakeWeakPtr<SourceBufferPrivateGStreamer> {
 public:
     static bool isContentTypeSupported(const ContentType&);
     static Ref<SourceBufferPrivateGStreamer> create(MediaSourcePrivateGStreamer*, const ContentType&, MediaPlayerPrivateGStreamerMSE&);
