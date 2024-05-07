@@ -227,7 +227,8 @@ public:
         gst_buffer_add_reference_timestamp_meta(buffer.get(), m_rtpTimestampCaps.get(), inputImage.RtpTimestamp(), GST_CLOCK_TIME_NONE);
 
         auto sample = adoptGRef(gst_sample_new(buffer.get(), m_caps.get(), nullptr, nullptr));
-        switch (gst_app_src_push_sample(GST_APP_SRC(m_src), sample.get())) {
+        
+	switch (gst_app_src_push_sample(GST_APP_SRC(m_src), sample.get())) {
         case GST_FLOW_OK:
             break;
         case GST_FLOW_FLUSHING:
