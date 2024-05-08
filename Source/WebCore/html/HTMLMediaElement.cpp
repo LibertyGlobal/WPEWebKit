@@ -4200,7 +4200,7 @@ void HTMLMediaElement::scanTimerFired()
 
 // The spec says to fire periodic timeupdate events (those sent while playing) every
 // "15 to 250ms", we choose the slowest frequency
-static const Seconds maxTimeupdateEventFrequency { 250_ms };
+static const Seconds maxTimeupdateEventFrequency { 200_ms };
 
 void HTMLMediaElement::startPlaybackProgressTimer()
 {
