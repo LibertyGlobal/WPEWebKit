@@ -280,11 +280,14 @@ void AuxiliaryProcessProxy::didFinishLaunching(ProcessLauncher*, IPC::Connection
 {
     ASSERT(!m_connection);
     ASSERT(isMainRunLoop());
-
+    // that sleep give use repro of the problem
+    usleep(1000 * 950); // 950 milliseconds sleep to reproduce the problem
     auto launchTime = MonotonicTime::now() - m_processStart;
     if (launchTime > 1_s)
         RELEASE_LOG_FAULT(Process, "%s process (%p) took %f seconds to launch", processName().characters(), this, launchTime.value());
-    
+    else {
+        printf("Launching time for %s %p is %f\n", processName().characters(), this, launchTime.value()); fflush(stdout);
+    }
     if (!IPC::Connection::identifierIsValid(connectionIdentifier))
         return;
 
