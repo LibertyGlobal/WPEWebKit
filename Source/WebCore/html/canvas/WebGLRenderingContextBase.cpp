@@ -140,6 +140,9 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
 
+#include <chrono>
+#include <GCController.h>
+
 #if ENABLE(OFFSCREEN_CANVAS)
 #include "OffscreenCanvas.h"
 #endif
@@ -815,6 +818,11 @@ static WebGLRenderingContextBaseSet& activeContexts()
 
 static void addActiveContext(WebGLRenderingContextBase& newContext)
 {
+    auto start = std::chrono::steady_clock::now();
+    GCController::singleton().garbageCollectNow();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+    fprintf(stderr, "xaxa GC took: %d milliseconds\n", dt);
+
     auto& contexts = activeContexts();
     auto maxContextsSize = isMainThread() ? maxActiveContexts : maxActiveWorkerContexts;
     if (contexts.size() >= maxContextsSize) {
