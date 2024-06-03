@@ -35,6 +35,7 @@
 #include <wtf/LoggerHelper.h>
 #include <wtf/MediaTime.h>
 #include <wtf/UniqueRef.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebCore {
 
@@ -56,7 +57,7 @@ public:
     
     bool reenqueueMediaForTime(const MediaTime&, const MediaTime& timeFudgeFactor);
     MediaTime findSeekTimeForTargetTime(const MediaTime& targetTime, const MediaTime& negativeThreshold, const MediaTime& positiveThreshold);
-    bool removeCodedFrames(const MediaTime& start, const MediaTime& end, const MediaTime& currentTime);
+    bool removeCodedFrames(const MediaTime& start, const MediaTime& end, const MediaTime& currentTime, const WTF::String trackID);
     PlatformTimeRanges removeSamples(const DecodeOrderSampleMap::MapType&, const char*);
     
     void resetTimestampOffset();

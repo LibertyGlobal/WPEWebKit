@@ -358,7 +358,10 @@ void SourceBufferPrivate::reenqueueMediaIfNeeded(const MediaTime& currentTime)
         TrackBuffer& trackBuffer = trackBufferPair.value;
         const AtomString& trackID = trackBufferPair.key;
 
+        fprintf(stderr, "JJ: before needsReenqueueing, reenqueueMediaIfNeeded, id: %s, needsReenq: %d\n", trackID.string().utf8().data(), trackBuffer.needsReenqueueing());
+
         if (trackBuffer.needsReenqueueing()) {
+            fprintf(stderr, "JJ: eenqueuing at time: %s\n", trackID.string().utf8().data());
             DEBUG_LOG(LOGIDENTIFIER, "reenqueuing at time ", currentTime);
             reenqueueMediaForTime(trackBuffer, trackID, currentTime);
         } else
@@ -394,6 +397,9 @@ void SourceBufferPrivate::removeCodedFrames(const MediaTime& start, const MediaT
         return;
     }
 
+    LOG(Media, "JJ: BEFORE SourceBuffer::removeCodedFrames(%p) - buffered = %s", this, toString(m_buffered->ranges()).utf8().data());
+
+
     // 3.5.9 Coded Frame Removal Algorithm
     // https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html#sourcebuffer-coded-frame-removal
 
@@ -404,16 +410,22 @@ void SourceBufferPrivate::removeCodedFrames(const MediaTime& start, const MediaT
         TrackBuffer& trackBuffer = trackBufferKeyValue.value;
         AtomString trackID = trackBufferKeyValue.key;
         
-        if (!trackBuffer.removeCodedFrames(start, end, currentTime))
+        LOG(Media, "JJ: before removeCodedFrames, trackID: %s", trackID.string().utf8().data());
+        if (!trackBuffer.removeCodedFrames(start, end, currentTime, trackID.string()))
             continue;
-        
+        LOG(Media, "JJ: after removeCodedFrames, trackID: %s", trackID.string().utf8().data());
+
         setBufferedDirty(true);
 
         // 3.4 If this object is in activeSourceBuffers, the current playback position is greater than or equal to start
         // and less than the remove end timestamp, and HTMLMediaElement.readyState is greater than HAVE_METADATA, then set
         // the HTMLMediaElement.readyState attribute to HAVE_METADATA and stall playback.
-        if (isActive() && currentTime >= start && currentTime < end && readyState() > MediaPlayer::ReadyState::HaveMetadata)
+        if (isActive() && currentTime >= start && currentTime < end && readyState() > MediaPlayer::ReadyState::HaveMetadata) {
+            LOG(Media, "JJ: should stall playback! (%p), trackID: %s - buffered = %s", this, trackID.string().utf8().data(), toString(m_buffered->ranges()).utf8().data());
+
             setReadyState(MediaPlayer::ReadyState::HaveMetadata);
+
+        }  
     }
     
     reenqueueMediaIfNeeded(currentTime);
@@ -425,7 +437,7 @@ void SourceBufferPrivate::removeCodedFrames(const MediaTime& start, const MediaT
 
     updateHighestPresentationTimestamp();
 
-    LOG(Media, "SourceBuffer::removeCodedFrames(%p) - buffered = %s", this, toString(m_buffered->ranges()).utf8().data());
+    LOG(Media, "JJ: SourceBuffer::removeCodedFrames(%p) - buffered = %s", this, toString(m_buffered->ranges()).utf8().data());
 
     m_client->sourceBufferPrivateReportExtraMemoryCost(totalTrackBufferSizeInBytes());
 

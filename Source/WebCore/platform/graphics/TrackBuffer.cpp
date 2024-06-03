@@ -249,7 +249,7 @@ static WARN_UNUSED_RETURN bool decodeTimeComparator(const PresentationOrderSampl
     return a.second->decodeTime() < b.second->decodeTime();
 };
 
-bool TrackBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& end, const MediaTime& currentTime)
+bool TrackBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& end, const MediaTime& currentTime, const WTF::String trackID)
 {
     // 3.5.9 Coded Frame Removal Algorithm
     // https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html#sourcebuffer-coded-frame-removal
@@ -309,9 +309,14 @@ bool TrackBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& end
         PlatformTimeRanges possiblyEnqueuedRanges(currentTime, m_highestEnqueuedPresentationTime);
         possiblyEnqueuedRanges.intersectWith(erasedRanges);
         if (possiblyEnqueuedRanges.length()) {
+            LOG(Media, "JJ: m_needsReenqueueing == true; currentTime: %f, m_highestEnqueuedPresentationTime: %f, trackID: %s", currentTime.toFloat() , m_highestEnqueuedPresentationTime.toFloat(), trackID.utf8().data());
             m_needsReenqueueing = true;
             DEBUG_LOG_IF(m_logger, LOGIDENTIFIER, "the range in removeCodedFrames() includes already enqueued samples, reenqueueing from ", currentTime);
+        } else {
+            LOG(Media, "JJ: m_needsReenqueueing == false; currentTime: %f, m_highestEnqueuedPresentationTime: %f, trackID: %s", currentTime.toFloat() , m_highestEnqueuedPresentationTime.toFloat(), trackID.utf8().data());
         }
+    } else {
+            LOG(Media, "JJ: not _highestEnqueuedPresentationTime.isValid() && currentTime < m_highestEnqueuedPresentationTime, curentTime: %f, m_highestEnqueuedPresentationTime: %f, m_highestEnqueuedPresentationTime.isValid(): %d, trackID: %s", currentTime.toFloat(), m_highestEnqueuedPresentationTime.toFloat(), m_highestEnqueuedPresentationTime.isValid(), trackID.utf8().data());
     }
 
     erasedRanges.invert();
