@@ -1574,6 +1574,47 @@ void MediaPlayerPrivateGStreamer::handleStreamCollectionMessage(GstMessage* mess
     GST_DEBUG_OBJECT(pipeline(), "Updating tracks DONE");
 }
 
+#if ENABLE(ENCRYPTED_MEDIA)
+static const char * getPrefferedKeySystemId(GstMessage* message, GstElement* pipeline) {
+    const char * result = nullptr;
+    char * preferenceEnv = ::getenv("WPE_DRM_PREFERENCES");
+    if (preferenceEnv == nullptr) {
+        GST_DEBUG_OBJECT(pipeline, "failed to get WPE_DRM_PREFERENCES return nullptr");
+        return nullptr;
+    } else {
+        GST_DEBUG_OBJECT(pipeline, "WPE_DRM_PREFERENCES: %s", preferenceEnv);
+    }
+
+    ProtectionSystemEvents protectionSystemEvents(message);
+    String systemId;
+    std::list<String> messageIds{};
+    for (auto& event : protectionSystemEvents.events()) {
+        const char* eventKeySystemId = nullptr;
+        GstBuffer* data = nullptr;
+        gst_event_parse_protection(event.get(), &eventKeySystemId, &data, nullptr);
+        systemId = GStreamerEMEUtilities::uuidToKeySystem(String::fromLatin1(eventKeySystemId));
+        messageIds.push_back(systemId);
+    }
+
+    char * preferences = strdup(preferenceEnv);
+    char * rest = preferences;
+    char * singlePreference;
+    while ((singlePreference = strtok_r(rest, ",", &rest))) {
+        for (auto& item: messageIds) {
+            if (strcmp(item.utf8().data(), singlePreference) == 0) {
+                result = GStreamerEMEUtilities::keySystemToUuid(item);
+                GST_DEBUG_OBJECT(pipeline, "found matching DRM: %s", result);
+                break;
+            }
+        }
+        if (result) break;
+    }
+    free(preferences);
+    GST_DEBUG_OBJECT(pipeline,"return: %s", result);
+    return result;
+}
+#endif // ENABLE(ENCRYPTED_MEDIA)
+
 bool MediaPlayerPrivateGStreamer::handleNeedContextMessage(GstMessage* message)
 {
     ASSERT(GST_MESSAGE_TYPE(message) == GST_MESSAGE_NEED_CONTEXT);
@@ -1597,20 +1638,32 @@ bool MediaPlayerPrivateGStreamer::handleNeedContextMessage(GstMessage* message)
 #if ENABLE(ENCRYPTED_MEDIA)
     if (!g_strcmp0(contextType, "drm-preferred-decryption-system-id")) {
         initializationDataEncountered(parseInitDataFromProtectionMessage(message));
-        bool isCDMAttached = waitForCDMAttachment();
-        if (isCDMAttached && !isPlayerShuttingDown() && !m_cdmInstance->keySystem().isEmpty()) {
-            const char* preferredKeySystemUuid = GStreamerEMEUtilities::keySystemToUuid(m_cdmInstance->keySystem());
-            GST_INFO_OBJECT(pipeline(), "working with key system %s, continuing with key system %s on %s", m_cdmInstance->keySystem().utf8().data(), preferredKeySystemUuid, GST_MESSAGE_SRC_NAME(message));
+        const char* preferredKeySystemId = getPrefferedKeySystemId(message, pipeline());
+        if (preferredKeySystemId) {
+            GST_INFO_OBJECT(pipeline(), "preference setting used, working with key system %s, continuing with key system %s on %s",
+                (const char*)(GStreamerEMEUtilities::uuidToKeySystem(String::fromLatin1(preferredKeySystemId))),
+                preferredKeySystemId, GST_MESSAGE_SRC_NAME(message));
 
             GRefPtr<GstContext> context = adoptGRef(gst_context_new("drm-preferred-decryption-system-id", FALSE));
             GstStructure* contextStructure = gst_context_writable_structure(context.get());
-            gst_structure_set(contextStructure, "decryption-system-id", G_TYPE_STRING, preferredKeySystemUuid, nullptr);
+            gst_structure_set(contextStructure, "decryption-system-id", G_TYPE_STRING, preferredKeySystemId, nullptr);
             gst_element_set_context(GST_ELEMENT(GST_MESSAGE_SRC(message)), context.get());
             return true;
-        }
+        } else {
+            bool isCDMAttached = waitForCDMAttachment();
+            if (isCDMAttached && !isPlayerShuttingDown() && !m_cdmInstance->keySystem().isEmpty()) {
+                const char* preferredKeySystemUuid = GStreamerEMEUtilities::keySystemToUuid(m_cdmInstance->keySystem());
+                GST_INFO_OBJECT(pipeline(), "working with key system %s, continuing with key system %s on %s", m_cdmInstance->keySystem().utf8().data(), preferredKeySystemUuid, GST_MESSAGE_SRC_NAME(message));
 
-        GST_WARNING_OBJECT(pipeline(), "waiting for a CDM failed, no CDM available");
-        return false;
+                GRefPtr<GstContext> context = adoptGRef(gst_context_new("drm-preferred-decryption-system-id", FALSE));
+                GstStructure* contextStructure = gst_context_writable_structure(context.get());
+                gst_structure_set(contextStructure, "decryption-system-id", G_TYPE_STRING, preferredKeySystemUuid, nullptr);
+                gst_element_set_context(GST_ELEMENT(GST_MESSAGE_SRC(message)), context.get());
+                return true;
+            }
+            GST_WARNING_OBJECT(pipeline(), "waiting for a CDM failed, no CDM available");
+            return false;
+        }
     }
 #endif // ENABLE(ENCRYPTED_MEDIA)
 
