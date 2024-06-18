@@ -514,7 +514,7 @@ private:
 
     virtual void updateDownloadBufferingFlag();
     void processBufferingStats(GstMessage*);
-    void updateBufferingStatus(GstBufferingMode, double percentage);
+    void updateBufferingStatus(GstBufferingMode, double percentage, bool resetHistory = false);
     void updateMaxTimeLoaded(double percentage);
 
 #if USE(GSTREAMER_MPEGTS)
@@ -537,6 +537,42 @@ private:
 #if PLATFORM(BROADCOM) || USE(WESTEROS_SINK) || PLATFORM(AMLOGIC) || PLATFORM(REALTEK)
     void configureElementPlatformQuirks(GstElement*);
 #endif
+
+    #if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
+    class MovingAverage {
+    public:
+        MovingAverage(const unsigned char length)
+            : m_length(length)
+            , m_values(new int[length]{}) {
+        }
+
+        ~MovingAverage() {
+            free(m_values);
+        }
+
+        void reset(int value) {
+            for (unsigned char i = 0; i < m_length; i++)
+                m_values[i] = value;
+        }
+
+        int accumulate(int value) {
+            int sum = 0;
+            for (unsigned char i = 1; i < m_length; i++) {
+                m_values[i-1] = m_values[i];
+                sum += m_values[i-1];
+            }
+            m_values[m_length - 1] = value;
+            sum += value;
+            return sum / m_length;
+        }
+    private:
+        const unsigned char m_length;
+        int* m_values;
+    };
+
+    int correctBufferingPercentage(const int originalBufferingPercentage);
+#endif
+    bool queryBufferingPercentage(GstBufferingMode&, int &percentage);
 
     void setPlaybinURL(const URL& urlString);
 
@@ -583,7 +619,10 @@ private:
     RefPtr<TextureMapperPlatformLayerProxy> m_platformLayerProxy;
 #endif
 #endif
+    // Can only be changed from updateBufferingStatus().
+    bool m_wasBuffering { false };
     bool m_isBuffering { false };
+    int m_previousBufferingPercentage { 0 };
     int m_bufferingPercentage { 0 };
     bool m_hasWebKitWebSrcSentEOS { false };
     mutable unsigned long long m_totalBytes { 0 };
@@ -671,6 +710,13 @@ private:
     // Specific to MediaStream playback.
     MediaTime m_startTime;
     MediaTime m_pausedTime;
+
+#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
+    GRefPtr<GstElement> m_vidfilter;
+    GRefPtr<GstElement> m_multiqueue;
+    GRefPtr<GstElement> m_queue2;
+    MovingAverage m_streamBufferingLevelMovingAverage = MovingAverage(10);
+#endif
 };
 
 }
