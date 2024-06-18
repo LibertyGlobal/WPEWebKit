@@ -420,7 +420,7 @@ static void scaleJITPolicy()
 
 static void overrideDefaults()
 {
-#if !PLATFORM(IOS_FAMILY)
+#if !PLATFORM(IOS_FAMILY) && !PLATFORM(BROADCOM)
     if (WTF::numberOfProcessorCores() < 4)
 #endif
     {
