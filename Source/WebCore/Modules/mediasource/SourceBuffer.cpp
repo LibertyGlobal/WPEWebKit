@@ -1907,12 +1907,12 @@ void SourceBuffer::sourceBufferPrivateDidReceiveSample(MediaSample& sample)
         // Add the coded frame with the presentation timestamp, decode timestamp, and frame duration to the track buffer.
         trackBuffer.samples.addSample(sample);
         //log sample map size
-        LOG(MediaSource, "jmanko sample map size: %zu", trackBuffer.samples.size());
+        fprintf(stderr, "jmanko sample map size: %zu\n", trackBuffer.samples.size());
         //dump timestamps after all the appends are done
         if (trackBuffer.samples.size() == 855) { // 855 is the audio track buffer size on 2.38 after all appends, might be different here
            int i = 0;
            for (auto samplePair : trackBuffer.samples.presentationOrder()) {
-               LOG(MediaSource, "jmanko sample %d: %s", i, toString(samplePair.second).utf8().data());
+               fprintf(stderr, "jmanko sample %d: %s\n", i, toString(samplePair.second).utf8().data());
                i++;
            }
        }
