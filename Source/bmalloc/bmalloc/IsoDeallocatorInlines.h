@@ -51,7 +51,7 @@ template<typename Config>
 template<typename Type>
 void IsoDeallocator<Config>::deallocate(api::IsoHeap<Type>& handle, void* ptr)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     if (verbose)
         fprintf(stderr, "%p: deallocating %p of size %u\n", &IsoPage<Config>::pageFor(ptr)->heap(), ptr, Config::objectSize);
 

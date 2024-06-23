@@ -167,7 +167,7 @@ void verifyObjectSet(const set<void*>& expectedObjects,
                      const vector<pas_heap*>& heaps,
                      const ObjectVerificationFunc& objectVerificationFunc)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     flushDeallocationLogAndStopAllocators();
 
@@ -615,7 +615,7 @@ void testLargeAllocation(const Allocator& allocator,
                          size_t expectedNumberOfAllocatedPageBytes,
                          size_t expectedNumberOfBootstrapBytes)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     uintptr_t lastObject = 0;
     testSimpleAllocation(
         allocator,
@@ -654,7 +654,7 @@ void testAllocationWithInterleavedFragmentation(const Allocator& allocator,
                                                 size_t expectedNumberOfCommittedPagesAtEnd,
                                                 uint64_t expectedAllocateSlowPathCount)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     set<void*> objects;
     vector<void*> objectList;
@@ -1171,7 +1171,7 @@ void testSizeClassCreation(Arguments... programs)
 
 void testSpuriousEligibility()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
 #if TLC
     pas_scavenger_suspend();
@@ -1537,7 +1537,7 @@ void testComplexLargeAllocationImpl(const ComplexAllocator& allocator,
                                     ExpectedBytes expectedNumMappedBytes,
                                     const vector<AllocationProgram>& programs)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
 #if TLC
     pas_large_sharing_pool_validate_each_splat = true;
@@ -1647,7 +1647,7 @@ void testAllocationChaos(unsigned numThreads, unsigned numIsolatedHeaps,
         pas_large_sharing_pool_validate_each_splat = true;
 #endif
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     mutex lock;
     

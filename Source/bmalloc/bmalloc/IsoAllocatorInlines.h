@@ -48,7 +48,7 @@ IsoAllocator<Config>::~IsoAllocator()
 template<typename Config>
 void* IsoAllocator<Config>::allocate(IsoHeapImpl<Config>& heap, bool abortOnFailure)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     void* result = m_freeList.allocate<Config>(
         [&] () -> void* {
             return allocateSlow(heap, abortOnFailure);

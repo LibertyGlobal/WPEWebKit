@@ -33,7 +33,7 @@ using namespace std;
 
 namespace {
 
-constexpr bool verbose = false;
+constexpr bool verbose = true;
 
 struct Element {
     Element() = default;

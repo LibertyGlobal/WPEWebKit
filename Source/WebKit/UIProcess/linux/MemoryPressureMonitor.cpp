@@ -39,6 +39,7 @@
 #include <wtf/UniStdExtras.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringToIntegerConversion.h>
+// #include <GCController.h>
 
 namespace WebKit {
 
@@ -296,6 +297,10 @@ static int systemMemoryUsedAsPercentage(FILE* memInfoFile, FILE* zoneInfoFile, C
             LOG_VERBOSE(MemoryPressure, "MemoryPressureMonitor::memory: cgroup (memory total=%zu bytes) (memory usage=%zu bytes) (memory usage percentage=%d bytes)", memoryTotal, memoryUsage, memoryUsagePercentageWithCgroup);
             if (memoryUsagePercentageWithCgroup > memoryUsagePercentage)
                 memoryUsagePercentage = memoryUsagePercentageWithCgroup;
+
+            // if (memoryUsagePercentageWithCgroup > 50) {
+            //     GCController::garbageCollectNow();
+            // }
         }
     }
     LOG_VERBOSE(MemoryPressure, "MemoryPressureMonitor::memory: memoryUsagePercentage (%d)", memoryUsagePercentage);

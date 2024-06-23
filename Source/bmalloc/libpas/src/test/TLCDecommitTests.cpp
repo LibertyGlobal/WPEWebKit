@@ -186,7 +186,7 @@ void testTLCDecommit(unsigned numHeaps,
 void testChaosThenDecommit(unsigned numHeaps, unsigned typeSize, unsigned maxObjectsAtATime,
                            unsigned maxFromSameHeap, size_t maxSize, size_t count)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_heap_ref* heapRefs = new pas_heap_ref[numHeaps];
     for (unsigned index = numHeaps; index--;) {
@@ -353,7 +353,7 @@ void testTLCDecommitThenDeallocate(unsigned numHeaps)
 
 void testAllocateFromStoppedBaselineImpl()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     if (verbose) {
         cout << "TLC = " << pas_thread_local_cache_try_get() << "\n";

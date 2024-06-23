@@ -110,7 +110,7 @@ BINLINE void Heap::logStat(size_t value, ssize_t amount, const char* label, cons
 
 BINLINE void Heap::adjustFreeableMemory(UniqueLockHolder&, ssize_t amount, const char* note)
 {
-    constexpr bool verbose = false;
+    constexpr bool verbose = true;
 
     adjustStat(m_freeableMemory, amount);
 
@@ -120,7 +120,7 @@ BINLINE void Heap::adjustFreeableMemory(UniqueLockHolder&, ssize_t amount, const
 
 BINLINE void Heap::adjustFootprint(UniqueLockHolder&, ssize_t amount, const char* note)
 {
-    constexpr bool verbose = false;
+    constexpr bool verbose = true;
 
     adjustStat(m_footprint, amount);
 

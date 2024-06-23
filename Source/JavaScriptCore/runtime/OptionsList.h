@@ -442,7 +442,7 @@ bool canUseWebAssemblyFastMemory();
     v(Bool, useB3HoistLoopInvariantValues, false, Normal, nullptr) \
     v(Bool, useB3CanonicalizePrePostIncrements, false, Normal, nullptr) \
     \
-    v(Bool, useDollarVM, false, Restricted, "installs the $vm debugging tool in global objects") \
+    v(Bool, useDollarVM, true, Restricted, "installs the $vm debugging tool in global objects") \
     v(OptionString, functionOverrides, nullptr, Restricted, "file with debugging overrides for function bodies") \
     v(Bool, useSigillCrashAnalyzer, false, Configurable, "logs data about SIGILL crashes") \
     \

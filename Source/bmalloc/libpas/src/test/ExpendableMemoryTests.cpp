@@ -307,7 +307,7 @@ void testRematerializeAfterSearchOfDecommitted()
 
 void testBasicSizeClass(unsigned firstSize, unsigned secondSize)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_primitive_heap_ref heapRef = BMALLOC_FLEX_HEAP_REF_INITIALIZER(
         new bmalloc_type(BMALLOC_TYPE_INITIALIZER(1, 1, "test")));

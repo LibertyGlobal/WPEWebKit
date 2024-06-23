@@ -91,7 +91,7 @@ void IsoPage<Config>::free(const LockHolder& locker, void* passedPtr)
 template<typename Config>
 FreeList IsoPage<Config>::startAllocating(const LockHolder&)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     if (verbose)
         fprintf(stderr, "%p: starting allocation.\n", this);
@@ -212,7 +212,7 @@ FreeList IsoPage<Config>::startAllocating(const LockHolder&)
 template<typename Config>
 void IsoPage<Config>::stopAllocating(const LockHolder& locker, FreeList freeList)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     if (verbose)
         fprintf(stderr, "%p: stopping allocation.\n", this);

@@ -41,7 +41,7 @@ void testSizeProgression(size_t startSize,
                          size_t reservationSize,
                          bool shouldSucceed)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     void* reservation = malloc(reservationSize);
     CHECK(reservation);

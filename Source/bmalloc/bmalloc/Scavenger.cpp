@@ -48,7 +48,7 @@
 
 namespace bmalloc {
 
-static constexpr bool verbose = false;
+static constexpr bool verbose = true;
 
 struct PrintTime {
     PrintTime(const char* str) 

@@ -92,6 +92,10 @@ static void releaseNoncriticalMemory(MaintainMemoryCache maintainMemoryCache)
 
 static void releaseCriticalMemory(Synchronous synchronous, MaintainBackForwardCache maintainBackForwardCache, MaintainMemoryCache maintainMemoryCache)
 {
+    fprintf(stderr,"----------- xaxa ---------- releaseCriticalMemory DO IT NOW AND SYNC\n");
+    GCController::singleton().deleteAllCode(JSC::DeleteAllCodeIfNotCollecting);
+    GCController::singleton().garbageCollectNow();
+
     // Right now, the only reason we call release critical memory while not under memory pressure is if the process is about to be suspended.
     if (maintainBackForwardCache == MaintainBackForwardCache::No) {
         PruningReason pruningReason = MemoryPressureHandler::singleton().isUnderMemoryPressure() ? PruningReason::MemoryPressure : PruningReason::ProcessSuspended;

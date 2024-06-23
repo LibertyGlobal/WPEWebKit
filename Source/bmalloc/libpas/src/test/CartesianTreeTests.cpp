@@ -40,7 +40,7 @@ using namespace std;
 
 namespace {
 
-static constexpr bool verbose = false;
+static constexpr bool verbose = true;
 
 struct TestNode : public pas_cartesian_tree_node {
     TestNode(char xKey, char yKey, unsigned value)

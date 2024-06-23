@@ -71,7 +71,7 @@ using namespace std;
 
 namespace {
 
-constexpr bool verbose = false;
+constexpr bool verbose = true;
 
 const pas_heap_config* selectedHeapConfig;
 void* (*selectedAllocateCommonPrimitive)(size_t size);

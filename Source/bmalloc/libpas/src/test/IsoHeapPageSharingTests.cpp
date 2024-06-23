@@ -68,7 +68,7 @@ void testTakePages(unsigned firstObjectSize,
                    size_t expectedNumberOfPageIndicesAtEnd,
                    bool checkHeapLock)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_large_sharing_pool_validate_each_splat = true;
@@ -221,7 +221,7 @@ void testTakePagesFromCorrectHeap(unsigned numHeaps,
                                   std::function<size_t(unsigned)> sizeFunc,
                                   unsigned numHeapsInFirstPhase)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
 
@@ -338,7 +338,7 @@ void testTakePagesFromCorrectHeap(unsigned numHeaps,
 
 void testLargeHeapTakesPagesFromCorrectSmallHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     
@@ -459,7 +459,7 @@ void testLargeHeapTakesPagesFromCorrectSmallHeap()
 
 void testLargeHeapTakesPagesFromCorrectSmallHeapAllocateAfterFree()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     
@@ -586,7 +586,7 @@ void testLargeHeapTakesPagesFromCorrectSmallHeapAllocateAfterFree()
 
 void testLargeHeapTakesPagesFromCorrectSmallHeapWithFancyOrder()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     
@@ -709,7 +709,7 @@ void testLargeHeapTakesPagesFromCorrectSmallHeapWithFancyOrder()
 
 void testLargeHeapTakesPagesFromCorrectLargeHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_physical_page_sharing_pool_balancing_enabled_for_utility = false;
@@ -833,7 +833,7 @@ void testLargeHeapTakesPagesFromCorrectLargeHeap()
 
 void testLargeHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnSmallHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     
@@ -987,7 +987,7 @@ void testLargeHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnSmallHeap()
 
 void testLargeHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnAnotherLargeHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_physical_page_sharing_pool_balancing_enabled_for_utility = false;
@@ -1133,7 +1133,7 @@ void testLargeHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnAnotherLargeH
 
 void testLargeHeapTakesPagesFromCorrectLargeHeapWithFancyOrder()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_physical_page_sharing_pool_balancing_enabled_for_utility = false;
@@ -1265,7 +1265,7 @@ void testLargeHeapTakesPagesFromCorrectLargeHeapWithFancyOrder()
 
 void testSmallHeapTakesPagesFromCorrectLargeHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_large_utility_free_heap_talks_to_large_sharing_pool = false;
@@ -1424,7 +1424,7 @@ void testSmallHeapTakesPagesFromCorrectLargeHeap()
 
 void testSmallHeapTakesPagesFromCorrectLargeHeapWithFancyOrder()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_large_utility_free_heap_talks_to_large_sharing_pool = false;
@@ -1585,7 +1585,7 @@ void testSmallHeapTakesPagesFromCorrectLargeHeapWithFancyOrder()
 
 void testSmallHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnSmallHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_large_utility_free_heap_talks_to_large_sharing_pool = false;
@@ -1758,7 +1758,7 @@ void testSmallHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnSmallHeap()
 
 void testSmallHeapTakesPagesFromCorrectLargeHeapAllocateAfterFreeOnAnotherLargeHeap()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     pas_scavenger_suspend();
     pas_physical_page_sharing_pool_balancing_enabled_for_utility = false;
@@ -2022,7 +2022,7 @@ void* checkThingy(void* object)
 
 void* addObject(void* object)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     if (verbose) {
         cout << "Adding allocated object: " << object << "\n";
@@ -2064,7 +2064,7 @@ const char* allocationKindName(AllocationKind allocationKind)
 
 void allocateThingiesImpl(ThingyKind kind, AllocationKind allocateMany)
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
 
     if (verbose) {
         cout << "Allocating " << thingyName(kind) << ", " << allocationKindName(allocateMany) << "\n";
@@ -2604,7 +2604,7 @@ void testFullVdirToDirNewLateDirAllocation()
 
 void testFullVdirToDirNewLargeAllocation()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     setupThingy();
 
@@ -2637,7 +2637,7 @@ void testFullVdirToDirNewLargeAllocation()
 
 void testFullNotVdirButLargeToDirNewLargeAllocation()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     setupThingy();
 
@@ -2745,7 +2745,7 @@ void testFullVdirToDirNewLateAllocationAlsoPhysical()
 
 void testFullVdirToLarge()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     setupThingy();
 
@@ -2956,7 +2956,7 @@ void testFullNotVdirButLargeToLargeNewLargeAllocation()
 
 void testFullVdirToLargeNewLateLargeAllocation()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     // Maybe we will need to do this for other tests in this file.
     pas_physical_page_sharing_pool_balancing_enabled_for_utility = false;
@@ -3987,7 +3987,7 @@ void testFullLargeToDirNewLateDirAllocationCombinedUseEpoch()
 
 void testFullLargeToLargeForwardMinEpoch()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     setupThingy();
 
@@ -4016,7 +4016,7 @@ void testFullLargeToLargeForwardMinEpoch()
 
 void testFullLargeToLargeCombinedUseEpoch()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     setupThingy();
 
@@ -4205,7 +4205,7 @@ void testFullLargeToLargeNewLateDirAllocation()
 // the use_epoch being time of deletion.
 void testNewEligibleHasOlderEpoch()
 {
-    static constexpr bool verbose = false;
+    static constexpr bool verbose = true;
     
     vector<void*> stashedObjects;
     
