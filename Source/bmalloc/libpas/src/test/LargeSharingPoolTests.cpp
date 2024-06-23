@@ -130,7 +130,7 @@ void assertState(const vector<Range>& ranges)
 
 void testGoodCoalesceEpochUpdate()
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     pas_physical_memory_transaction transaction;
     

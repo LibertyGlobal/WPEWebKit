@@ -100,7 +100,7 @@ void testAllocateAlignedSmallerThanSizeClassAndSmallerThanLargestAvailable(
     size_t firstSize, size_t numFirstObjects, size_t indexOfObjectToFree,
     size_t fillerObjectSize, size_t alignedSize, size_t numAlignedObjects)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     vector<void*> objects;
     void* freedObject;

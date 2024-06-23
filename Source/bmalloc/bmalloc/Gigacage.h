@@ -40,8 +40,13 @@
 #include <mach/vm_param.h>
 #endif
 
+#if ((BOS(DARWIN) || BOS(LINUX)) && \
+    (BCPU(X86_64) || (BCPU(ARM64) && !defined(__ILP32__) && (!BPLATFORM(IOS_FAMILY) || BPLATFORM(IOS)))))
+#define GIGACAGE_ENABLED 1
+#else
 #define GIGACAGE_ENABLED 0
- 
+#endif
+
 
 namespace Gigacage {
 

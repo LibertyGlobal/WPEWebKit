@@ -300,7 +300,7 @@ AllocationMode IsoHeapImpl<Config>::updateAllocationMode()
 template<typename Config>
 void* IsoHeapImpl<Config>::allocateFromShared(const LockHolder&, bool abortOnFailure)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     unsigned indexPlusOne = __builtin_ffs(m_availableShared);
     BASSERT(indexPlusOne);

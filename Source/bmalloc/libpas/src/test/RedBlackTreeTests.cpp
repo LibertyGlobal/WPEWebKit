@@ -41,7 +41,7 @@ using namespace std;
 
 namespace {
 
-static constexpr bool verbose = true;
+static constexpr bool verbose = false;
 #if PAS_ENABLE_TESTING
 constexpr bool verboseEnumeration = false;
 #endif // PAS_ENABLE_TESTING

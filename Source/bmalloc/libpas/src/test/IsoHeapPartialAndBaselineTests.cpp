@@ -165,7 +165,7 @@ void testSimplePartialAllocations(size_t size,
                                   size_t secondNumPages,
                                   const FreeOrder& freeOrder)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     struct ObjectData {
         ObjectData() = default;
@@ -306,7 +306,7 @@ void testSimplePartialAllocations(size_t size,
 
 void testFreeAroundPrimordialStop(size_t size, size_t alignment, size_t numObjectsToAllocate, bool scavengeAfterAllocating, size_t freeObjectStart, size_t freeObjectEnd, size_t repeat, size_t numAdditionalObjects)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     vector<void*> objects;
     set<void*> objectSet;
@@ -353,7 +353,7 @@ void testFreeAroundPrimordialStop(size_t size, size_t alignment, size_t numObjec
 
 void testFreeInterleavedAroundPrimordialStop(size_t size, size_t alignment, size_t numObjectsToAllocate, bool scavengeAfterAllocating, size_t freeObjectStart, size_t freeRunLength, size_t freeStrideLength, size_t repeat, size_t numAdditionalObjects)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     vector<void*> objects;
     set<void*> objectSet;
@@ -437,7 +437,7 @@ void testMultiplePartialsFromDifferentHeapsPerShared(const vector<PartialProgram
                                                      bool scavengeAfterAllocating,
                                                      size_t repeat)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     
     vector<pas_heap_ref*> heaps;
     vector<vector<void*>> objects;
@@ -602,7 +602,7 @@ void testMultiplePartialsFromDifferentThreadsPerShared(size_t size,
                                                        size_t repeat,
                                                        size_t numThreads)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     pas_heap_ref heap = ISO_HEAP_REF_INITIALIZER_WITH_ALIGNMENT(size, alignment);
 

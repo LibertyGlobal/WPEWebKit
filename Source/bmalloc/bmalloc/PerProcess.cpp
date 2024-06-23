@@ -33,7 +33,7 @@
 namespace bmalloc {
 
 static constexpr unsigned tableSize = 100;
-static constexpr bool verbose = true;
+static constexpr bool verbose = false;
 
 static Mutex s_mutex;
 

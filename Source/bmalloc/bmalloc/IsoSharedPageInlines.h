@@ -50,7 +50,7 @@ void IsoSharedPage::free(const LockHolder&, api::IsoHeap<Type>& handle, void* pt
 
 inline VariadicBumpAllocator IsoSharedPage::startAllocating(const LockHolder&)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     if (verbose) {
         fprintf(stderr, "%p: starting shared allocation.\n", this);
@@ -65,7 +65,7 @@ inline VariadicBumpAllocator IsoSharedPage::startAllocating(const LockHolder&)
 
 inline void IsoSharedPage::stopAllocating(const LockHolder&)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
 
     if (verbose)
         fprintf(stderr, "%p: stopping shared allocation.\n", this);

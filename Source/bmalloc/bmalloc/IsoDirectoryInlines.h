@@ -90,7 +90,7 @@ EligibilityResult<Config> IsoDirectory<Config, passedNumPages>::takeFirstEligibl
 template<typename Config, unsigned passedNumPages>
 void IsoDirectory<Config, passedNumPages>::didBecome(const LockHolder& locker, IsoPage<Config>* page, IsoPageTrigger trigger)
 {
-    static constexpr bool verbose = true;
+    static constexpr bool verbose = false;
     unsigned pageIndex = page->index();
     switch (trigger) {
     case IsoPageTrigger::Eligible:
