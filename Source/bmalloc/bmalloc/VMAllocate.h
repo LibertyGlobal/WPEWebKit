@@ -122,6 +122,7 @@ inline void vmValidatePhysical(void* p, size_t vmSize)
 
 inline void* tryVMAllocate(size_t vmSize, VMTag usage = VMTag::Malloc)
 {
+    // fprintf(stderr, "xaxagc %s vmSize:%zu\n", __FUNCTION__, vmSize);
     vmValidate(vmSize);
     void* result = mmap(0, vmSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | BMALLOC_NORESERVE, static_cast<int>(usage), 0);
     if (result == MAP_FAILED)
@@ -138,6 +139,7 @@ inline void* vmAllocate(size_t vmSize, VMTag usage = VMTag::Malloc)
 
 inline void vmDeallocate(void* p, size_t vmSize)
 {
+    // fprintf(stderr, "xaxagc %s size:%zu\n", __FUNCTION__, vmSize);
     vmValidate(p, vmSize);
     munmap(p, vmSize);
 }
@@ -150,6 +152,7 @@ inline void vmRevokePermissions(void* p, size_t vmSize)
 
 inline void vmZeroAndPurge(void* p, size_t vmSize, VMTag usage = VMTag::Malloc)
 {
+    // fprintf(stderr, "xaxagc %s size:%zu\n", __FUNCTION__, vmSize);
     vmValidate(p, vmSize);
     // MAP_ANON guarantees the memory is zeroed. This will also cause
     // page faults on accesses to this range following this call.
@@ -197,6 +200,7 @@ inline void* vmAllocate(size_t vmAlignment, size_t vmSize, VMTag usage = VMTag::
 
 inline void vmDeallocatePhysicalPages(void* p, size_t vmSize)
 {
+    // fprintf(stderr, "xaxagc %s vmSize: %zu\n", __FUNCTION__, vmSize);
     vmValidatePhysical(p, vmSize);
 #if BOS(DARWIN)
     SYSCALL(madvise(p, vmSize, MADV_FREE_REUSABLE));
@@ -212,6 +216,7 @@ inline void vmDeallocatePhysicalPages(void* p, size_t vmSize)
 
 inline void vmAllocatePhysicalPages(void* p, size_t vmSize)
 {
+    // fprintf(stderr, "xaxagc %s vmSize: %zu\n", __FUNCTION__, vmSize);
     vmValidatePhysical(p, vmSize);
 #if BOS(DARWIN)
     BUNUSED_PARAM(p);
@@ -242,6 +247,7 @@ inline size_t physicalPageSizeSloppy(void* p, size_t size)
 // Trims requests that are un-page-aligned.
 inline void vmDeallocatePhysicalPagesSloppy(void* p, size_t size)
 {
+    // fprintf(stderr, "xaxagc %s vmSize: %zu\n", __FUNCTION__, size);
     char* begin = roundUpToMultipleOf(vmPageSizePhysical(), static_cast<char*>(p));
     char* end = roundDownToMultipleOf(vmPageSizePhysical(), static_cast<char*>(p) + size);
 

@@ -224,6 +224,8 @@ VM::VM(VMType vmType, HeapType heapType, WTF::RunLoop* runLoop, bool* success)
     , m_builtinExecutables(makeUnique<BuiltinExecutables>(*this))
     , m_syncWaiter(adoptRef(*new Waiter(this)))
 {
+    fprintf(stderr, "xaxagc VM CREATE %p\n", this);
+
     if (UNLIKELY(vmCreationShouldCrash))
         CRASH_WITH_INFO(0x4242424220202020, 0xbadbeef0badbeef, 0x1234123412341234, 0x1337133713371337);
 
@@ -403,6 +405,7 @@ void waitForVMDestruction()
 
 VM::~VM()
 {
+    fprintf(stderr, "xaxagc VM DESTROY %p\n", this);
     Locker destructionLocker { s_destructionLock.read() };
 
     if (Options::useAtomicsWaitAsync() && vmType == Default)

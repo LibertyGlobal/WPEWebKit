@@ -201,7 +201,7 @@
 #define HAVE_MADV_FREE_REUSE 1
 #endif
 
-#if OS(DARWIN)
+#if 1
 #define HAVE_MADV_DONTNEED 1
 #endif
 

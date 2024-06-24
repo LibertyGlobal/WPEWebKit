@@ -137,11 +137,12 @@ void Heap::markAllLargeAsEligibile(const LockHolder&)
 
 void Heap::decommitLargeRange(UniqueLockHolder& lock, LargeRange& range, BulkDecommit& decommitter)
 {
+    fprintf(stderr, "xaxa ------------------- %s : totalPhysicalSize() = %.2f\n", __FUNCTION__, range.totalPhysicalSize() / (1024.f*1024.f));
     BASSERT(range.hasPhysicalPages());
 
     adjustFootprint(lock, -range.totalPhysicalSize(), "decommitLargeRange");
     adjustFreeableMemory(lock, -range.totalPhysicalSize(), "decommitLargeRange");
-    decommitter.addLazy(range.begin(), range.physicalEnd() - range.begin());
+    decommitter.addEager(range.begin(), range.physicalEnd() - range.begin());
     m_hasPendingDecommits = true;
     range.setStartPhysicalSize(0);
     range.setTotalPhysicalSize(0);
@@ -185,8 +186,8 @@ void Heap::scavenge(UniqueLockHolder& lock, BulkDecommit& decommitter, size_t& d
     }
 
     for (LargeRange& range : m_largeFree) {
-        if (!range.hasPhysicalPages())
-            continue;
+        // if (!range.hasPhysicalPages())
+        //     continue;
         if (range.usedSinceLastScavenge()) {
             range.clearUsedSinceLastScavenge();
             deferredDecommits++;

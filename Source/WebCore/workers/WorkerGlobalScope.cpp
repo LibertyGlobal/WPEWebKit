@@ -606,12 +606,12 @@ void WorkerGlobalScope::deleteJSCodeAndGC(Synchronous synchronous)
             return;
         }
     }
-#if PLATFORM(IOS_FAMILY)
+// #if PLATFORM(IOS_FAMILY)
     if (!vm().heap.currentThreadIsDoingGCWork()) {
         vm().heap.collectNowFullIfNotDoneRecently(JSC::Async);
         return;
     }
-#endif
+// #endif
 #if USE(CF) || USE(GLIB)
     vm().heap.reportAbandonedObjectGraph();
 #else

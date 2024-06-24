@@ -60,7 +60,7 @@ void BlockDirectory::setSubspace(Subspace* subspace)
 void BlockDirectory::updatePercentageOfPagedOutPages(SimpleStats& stats)
 {
     // FIXME: We should figure out a solution for Windows.
-#if OS(UNIX)
+#if 0 //  OS(UNIX)
     size_t pageSize = WTF::pageSize();
     ASSERT(!(MarkedBlock::blockSize % pageSize));
     auto numberOfPagesInMarkedBlock = MarkedBlock::blockSize / pageSize;
@@ -83,6 +83,8 @@ void BlockDirectory::updatePercentageOfPagedOutPages(SimpleStats& stats)
         for (unsigned i = 0; i < numberOfPagesInMarkedBlock; ++i)
             stats.add(!(pagedBits[i] & pageIsResidentAndNotCompressed));
     }
+#else
+    fprintf(stderr, "xaxa skip mincore; mean currently: %.2f\n", stats.mean());
 #endif
 }
 

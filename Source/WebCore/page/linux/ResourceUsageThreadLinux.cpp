@@ -310,6 +310,7 @@ void ResourceUsageThread::platformCollectMemoryData(JSC::VM* vm, ResourceUsageDa
     size_t currentGCOwnedExternal = vm->heap.externalMemorySize();
     RELEASE_ASSERT(currentGCOwnedExternal <= currentGCOwnedExtra);
 
+
     data.categories[MemoryCategory::GCHeap].dirtySize = currentGCHeapCapacity;
     data.categories[MemoryCategory::GCOwned].dirtySize = currentGCOwnedExtra - currentGCOwnedExternal;
     data.categories[MemoryCategory::GCOwned].externalSize = currentGCOwnedExternal;
@@ -319,6 +320,12 @@ void ResourceUsageThread::platformCollectMemoryData(JSC::VM* vm, ResourceUsageDa
         imagesDecodedSize = MemoryCache::singleton().getStatistics().images.decodedSize;
     });
     data.categories[MemoryCategory::Images].dirtySize = imagesDecodedSize;
+
+    fprintf(stderr, "xaxagc data.totalDirtySize %.1f MB\n", data.totalDirtySize / (1024.f*1024.f));
+    fprintf(stderr, "xaxagc currentGCHeapCapacity %.1f MB\n", currentGCHeapCapacity / (1024.f*1024.f));
+    fprintf(stderr, "xaxagc currentGCOwnedExternal %.1f MB\n", currentGCOwnedExternal / (1024.f*1024.f));
+    fprintf(stderr, "xaxagc currentGCOwnedExtra %.1f MB\n", currentGCOwnedExtra / (1024.f*1024.f));
+    fprintf(stderr, "xaxagc imagesDecodedSize %.1f MB\n", imagesDecodedSize / (1024.f*1024.f));
 
     size_t categoriesTotalSize = 0;
     for (auto& category : data.categories)

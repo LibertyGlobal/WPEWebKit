@@ -102,6 +102,7 @@ public:
 
     bool isUnderMemoryPressure() const
     {
+        if (1+1==2) return true;
         auto memoryPressureStatus = m_memoryPressureStatus.load();
         return memoryPressureStatus == MemoryPressureStatus::SystemCritical
             || memoryPressureStatus == MemoryPressureStatus::ProcessLimitCritical

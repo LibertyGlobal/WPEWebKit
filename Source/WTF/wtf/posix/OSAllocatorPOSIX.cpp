@@ -52,6 +52,7 @@ namespace WTF {
 
 void* OSAllocator::tryReserveAndCommit(size_t bytes, Usage usage, bool writable, bool executable, bool jitCageEnabled, bool includesGuardPages)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
     // All POSIX reservations start out logically committed.
     int protection = PROT_READ;
     if (writable)
@@ -115,6 +116,7 @@ void* OSAllocator::tryReserveAndCommit(size_t bytes, Usage usage, bool writable,
 
 void* OSAllocator::tryReserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable, bool jitCageEnabled, bool includesGuardPages)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
 #if OS(LINUX)
     UNUSED_PARAM(usage);
     UNUSED_PARAM(jitCageEnabled);
@@ -146,6 +148,7 @@ void* OSAllocator::tryReserveUncommitted(size_t bytes, Usage usage, bool writabl
 
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable, bool jitCageEnabled, bool includesGuardPages)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
     void* result = tryReserveUncommitted(bytes, usage, writable, executable, jitCageEnabled, includesGuardPages);
     RELEASE_ASSERT(result);
     return result;
@@ -153,6 +156,7 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
 
 void* OSAllocator::tryReserveUncommittedAligned(size_t bytes, size_t alignment, Usage usage, bool writable, bool executable, bool jitCageEnabled, bool includesGuardPages)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
     ASSERT(hasOneBitSet(alignment) && alignment >= pageSize());
 
 #if PLATFORM(MAC) || USE(APPLE_INTERNAL_SDK)
@@ -173,6 +177,7 @@ void* OSAllocator::tryReserveUncommittedAligned(size_t bytes, size_t alignment, 
     kern_return_t result = mach_vm_map(mach_task_self(), reinterpret_cast<mach_vm_address_t*>(&aligned), bytes, alignment - 1, flags, MEMORY_OBJECT_NULL, 0, copy, protections, protections, childProcessInheritance);
     ASSERT_UNUSED(result, result == KERN_SUCCESS || !aligned);
 #if HAVE(MADV_FREE_REUSE)
+    asdasd
     if (aligned) {
         // To support the "reserve then commit" model, we have to initially decommit.
         while (madvise(aligned, bytes, MADV_FREE_REUSABLE) == -1 && errno == EAGAIN) { }
@@ -232,6 +237,7 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
 
 void OSAllocator::commit(void* address, size_t bytes, bool writable, bool executable)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
 #if OS(LINUX)
     UNUSED_PARAM(writable);
     UNUSED_PARAM(executable);
@@ -251,6 +257,7 @@ void OSAllocator::commit(void* address, size_t bytes, bool writable, bool execut
 
 void OSAllocator::decommit(void* address, size_t bytes)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
 #if OS(LINUX)
     while (madvise(address, bytes, MADV_DONTNEED) == -1 && errno == EAGAIN) { }
 #elif HAVE(MADV_FREE_REUSE)
@@ -267,6 +274,7 @@ void OSAllocator::decommit(void* address, size_t bytes)
 
 void OSAllocator::hintMemoryNotNeededSoon(void* address, size_t bytes)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
 #if HAVE(MADV_DONTNEED)
     while (madvise(address, bytes, MADV_DONTNEED) == -1 && errno == EAGAIN) { }
 #else
@@ -277,6 +285,7 @@ void OSAllocator::hintMemoryNotNeededSoon(void* address, size_t bytes)
 
 void OSAllocator::releaseDecommitted(void* address, size_t bytes)
 {
+    // fprintf(stderr, "xaxagc %s bytes: %zu\n", __FUNCTION__, bytes);
     int result = munmap(address, bytes);
     if (result == -1)
         CRASH();

@@ -130,11 +130,11 @@ static void releaseCriticalMemory(Synchronous synchronous, MaintainBackForwardCa
         GCController::singleton().deleteAllCode(JSC::DeleteAllCodeIfNotCollecting);
         GCController::singleton().garbageCollectNow();
     } else {
-#if PLATFORM(IOS_FAMILY)
+// #if PLATFORM(IOS_FAMILY)
         GCController::singleton().garbageCollectNowIfNotDoneRecently();
-#else
-        GCController::singleton().garbageCollectSoon();
-#endif
+// #else
+//         GCController::singleton().garbageCollectSoon();
+// #endif
     }
 
     WorkerGlobalScope::releaseMemoryInWorkers(synchronous);

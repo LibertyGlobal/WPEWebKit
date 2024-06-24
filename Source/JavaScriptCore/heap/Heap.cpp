@@ -374,6 +374,7 @@ Heap::Heap(VM& vm, HeapType heapType)
     , unlinkedFunctionExecutableSpaceAndSet ISO_SUBSPACE_INIT(*this, destructibleCellHeapCellType, UnlinkedFunctionExecutable) // Hash:0xf6b828d9
 
 {
+    fprintf(stderr, "xaxagc JSC::Heap CREATE %p\n", this);
     m_worldState.store(0);
 
     for (unsigned i = 0, numberOfParallelThreads = heapHelperPool().numberOfThreads(); i < numberOfParallelThreads; ++i) {
@@ -413,6 +414,7 @@ Heap::Heap(VM& vm, HeapType heapType)
 
 Heap::~Heap()
 {
+    fprintf(stderr, "xaxagc JSC::Heap DESTROY %p\n", this);
     // Scribble m_worldState to make it clear that the heap has already been destroyed if we crash in checkConn
     m_worldState.store(0xbadbeeffu);
 
@@ -3213,10 +3215,12 @@ Heap::Heap(JSC::Heap& heap)
     , INIT_CLIENT_ISO_SUBSPACE_FROM_SPACE_AND_SET(programExecutableSpace)
     , INIT_CLIENT_ISO_SUBSPACE_FROM_SPACE_AND_SET(unlinkedFunctionExecutableSpace)
 {
+    fprintf(stderr, "xaxagc GCClient::Heap CREATE %p\n", this);
 }
 
 Heap::~Heap()
 {
+    fprintf(stderr, "xaxagc GCClient::Heap DESTROY %p\n", this);
     for (auto* perVMIsoSubspace : perVMIsoSubspaces)
         perVMIsoSubspace->releaseClientIsoSubspace(vm());
 }
