@@ -1043,6 +1043,8 @@ void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
 void WebProcess::garbageCollectJavaScriptObjects()
 {
     GCController::singleton().garbageCollectNow();
+    JSLockHolder lock(commonVM());
+    commonVM().shrinkFootprintWhenIdle();
 }
 
 void WebProcess::backgroundResponsivenessPing()
