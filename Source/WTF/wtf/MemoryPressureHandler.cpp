@@ -41,8 +41,8 @@ namespace WTF {
 WTF_EXPORT_PRIVATE bool MemoryPressureHandler::ReliefLogger::s_loggingEnabled = false;
 
 #if PLATFORM(IOS_FAMILY) || PLATFORM(BROADCOM)
-static const double s_conservativeThresholdFraction = 0.5;
-static const double s_strictThresholdFraction = 0.65;
+static const double s_conservativeThresholdFraction = 0.35;
+static const double s_strictThresholdFraction = 0.45;
 #else
 static const double s_conservativeThresholdFraction = 0.8;
 static const double s_strictThresholdFraction = 0.9;
