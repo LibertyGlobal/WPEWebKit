@@ -714,9 +714,9 @@ void Options::initialize()
             RELEASE_ASSERT(Options::addressOfOption(forceOSRExitToLLIntID) ==  &Options::forceOSRExitToLLInt());
             RELEASE_ASSERT(Options::addressOfOptionDefault(forceOSRExitToLLIntID) ==  &Options::forceOSRExitToLLIntDefault());
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
             Config::enableRestrictedOptions();
-#endif
+// #endif
             // Initialize each of the options with their default values:
 #define INIT_OPTION(type_, name_, defaultValue_, availability_, description_) { \
                 auto value = defaultValue_; \

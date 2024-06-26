@@ -156,6 +156,8 @@ void MemoryPressureHandler::respondToMemoryPressure(Critical critical, Synchrono
 void MemoryPressureHandler::platformReleaseMemory(Critical)
 {
 #if HAVE(MALLOC_TRIM)
+    fprintf(stderr, "xaxa CALLING malloc_trim\n");
+    malloc_stats();
     malloc_trim(0);
 #endif
 }

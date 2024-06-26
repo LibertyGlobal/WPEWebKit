@@ -198,6 +198,7 @@ void decommitAlignedPhysical(void* object, size_t size, HeapKind kind)
 void enableMiniMode()
 {
 #if BENABLE(LIBPAS)
+XXXXXXXXXXx
     // Speed up the scavenger.
     pas_scavenger_period_in_milliseconds = 5.;
     pas_scavenger_max_epoch_delta = 5ll * 1000ll * 1000ll;

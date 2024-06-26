@@ -48,7 +48,7 @@
 
 namespace bmalloc {
 
-static constexpr bool verbose = false;
+static constexpr bool verbose = true;
 
 double from_env_or_default(const char *envname, size_t defaultValue);
 

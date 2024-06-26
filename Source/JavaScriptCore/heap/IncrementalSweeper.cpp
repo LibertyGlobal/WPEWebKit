@@ -64,7 +64,7 @@ void IncrementalSweeper::doSweep(VM& vm, MonotonicTime sweepBeginTime)
         return;
     }
 
-    if (m_shouldFreeFastMallocMemoryAfterSweeping) {
+    if (m_shouldFreeFastMallocMemoryAfterSweeping || true) {
         WTF::releaseFastMallocFreeMemory();
         m_shouldFreeFastMallocMemoryAfterSweeping = false;
     }

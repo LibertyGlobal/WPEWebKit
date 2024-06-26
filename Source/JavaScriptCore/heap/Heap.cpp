@@ -88,6 +88,7 @@
 #include <wtf/SimpleStats.h>
 #include <wtf/Threading.h>
 
+
 #if USE(BMALLOC_MEMORY_FOOTPRINT_API)
 #include <bmalloc/bmalloc.h>
 #endif
@@ -104,7 +105,7 @@ namespace JSC {
 
 namespace {
 
-static constexpr bool verboseStop = false;
+static constexpr bool verboseStop = true;
 
 double maxPauseMS(double thisPauseMS)
 {
@@ -374,6 +375,17 @@ Heap::Heap(VM& vm, HeapType heapType)
     , unlinkedFunctionExecutableSpaceAndSet ISO_SUBSPACE_INIT(*this, destructibleCellHeapCellType, UnlinkedFunctionExecutable) // Hash:0xf6b828d9
 
 {
+    // if (__COUNT___ == -1) {
+    //     auto thr = new std::thread([](){
+    //         while (true) {
+    //             std::this_thread::sleep_for(std::chrono::seconds(20));
+    //             fprintf(stderr, "xaxa HEAP THREAD WILL TRIM\n");
+    //             malloc_trim(0);
+    //         }
+    //     });
+    //     thr->detach();
+    // }
+    // __COUNT___ = 1;
     m_worldState.store(0);
 
     for (unsigned i = 0, numberOfParallelThreads = heapHelperPool().numberOfThreads(); i < numberOfParallelThreads; ++i) {
@@ -1650,7 +1662,9 @@ NEVER_INLINE bool Heap::runEndPhase(GCConductor conn)
     m_lastGCStartTime = m_currentGCStartTime;
     m_lastGCEndTime = MonotonicTime::now();
     m_totalGCTime += m_lastGCEndTime - m_lastGCStartTime;
-        
+    
+    // fprintf(stderr, "xaxa WILL RUN TRIM AFTER GC; malloc_trim result: %d\n", malloc_trim(0));
+    // malloc_stats();
     return changePhase(conn, CollectorPhase::NotRunning);
 }
 
@@ -2309,7 +2323,7 @@ void Heap::notifyIncrementalSweeper()
 
 void Heap::updateAllocationLimits()
 {
-    constexpr bool verbose = false;
+    constexpr bool verbose = true;
     
     if (verbose) {
         dataLog("\n");

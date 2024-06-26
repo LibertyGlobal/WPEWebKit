@@ -97,7 +97,7 @@ private:
     std::atomic<State> m_state { State::Sleep };
     size_t m_scavengerBytes { 0 };
     std::chrono::milliseconds m_waitTime;
-    bool m_isInMiniMode { false };
+    bool m_isInMiniMode { true };
     
     Mutex m_scavengingMutex;
     std::condition_variable_any m_condition;
