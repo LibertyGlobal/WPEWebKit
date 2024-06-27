@@ -48,7 +48,7 @@
 
 namespace bmalloc {
 
-static constexpr bool verbose = true;
+static constexpr bool verbose = false;
 
 double from_env_or_default(const char *envname, size_t defaultValue);
 
@@ -255,6 +255,15 @@ void Scavenger::scavenge()
         fprintf(stderr, "--after scavenging--\n");
         dumpStats();
         fprintf(stderr, "--------------------------------\n");
+    }
+
+    static int _scavcounter = 0;
+    if (++_scavcounter % 100 == 0) {
+        fprintf(stderr, "bmalloc: another 100 scavenges\n");
+        fprintf(stderr, "--after scavenging--\n");
+        dumpStats();
+        fprintf(stderr, "--------------------------------\n");
+        _scavcounter = 0;
     }
 
     {
