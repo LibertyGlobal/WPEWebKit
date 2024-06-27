@@ -250,7 +250,23 @@ bool InjectedBundle::isProcessingUserGesture()
 
 void InjectedBundle::garbageCollectJavaScriptObjects()
 {
+    fprintf(stderr, "xaxa garbageCollectJavaScriptObjects\n");
+    // const bool bmallocMinimode = ...; sdsd
+    // if (bmallocMinimode) {
+        // fastEnableMiniMode();
+    // }
+
     GCController::singleton().garbageCollectNow();
+    WTF::releaseFastMallocFreeMemory();
+
+    // if (!bmallocMinimode) {
+        // fastDisableMiniMode();
+
+    JSLockHolder lock(commonVM());
+    commonVM().shrinkFootprintWhenIdle();
+
+        /// shrinkFootprintWhenIdle
+    // }
 }
 
 void InjectedBundle::garbageCollectJavaScriptObjectsOnAlternateThreadForDebugging(bool waitUntilDone)
