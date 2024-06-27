@@ -36,6 +36,9 @@
 #include <wtf/RAMSize.h>
 #include <wtf/text/StringToIntegerConversion.h>
 
+#include <wtf/FastMalloc.h>
+// #include <JavaScriptCore/VM.h>
+
 namespace WTF {
 
 WTF_EXPORT_PRIVATE bool MemoryPressureHandler::ReliefLogger::s_loggingEnabled = false;
@@ -284,6 +287,15 @@ void MemoryPressureHandler::setMemoryUsagePolicyBasedOnFootprints(size_t footpri
     if (newPolicy == m_memoryUsagePolicy)
         return;
 
+    // in minimode, we do not need to enable bmalloc minimode
+    // return !Options::useJIT() || Options::forceMiniVMMode();
+    // TODO: no access to 'Options' or 'VN' here
+    if (newPolicy == MemoryUsagePolicy::StrictSynchronous) {
+        fastEnableMiniMode();
+    } else {
+        fastDisableMiniMode();
+    }
+
     RELEASE_LOG(MemoryPressure, "Memory usage policy changed: %s -> %s, new thresholds: %zu MB, video %zu MB", toString(m_memoryUsagePolicy), toString(newPolicy), thresholdForPolicy(newPolicy, MemoryType::Normal) / MB, thresholdForPolicy(newPolicy, MemoryType::Video) / MB);
     m_memoryUsagePolicy = newPolicy;
     memoryPressureStatusChanged();
@@ -376,6 +388,8 @@ void MemoryPressureHandler::setConfiguration(const Configuration& configuration)
         m_configuration.baseThresholdVideo = s_envBaseThresholdVideo;
 }
 
+
+
 void MemoryPressureHandler::releaseMemory(Critical critical, Synchronous synchronous)
 {
     if (!m_lowMemoryHandler)
@@ -384,6 +398,7 @@ void MemoryPressureHandler::releaseMemory(Critical critical, Synchronous synchro
     ReliefLogger log("Total");
     m_lowMemoryHandler(critical, synchronous);
     platformReleaseMemory(critical);
+
 }
 
 void MemoryPressureHandler::setMemoryPressureStatus(MemoryPressureStatus memoryPressureStatus)

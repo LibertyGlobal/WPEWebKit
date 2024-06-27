@@ -488,6 +488,9 @@ void WebProcess::initializeWebProcess(WebProcessCreationParameters&& parameters)
         });
 #endif
         memoryPressureHandler.setMemoryPressureStatusChangedCallback([this](WTF::MemoryPressureStatus memoryPressureStatus) {
+
+            // if (memoryPressureStatus == ... TODO XXX) {}
+
             if (parentProcessConnection())
                 parentProcessConnection()->send(Messages::WebProcessProxy::MemoryPressureStatusChanged(MemoryPressureHandler::singleton().isUnderMemoryPressure()), 0);
 

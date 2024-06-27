@@ -218,6 +218,14 @@ void enableMiniMode()
 #endif
 }
 
+#if !BENABLE(LIBPAS)
+void disableMiniMode()
+{
+    if (!DebugHeap::tryGet())
+        Scavenger::get()->disableMiniMode();
+}
+#endif
+
 void disableScavenger()
 {
 #if BENABLE(LIBPAS)
