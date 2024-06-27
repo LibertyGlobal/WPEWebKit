@@ -1046,6 +1046,12 @@ void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
 void WebProcess::garbageCollectJavaScriptObjects()
 {
     GCController::singleton().garbageCollectNow();
+
+    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
+    GCController::singleton().garbageCollectNow();
+    WTF::releaseFastMallocFreeMemory();
+    JSLockHolder lock(commonVM());
+    commonVM().shrinkFootprintWhenIdle();
 }
 
 void WebProcess::backgroundResponsivenessPing()

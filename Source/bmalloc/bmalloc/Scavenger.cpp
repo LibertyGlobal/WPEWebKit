@@ -199,6 +199,10 @@ void Scavenger::scavenge()
     if (!m_isEnabled)
         return;
 
+    static thread_local uint64_t _total_time = 0;
+
+    auto start = std::chrono::steady_clock::now();
+
     UniqueLockHolder lock(m_scavengingMutex);
 
     if (verbose) {
@@ -257,9 +261,21 @@ void Scavenger::scavenge()
         fprintf(stderr, "--------------------------------\n");
     }
 
-    static int _scavcounter = 0;
+    _total_time += std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+
+    static thread_local int _scavcounter = 0;
+    static thread_local uint64_t _last_time = 0;
     if (++_scavcounter % 100 == 0) {
+        uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - std::chrono::time_point<std::chrono::steady_clock>()).count();
+        auto dt = (now - _last_time);
         fprintf(stderr, "bmalloc: another 100 scavenges\n");
+        if (_last_time > 0) {
+            fprintf(stderr, "   dt: %llu[ms], total time spent: %llu ; %.3f\n", dt, _total_time, (float)_total_time/dt );
+        }
+        _last_time = now;
+        _total_time = 0;
+
+
         fprintf(stderr, "--after scavenging--\n");
         dumpStats();
         fprintf(stderr, "--------------------------------\n");
