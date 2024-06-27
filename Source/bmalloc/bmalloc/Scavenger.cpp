@@ -187,6 +187,13 @@ void Scavenger::enableMiniMode()
         run();
 }
 
+void Scavenger::disableMiniMode()
+{
+    m_isInMiniMode = false; // We just store to this racily. The scavenger thread will eventually pick up the right value.
+    if (m_state == State::RunSoon)
+        run();
+}
+
 void Scavenger::scavenge()
 {
     if (!m_isEnabled)
@@ -354,6 +361,8 @@ void Scavenger::threadRunLoop()
             timeSpentScavenging *= s_newWaitMultiplier;
             std::chrono::milliseconds newWaitTime = std::chrono::duration_cast<std::chrono::milliseconds>(timeSpentScavenging);
             m_waitTime = std::min(std::max(newWaitTime, std::chrono::milliseconds(s_minWaitTimeMilliseconds)), std::chrono::milliseconds(s_maxWaitTimeMilliseconds));
+        } else {
+            m_waitTime = std::chrono::milliseconds(10);
         }
 
         if (verbose)

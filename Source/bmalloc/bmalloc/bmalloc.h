@@ -186,6 +186,10 @@ BEXPORT void setScavengerThreadQOSClass(qos_class_t overrideClass);
 
 BEXPORT void enableMiniMode();
 
+#if !BENABLE(LIBPAS)
+BEXPORT void disableMiniMode();
+#endif
+
 // Used for debugging only.
 BEXPORT void disableScavenger();
 

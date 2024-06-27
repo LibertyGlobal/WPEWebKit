@@ -73,7 +73,12 @@ public:
     // It's unlikely, but possible.
     size_t footprint();
 
+
     void enableMiniMode();
+
+#if !BENABLE(LIBPAS)
+    void disableMiniMode();
+#endif
 
     // Used for debugging only.
     void disable() { m_isEnabled = false; }
@@ -97,7 +102,7 @@ private:
     std::atomic<State> m_state { State::Sleep };
     size_t m_scavengerBytes { 0 };
     std::chrono::milliseconds m_waitTime;
-    bool m_isInMiniMode { false };
+    volatile bool m_isInMiniMode { false };
     
     Mutex m_scavengingMutex;
     std::condition_variable_any m_condition;

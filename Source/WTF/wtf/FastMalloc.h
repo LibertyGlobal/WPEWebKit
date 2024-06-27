@@ -120,6 +120,8 @@ WTF_EXPORT_PRIVATE void fastDecommitAlignedMemory(void*, size_t);
 
 WTF_EXPORT_PRIVATE void fastEnableMiniMode();
 
+WTF_EXPORT_PRIVATE void fastDisableMiniMode();
+
 WTF_EXPORT_PRIVATE void fastDisableScavenger();
 
 class ForbidMallocUseForCurrentThreadScope {

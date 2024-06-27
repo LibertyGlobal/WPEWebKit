@@ -683,6 +683,12 @@ void fastEnableMiniMode()
     bmalloc::api::enableMiniMode();
 }
 
+void fastDisableMiniMode()
+{
+    bmalloc::api::disableMiniMode();
+}
+
+
 void fastDisableScavenger()
 {
     bmalloc::api::disableScavenger();
