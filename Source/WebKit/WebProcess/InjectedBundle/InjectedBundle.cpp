@@ -262,6 +262,8 @@ void InjectedBundle::garbageCollectJavaScriptObjects()
     // if (!bmallocMinimode) {
         // fastDisableMiniMode();
 
+
+
     JSLockHolder lock(commonVM());
     commonVM().shrinkFootprintWhenIdle();
 

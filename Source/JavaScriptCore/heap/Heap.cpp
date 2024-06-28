@@ -1133,6 +1133,8 @@ void Heap::sweepSynchronously()
         MonotonicTime after = MonotonicTime::now();
         dataLog("=> ", capacity() / 1024, "kb, ", (after - before).milliseconds(), "ms");
     }
+
+    WTF::releaseFastMallocFreeMemory();
 }
 
 void Heap::collect(Synchronousness synchronousness, GCRequest request)
@@ -1161,6 +1163,7 @@ void Heap::collectNow(Synchronousness synchronousness, GCRequest request)
     }
         
     case Sync: {
+        sweeper().freeFastMallocMemoryAfterSweeping();
         collectSync(request);
         
         DeferGCForAWhile deferGC(vm());

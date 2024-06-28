@@ -149,6 +149,7 @@
 #include <wtf/SystemTracing.h>
 #include <wtf/URLParser.h>
 #include <wtf/text/StringHash.h>
+#include <thread>
 
 #if ENABLE(ARKIT_INLINE_PREVIEW_MAC)
 #include "ARKitInlinePreviewModelPlayerMac.h"
@@ -1043,15 +1044,46 @@ void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
     completionHandler(JSC::Options::useJIT());
 }
 
+
 void WebProcess::garbageCollectJavaScriptObjects()
 {
-    GCController::singleton().garbageCollectNow();
+    static std::atomic_bool do_collect {false};
+    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");    
+    // GCController::singleton().garbageCollectNow();
+    static std::thread *cleanup_thread = new std::thread([&](){
+        while (true) {
+            while (!do_collect.load()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects THREAD WAKEUP\n");
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+            fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects COLLECT NOW\n");
 
-    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
-    GCController::singleton().garbageCollectNow();
+            {
+                JSLockHolder lock(commonVM());
+                fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects COLLECT NOW - lock taken\n");
+                fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects COLLECT NOW - DONE\n");
+            }
+            do_collect.store(false);
+
+            // JSLockHolder lock(commonVM());
+            // commonVM().shrinkFootprintWhenIdle();
+        }
+    });
+    
+    if (cleanup_thread) {
+        cleanup_thread->detach();
+        cleanup_thread = nullptr;
+    }
+
+
+    do_collect.store(true);
+
+    
+    // GCController::singleton().garbageCollectNow();
     // WTF::releaseFastMallocFreeMemory();
-    JSLockHolder lock(commonVM());
-    commonVM().shrinkFootprintWhenIdle();
+    // JSLockHolder lock(commonVM());
+    // commonVM().shrinkFootprintWhenIdle();
 }
 
 void WebProcess::backgroundResponsivenessPing()
