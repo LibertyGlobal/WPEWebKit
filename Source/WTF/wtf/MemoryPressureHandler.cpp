@@ -295,11 +295,11 @@ void MemoryPressureHandler::setMemoryUsagePolicyBasedOnFootprints(size_t footpri
     // in minimode, we do not need to enable bmalloc minimode
     // return !Options::useJIT() || Options::forceMiniVMMode();
     // TODO: no access to 'Options' or 'VN' here
-    if (newPolicy == MemoryUsagePolicy::StrictSynchronous) {
+    /*if (newPolicy == MemoryUsagePolicy::StrictSynchronous) {
         fastEnableMiniMode();
     } else {
         fastDisableMiniMode();
-    }
+    }*/
 
     RELEASE_LOG(MemoryPressure, "Memory usage policy changed: %s -> %s, new thresholds: %zu MB, video %zu MB", toString(m_memoryUsagePolicy), toString(newPolicy), thresholdForPolicy(newPolicy, MemoryType::Normal) / MB, thresholdForPolicy(newPolicy, MemoryType::Video) / MB);
     m_memoryUsagePolicy = newPolicy;

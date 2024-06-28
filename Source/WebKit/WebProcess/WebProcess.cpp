@@ -1049,7 +1049,7 @@ void WebProcess::garbageCollectJavaScriptObjects()
 
     fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
     GCController::singleton().garbageCollectNow();
-    WTF::releaseFastMallocFreeMemory();
+    // WTF::releaseFastMallocFreeMemory();
     JSLockHolder lock(commonVM());
     commonVM().shrinkFootprintWhenIdle();
 }

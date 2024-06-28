@@ -93,6 +93,7 @@ void GCController::garbageCollectNow()
 {
     JSLockHolder lock(commonVM());
     if (!commonVM().heap.currentThreadIsDoingGCWork()) {
+        commonVM().heap.sweeper().freeFastMallocMemoryAfterSweeping();
         commonVM().heap.collectNow(Sync, CollectionScope::Full);
         WTF::releaseFastMallocFreeMemory();
     }
