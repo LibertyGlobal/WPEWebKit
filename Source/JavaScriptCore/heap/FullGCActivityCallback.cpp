@@ -41,7 +41,8 @@ void FullGCActivityCallback::doCollection(VM& vm)
     Heap& heap = vm.heap;
     m_didGCRecently = false;
 
-#if !PLATFORM(IOS_FAMILY) || PLATFORM(MACCATALYST)
+#if (!PLATFORM(IOS_FAMILY) && !PLATFORM(BROADCOM)) || PLATFORM(MACCATALYST)
+asdasd
     MonotonicTime startTime = MonotonicTime::now();
     if (MemoryPressureHandler::singleton().isUnderMemoryPressure() && heap.isPagedOut()) {
         cancel();

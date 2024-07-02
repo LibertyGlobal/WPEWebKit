@@ -341,6 +341,7 @@ public:
 #endif
 
     void garbageCollectJavaScriptObjects();
+    void disableTempMiniMode();
     void setJavaScriptGarbageCollectorTimerEnabled(bool flag);
 
     enum class GamepadType {

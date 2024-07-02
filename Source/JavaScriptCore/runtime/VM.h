@@ -71,6 +71,8 @@
 #include <wtf/text/SymbolImpl.h>
 #include <wtf/text/SymbolRegistry.h>
 
+#include <atomic>
+
 #if ENABLE(REGEXP_TRACING)
 #include <wtf/ListHashSet.h>
 #endif
@@ -533,14 +535,21 @@ public:
     };
 
     static JS_EXPORT_PRIVATE bool canUseAssembler();
+
+    static std::atomic_bool temporaryMiniMode;
+
     static bool isInMiniMode()
     {
-        return !Options::useJIT() || Options::forceMiniVMMode();
+        return temporaryMiniMode.load() || !Options::useJIT() || Options::forceMiniVMMode();
+    }
+
+    static void setTemporaryMiniMode(bool val) {
+        temporaryMiniMode.store(val);
     }
 
     static bool useUnlinkedCodeBlockJettisoning()
     {
-        return Options::useUnlinkedCodeBlockJettisoning() || isInMiniMode();
+        return temporaryMiniMode.load() || Options::useUnlinkedCodeBlockJettisoning() || isInMiniMode();
     }
 
     static void computeCanUseJIT();

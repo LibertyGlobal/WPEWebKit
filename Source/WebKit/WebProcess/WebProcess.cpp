@@ -265,7 +265,7 @@ using namespace JSC;
 using namespace WebCore;
 
 NO_RETURN static void callExit(IPC::Connection*)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if OS(WINDOWS)
     // Calling _exit in non-main threads may cause a deadlock in WTF::Thread::ThreadHolder::~ThreadHolder.
     TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
@@ -276,7 +276,7 @@ NO_RETURN static void callExit(IPC::Connection*)
 
 #if PLATFORM(GTK) || PLATFORM(WPE)
 static void callExitSoon(IPC::Connection*)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     // If the connection has been closed and we haven't responded in the main thread for 10 seconds the process will exit forcibly.
     static const auto watchdogDelay = 10_s;
     WorkQueue::create("WebKit.WebProcess.WatchDogQueue")->dispatchAfter(watchdogDelay, [] {
@@ -309,7 +309,7 @@ WebProcess::WebProcess()
 #if PLATFORM(IOS_FAMILY)
     , m_webSQLiteDatabaseTracker([this](bool isHoldingLockedFiles) { parentProcessConnection()->send(Messages::WebProcessProxy::SetIsHoldingLockedFiles(isHoldingLockedFiles), 0); })
 #endif
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     // Initialize our platform strategies.
     WebPlatformStrategies::initialize();
 
@@ -364,12 +364,12 @@ WebProcess::WebProcess()
 }
 
 WebProcess::~WebProcess()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT_NOT_REACHED();
 }
 
 void WebProcess::initializeProcess(const AuxiliaryProcessInitializationParameters& parameters)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WTF::setProcessPrivileges({ });
 
     MessagePortChannelProvider::setSharedProvider(WebMessagePortChannelProvider::singleton());
@@ -379,7 +379,7 @@ void WebProcess::initializeProcess(const AuxiliaryProcessInitializationParameter
 }
 
 void WebProcess::initializeConnection(IPC::Connection* connection)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     AuxiliaryProcess::initializeConnection(connection);
 
 // Do not call exit in background queue for GTK and WPE because we need to ensure
@@ -412,7 +412,7 @@ void WebProcess::initializeConnection(IPC::Connection* connection)
 }
 
 static void scheduleLogMemoryStatistics(LogMemoryStatisticsReason reason)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     // Log stats in the next turn of the run loop so that it runs after the low memory handler.
     RunLoop::main().dispatch([reason] {
         WebCore::logMemoryStatistics(reason);
@@ -420,7 +420,7 @@ static void scheduleLogMemoryStatistics(LogMemoryStatisticsReason reason)
 }
 
 void WebProcess::initializeWebProcess(WebProcessCreationParameters&& parameters)
-{    
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);    
     TraceScope traceScope(InitializeWebProcessStart, InitializeWebProcessEnd);
 
     ASSERT(m_pageMap.isEmpty());
@@ -624,7 +624,7 @@ void WebProcess::initializeWebProcess(WebProcessCreationParameters&& parameters)
 }
 
 void WebProcess::setWebsiteDataStoreParameters(WebProcessDataStoreParameters&& parameters)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(!m_sessionID);
     m_sessionID = parameters.sessionID;
 
@@ -667,7 +667,7 @@ void WebProcess::setWebsiteDataStoreParameters(WebProcessDataStoreParameters&& p
 }
 
 bool WebProcess::areAllPagesSuspended() const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageMap.values()) {
         if (!page->isSuspended())
             return false;
@@ -676,13 +676,13 @@ bool WebProcess::areAllPagesSuspended() const
 }
 
 void WebProcess::setHasSuspendedPageProxy(bool hasSuspendedPageProxy)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_hasSuspendedPageProxy != hasSuspendedPageProxy);
     m_hasSuspendedPageProxy = hasSuspendedPageProxy;
 }
 
 void WebProcess::setIsInProcessCache(bool isInProcessCache)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if PLATFORM(COCOA)
     if (isInProcessCache) {
         ASSERT(m_processType == ProcessType::WebContent);
@@ -701,7 +701,7 @@ void WebProcess::setIsInProcessCache(bool isInProcessCache)
 }
 
 void WebProcess::markIsNoLongerPrewarmed()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if PLATFORM(COCOA)
     ASSERT(m_processType == ProcessType::PrewarmedWebContent);
     m_processType = ProcessType::WebContent;
@@ -711,7 +711,7 @@ void WebProcess::markIsNoLongerPrewarmed()
 }
 
 void WebProcess::prewarmGlobally()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (MemoryPressureHandler::singleton().isUnderMemoryPressure()) {
         RELEASE_LOG(PerformanceLogging, "WebProcess::prewarmGlobally: Not prewarming because the system in under memory pressure");
         return;
@@ -720,94 +720,94 @@ void WebProcess::prewarmGlobally()
 }
 
 void WebProcess::prewarmWithDomainInformation(WebCore::PrewarmInformation&& prewarmInformation)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebCore::ProcessWarming::prewarmWithInformation(WTFMove(prewarmInformation));
 }
 
 void WebProcess::registerURLSchemeAsEmptyDocument(const String& urlScheme)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsEmptyDocument(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsSecure(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsSecure(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsBypassingContentSecurityPolicy(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsBypassingContentSecurityPolicy(urlScheme);
 }
 
 void WebProcess::setDomainRelaxationForbiddenForURLScheme(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::setDomainRelaxationForbiddenForURLScheme(true, urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsLocal(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsLocal(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsNoAccess(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsNoAccess(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsDisplayIsolated(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsDisplayIsolated(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsCORSEnabled(const String& urlScheme)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsCORSEnabled(urlScheme);
     ensureNetworkProcessConnection().connection().send(Messages::NetworkConnectionToWebProcess::RegisterURLSchemesAsCORSEnabled({ urlScheme }), 0);
 }
 
 void WebProcess::registerURLSchemeAsAlwaysRevalidated(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsAlwaysRevalidated(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsCachePartitioned(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerURLSchemeAsCachePartitioned(urlScheme);
 }
 
 void WebProcess::registerURLSchemeAsCanDisplayOnlyIfCanRequest(const String& urlScheme) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LegacySchemeRegistry::registerAsCanDisplayOnlyIfCanRequest(urlScheme);
 }
 
 void WebProcess::setDefaultRequestTimeoutInterval(double timeoutInterval)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ResourceRequest::setDefaultTimeoutInterval(timeoutInterval);
 }
 
 void WebProcess::setAlwaysUsesComplexTextCodePath(bool alwaysUseComplexText)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebCore::FontCascade::setCodePath(alwaysUseComplexText ? WebCore::FontCascade::CodePath::Complex : WebCore::FontCascade::CodePath::Auto);
 }
 
 void WebProcess::setShouldUseFontSmoothing(bool useFontSmoothing)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebCore::FontCascade::setShouldUseSmoothing(useFontSmoothing);
 }
 
 void WebProcess::userPreferredLanguagesChanged(const Vector<String>& languages) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     LOG_WITH_STREAM(Language, stream << "The web process's userPreferredLanguagesChanged: " << languages);
     overrideUserPreferredLanguages(languages);
 }
 
 void WebProcess::fullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_fullKeyboardAccessEnabled = fullKeyboardAccessEnabled;
 }
 
 void WebProcess::setCacheModel(CacheModel cacheModel)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (m_hasSetCacheModel && (cacheModel == m_cacheModel))
         return;
 
@@ -830,7 +830,7 @@ void WebProcess::setCacheModel(CacheModel cacheModel)
 }
 
 WebPage* WebProcess::focusedWebPage() const
-{    
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);    
     for (auto& page : m_pageMap.values()) {
         if (page->windowAndWebPageAreFocused())
             return page.get();
@@ -839,12 +839,12 @@ WebPage* WebProcess::focusedWebPage() const
 }
     
 WebPage* WebProcess::webPage(PageIdentifier pageID) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_pageMap.get(pageID);
 }
 
 void WebProcess::createWebPage(PageIdentifier pageID, WebPageCreationParameters&& parameters)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     // It is necessary to check for page existence here since during a window.open() (or targeted
     // link) the WebPage gets created both in the synchronous handler and through the normal way. 
     auto result = m_pageMap.add(pageID, nullptr);
@@ -871,7 +871,7 @@ void WebProcess::createWebPage(PageIdentifier pageID, WebPageCreationParameters&
 }
 
 void WebProcess::removeWebPage(PageIdentifier pageID)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_pageMap.contains(pageID));
 
     flushResourceLoadStatistics();
@@ -887,7 +887,7 @@ void WebProcess::removeWebPage(PageIdentifier pageID)
 }
 
 bool WebProcess::shouldTerminate()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_pageMap.isEmpty());
 
     // FIXME: the ShouldTerminate message should also send termination parameters, such as any session cookies that need to be preserved.
@@ -900,7 +900,7 @@ bool WebProcess::shouldTerminate()
 }
 
 void WebProcess::terminate()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #ifndef NDEBUG
     // These are done in an attempt to reduce LEAK output.
     GCController::singleton().garbageCollectNow();
@@ -917,14 +917,15 @@ void WebProcess::terminate()
 }
 
 bool WebProcess::didReceiveSyncMessage(IPC::Connection& connection, IPC::Decoder& decoder, UniqueRef<IPC::Encoder>& replyEncoder)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (messageReceiverMap().dispatchSyncMessage(connection, decoder, replyEncoder))
         return true;
     return false;
 }
 
+
 void WebProcess::didReceiveMessage(IPC::Connection& connection, IPC::Decoder& decoder)
-{
+{fprintf(stderr,"xexe %s ENTER messageName: %d \n",__PRETTY_FUNCTION__, decoder.messageName());
     if (messageReceiverMap().dispatchMessage(connection, decoder))
         return;
 
@@ -958,22 +959,22 @@ void WebProcess::didReceiveMessage(IPC::Connection& connection, IPC::Decoder& de
 }
 
 WebFrame* WebProcess::webFrame(FrameIdentifier frameID) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_frameMap.get(frameID);
 }
 
 Vector<WebFrame*> WebProcess::webFrames() const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return copyToVector(m_frameMap.values());
 }
 
 void WebProcess::addWebFrame(FrameIdentifier frameID, WebFrame* frame)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_frameMap.set(frameID, frame);
 }
 
 void WebProcess::removeWebFrame(FrameIdentifier frameID)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_frameMap.remove(frameID);
 
     // We can end up here after our connection has closed when WebCore's frame life-support timer
@@ -986,7 +987,7 @@ void WebProcess::removeWebFrame(FrameIdentifier frameID)
 }
 
 WebPageGroupProxy* WebProcess::webPageGroup(PageGroup* pageGroup)
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageGroupMap.values()) {
         if (page->corePageGroup() == pageGroup)
             return page.get();
@@ -996,12 +997,12 @@ WebPageGroupProxy* WebProcess::webPageGroup(PageGroup* pageGroup)
 }
 
 WebPageGroupProxy* WebProcess::webPageGroup(PageGroupIdentifier pageGroupID)
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_pageGroupMap.get(pageGroupID);
 }
 
 WebPageGroupProxy* WebProcess::webPageGroup(const WebPageGroupData& pageGroupData)
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto result = m_pageGroupMap.add(pageGroupData.pageGroupID, nullptr);
     if (result.isNewEntry) {
         ASSERT(!result.iterator->value);
@@ -1012,13 +1013,13 @@ WebPageGroupProxy* WebProcess::webPageGroup(const WebPageGroupData& pageGroupDat
 }
 
 static uint64_t nextUserGestureTokenIdentifier()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     static uint64_t identifier = 1;
     return identifier++;
 }
 
 uint64_t WebProcess::userGestureTokenIdentifier(RefPtr<UserGestureToken> token)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!token || !token->processingUserGesture())
         return 0;
 
@@ -1033,21 +1034,22 @@ uint64_t WebProcess::userGestureTokenIdentifier(RefPtr<UserGestureToken> token)
 }
 
 void WebProcess::userGestureTokenDestroyed(UserGestureToken& token)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto identifier = m_userGestureTokens.take(&token);
     parentProcessConnection()->send(Messages::WebProcessProxy::DidDestroyUserGestureToken(identifier), 0);
 }
 
 void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     completionHandler(JSC::Options::useJIT());
 }
 
 void WebProcess::garbageCollectJavaScriptObjects()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     GCController::singleton().garbageCollectNow();
 
     fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
+    commonVM().setTemporaryMiniMode(true);
     GCController::singleton().garbageCollectNow();
     WTF::releaseFastMallocFreeMemory();
     JSLockHolder lock(commonVM());
@@ -1055,19 +1057,19 @@ void WebProcess::garbageCollectJavaScriptObjects()
 }
 
 void WebProcess::backgroundResponsivenessPing()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     parentProcessConnection()->send(Messages::WebProcessProxy::DidReceiveBackgroundResponsivenessPing(), 0);
 }
 
 void WebProcess::messagesAvailableForPort(const MessagePortIdentifier& identifier)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     MessagePort::notifyMessageAvailable(identifier);
 }
 
 #if HAVE(MOUSE_DEVICE_OBSERVATION)
 
 void WebProcess::setHasMouseDevice(bool hasMouseDevice)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (hasMouseDevice == m_hasMouseDevice)
         return;
 
@@ -1081,7 +1083,7 @@ void WebProcess::setHasMouseDevice(bool hasMouseDevice)
 #if HAVE(STYLUS_DEVICE_OBSERVATION)
 
 void WebProcess::setHasStylusDevice(bool hasStylusDevice)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (hasStylusDevice == m_hasStylusDevice)
         return;
 
@@ -1095,29 +1097,29 @@ void WebProcess::setHasStylusDevice(bool hasStylusDevice)
 #if ENABLE(GAMEPAD)
 
 void WebProcess::setInitialGamepads(const Vector<WebKit::GamepadData>& gamepadDatas)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebGamepadProvider::singleton().setInitialGamepads(gamepadDatas);
 }
 
 void WebProcess::gamepadConnected(const GamepadData& gamepadData, WebCore::EventMakesGamepadsVisible eventVisibility)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebGamepadProvider::singleton().gamepadConnected(gamepadData, eventVisibility);
 }
 
 void WebProcess::gamepadDisconnected(unsigned index)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebGamepadProvider::singleton().gamepadDisconnected(index);
 }
 
 #endif
 
 void WebProcess::setJavaScriptGarbageCollectorTimerEnabled(bool flag)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     GCController::singleton().setJavaScriptGarbageCollectorTimerEnabled(flag);
 }
 
 void WebProcess::handleInjectedBundleMessage(const String& messageName, const UserData& messageBody)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     InjectedBundle* injectedBundle = WebProcess::singleton().injectedBundle();
     if (!injectedBundle)
         return;
@@ -1126,7 +1128,7 @@ void WebProcess::handleInjectedBundleMessage(const String& messageName, const Us
 }
 
 void WebProcess::setInjectedBundleParameter(const String& key, const IPC::DataReference& value)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     InjectedBundle* injectedBundle = WebProcess::singleton().injectedBundle();
     if (!injectedBundle)
         return;
@@ -1135,7 +1137,7 @@ void WebProcess::setInjectedBundleParameter(const String& key, const IPC::DataRe
 }
 
 void WebProcess::setInjectedBundleParameters(const IPC::DataReference& value)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     InjectedBundle* injectedBundle = WebProcess::singleton().injectedBundle();
     if (!injectedBundle)
         return;
@@ -1144,7 +1146,7 @@ void WebProcess::setInjectedBundleParameters(const IPC::DataReference& value)
 }
 
 NO_RETURN inline void failedToSendSyncMessage()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if PLATFORM(GTK) || PLATFORM(WPE)
     // GTK and WPE ports don't exit on send sync message failure.
     // In this particular case, the network process can be terminated by the UI process while the
@@ -1158,7 +1160,7 @@ NO_RETURN inline void failedToSendSyncMessage()
 }
 
 static NetworkProcessConnectionInfo getNetworkProcessConnection(IPC::Connection& connection)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     NetworkProcessConnectionInfo connectionInfo;
     auto requestConnection = [&] {
         if (!connection.isValid()) {
@@ -1188,7 +1190,7 @@ static NetworkProcessConnectionInfo getNetworkProcessConnection(IPC::Connection&
 }
 
 NetworkProcessConnection& WebProcess::ensureNetworkProcessConnection()
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     RELEASE_ASSERT(RunLoop::isMain());
     ASSERT(m_sessionID);
 
@@ -1224,7 +1226,7 @@ NetworkProcessConnection& WebProcess::ensureNetworkProcessConnection()
 }
 
 void WebProcess::logDiagnosticMessageForNetworkProcessCrash()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebCore::Page* page = nullptr;
 
     if (auto* webPage = focusedWebPage())
@@ -1244,7 +1246,7 @@ void WebProcess::logDiagnosticMessageForNetworkProcessCrash()
 }
 
 void WebProcess::networkProcessConnectionClosed(NetworkProcessConnection* connection)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if OS(DARWIN)
     WEBPROCESS_RELEASE_LOG(Loading, "networkProcessConnectionClosed: NetworkProcess (%d) closed its connection (Crashed)", connection ? connection->connection().remoteProcessID() : 0);
 #else
@@ -1305,7 +1307,7 @@ void WebProcess::networkProcessConnectionClosed(NetworkProcessConnection* connec
 }
 
 WebFileSystemStorageConnection& WebProcess::fileSystemStorageConnection()
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!m_fileSystemStorageConnection)
         m_fileSystemStorageConnection = WebFileSystemStorageConnection::create(ensureNetworkProcessConnection().connection());
 
@@ -1313,14 +1315,14 @@ WebFileSystemStorageConnection& WebProcess::fileSystemStorageConnection()
 }
 
 WebLoaderStrategy& WebProcess::webLoaderStrategy()
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_webLoaderStrategy;
 }
 
 #if ENABLE(GPU_PROCESS)
 
 GPUProcessConnection& WebProcess::ensureGPUProcessConnection()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     RELEASE_ASSERT(RunLoop::isMain());
 
     // If we've lost our connection to the GPU process (e.g. it crashed) try to re-establish it.
@@ -1338,7 +1340,7 @@ GPUProcessConnection& WebProcess::ensureGPUProcessConnection()
 }
 
 void WebProcess::gpuProcessConnectionClosed(GPUProcessConnection& connection)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_gpuProcessConnection);
     ASSERT_UNUSED(connection, m_gpuProcessConnection == &connection);
 
@@ -1352,7 +1354,7 @@ void WebProcess::gpuProcessConnectionClosed(GPUProcessConnection& connection)
 
 #if PLATFORM(COCOA) && USE(LIBWEBRTC)
 LibWebRTCCodecs& WebProcess::libWebRTCCodecs()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!m_libWebRTCCodecs)
         m_libWebRTCCodecs = LibWebRTCCodecs::create();
     return *m_libWebRTCCodecs;
@@ -1361,7 +1363,7 @@ LibWebRTCCodecs& WebProcess::libWebRTCCodecs()
 
 #if ENABLE(MEDIA_STREAM) && PLATFORM(COCOA)
 AudioMediaStreamTrackRendererInternalUnitManager& WebProcess::audioMediaStreamTrackRendererInternalUnitManager()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!m_audioMediaStreamTrackRendererInternalUnitManager)
         m_audioMediaStreamTrackRendererInternalUnitManager = makeUnique<AudioMediaStreamTrackRendererInternalUnitManager>();
     return *m_audioMediaStreamTrackRendererInternalUnitManager;
@@ -1371,12 +1373,12 @@ AudioMediaStreamTrackRendererInternalUnitManager& WebProcess::audioMediaStreamTr
 #endif // ENABLE(GPU_PROCESS)
 
 void WebProcess::setEnhancedAccessibility(bool flag)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebCore::AXObjectCache::setEnhancedUserInterfaceAccessibility(flag);
 }
     
 void WebProcess::startMemorySampler(SandboxExtension::Handle&& sampleLogFileHandle, const String& sampleLogFilePath, const double interval)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ENABLE(MEMORY_SAMPLER)    
     WebMemorySampler::singleton()->start(WTFMove(sampleLogFileHandle), sampleLogFilePath, interval);
 #else
@@ -1387,14 +1389,14 @@ void WebProcess::startMemorySampler(SandboxExtension::Handle&& sampleLogFileHand
 }
     
 void WebProcess::stopMemorySampler()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ENABLE(MEMORY_SAMPLER)
     WebMemorySampler::singleton()->stop();
 #endif
 }
 
 void WebProcess::setTextCheckerState(const TextCheckerState& textCheckerState)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     bool continuousSpellCheckingTurnedOff = !textCheckerState.isContinuousSpellCheckingEnabled && m_textCheckerState.isContinuousSpellCheckingEnabled;
     bool grammarCheckingTurnedOff = !textCheckerState.isGrammarCheckingEnabled && m_textCheckerState.isGrammarCheckingEnabled;
 
@@ -1412,7 +1414,7 @@ void WebProcess::setTextCheckerState(const TextCheckerState& textCheckerState)
 }
 
 void WebProcess::fetchWebsiteData(OptionSet<WebsiteDataType> websiteDataTypes, CompletionHandler<void(WebsiteData&&)>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WebsiteData websiteData;
     if (websiteDataTypes.contains(WebsiteDataType::MemoryCache)) {
         auto origins = MemoryCache::singleton().originsWithCache(sessionID());
@@ -1424,7 +1426,7 @@ void WebProcess::fetchWebsiteData(OptionSet<WebsiteDataType> websiteDataTypes, C
 }
 
 void WebProcess::deleteWebsiteData(OptionSet<WebsiteDataType> websiteDataTypes, WallTime modifiedSince, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     UNUSED_PARAM(modifiedSince);
 
     if (websiteDataTypes.contains(WebsiteDataType::MemoryCache)) {
@@ -1437,7 +1439,7 @@ void WebProcess::deleteWebsiteData(OptionSet<WebsiteDataType> websiteDataTypes, 
 }
 
 void WebProcess::deleteWebsiteDataForOrigins(OptionSet<WebsiteDataType> websiteDataTypes, const Vector<WebCore::SecurityOriginData>& originDatas, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (websiteDataTypes.contains(WebsiteDataType::MemoryCache)) {
         HashSet<RefPtr<SecurityOrigin>> origins;
         for (auto& originData : originDatas)
@@ -1449,41 +1451,44 @@ void WebProcess::deleteWebsiteDataForOrigins(OptionSet<WebsiteDataType> websiteD
 }
 
 void WebProcess::setHiddenPageDOMTimerThrottlingIncreaseLimit(int milliseconds)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageMap.values())
         page->setHiddenPageDOMTimerThrottlingIncreaseLimit(Seconds::fromMilliseconds(milliseconds));
 }
 
 #if !PLATFORM(COCOA)
 void WebProcess::initializeProcessName(const AuxiliaryProcessInitializationParameters&)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 }
 
 void WebProcess::initializeSandbox(const AuxiliaryProcessInitializationParameters&, SandboxInitializationParameters&)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 }
 
 void WebProcess::updateActivePages(const String& overrideDisplayName)
 {
+    fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
+    fprintf(stderr,"xaxa %s DISABLE MINI MODE\n",__PRETTY_FUNCTION__);
+    commonVM().setTemporaryMiniMode(false);
 }
 
 void WebProcess::getActivePagesOriginsForTesting(CompletionHandler<void(Vector<String>&&)>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     completionHandler({ });
 }
 
 void WebProcess::updateCPULimit()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 }
 
 void WebProcess::updateCPUMonitorState(CPUMonitorUpdateReason)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 }
 
 #endif
 
 void WebProcess::pageActivityStateDidChange(PageIdentifier, OptionSet<WebCore::ActivityState::Flag> changed)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (changed & WebCore::ActivityState::IsVisible) {
         updateCPUMonitorState(CPUMonitorUpdateReason::VisibilityHasChanged);
 #if OS(LINUX)
@@ -1493,7 +1498,7 @@ void WebProcess::pageActivityStateDidChange(PageIdentifier, OptionSet<WebCore::A
 }
 
 void WebProcess::prepareToSuspend(bool isSuspensionImminent, MonotonicTime estimatedSuspendTime, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto nowTime = MonotonicTime::now();
     double remainingRunTime = nowTime > estimatedSuspendTime ? (nowTime - estimatedSuspendTime).value() : 0.0;
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "prepareToSuspend: isSuspensionImminent=%d, remainingRunTime=%fs", isSuspensionImminent, remainingRunTime);
@@ -1541,7 +1546,7 @@ void WebProcess::prepareToSuspend(bool isSuspensionImminent, MonotonicTime estim
 }
 
 void WebProcess::markAllLayersVolatile(CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "markAllLayersVolatile:");
     auto callbackAggregator = CallbackAggregator::create(WTFMove(completionHandler));
     for (auto& page : m_pageMap.values()) {
@@ -1555,28 +1560,28 @@ void WebProcess::markAllLayersVolatile(CompletionHandler<void()>&& completionHan
 }
 
 void WebProcess::cancelMarkAllLayersVolatile()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "cancelMarkAllLayersVolatile:");
     for (auto& page : m_pageMap.values())
         page->cancelMarkLayersVolatile();
 }
 
 void WebProcess::freezeAllLayerTrees()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "freezeAllLayerTrees: WebProcess is freezing all layer trees");
     for (auto& page : m_pageMap.values())
         page->freezeLayerTree(WebPage::LayerTreeFreezeReason::ProcessSuspended);
 }
 
 void WebProcess::unfreezeAllLayerTrees()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "unfreezeAllLayerTrees: WebProcess is unfreezing all layer trees");
     for (auto& page : m_pageMap.values())
         page->unfreezeLayerTree(WebPage::LayerTreeFreezeReason::ProcessSuspended);
 }
 
 void WebProcess::processDidResume()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     WEBPROCESS_RELEASE_LOG(ProcessSuspension, "processDidResume:");
 
     m_processIsSuspended = false;
@@ -1603,7 +1608,7 @@ void WebProcess::processDidResume()
 }
 
 void WebProcess::sendPrewarmInformation(const URL& url)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto registrableDomain = WebCore::RegistrableDomain { url };
     if (registrableDomain.isEmpty())
         return;
@@ -1611,7 +1616,7 @@ void WebProcess::sendPrewarmInformation(const URL& url)
 }
 
 void WebProcess::pageDidEnterWindow(PageIdentifier pageID)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_pagesInWindows.add(pageID);
     m_nonVisibleProcessGraphicsCleanupTimer.stop();
 
@@ -1621,7 +1626,7 @@ void WebProcess::pageDidEnterWindow(PageIdentifier pageID)
 }
 
 void WebProcess::pageWillLeaveWindow(PageIdentifier pageID)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_pagesInWindows.remove(pageID);
 
     if (m_pagesInWindows.isEmpty()) {
@@ -1636,7 +1641,7 @@ void WebProcess::pageWillLeaveWindow(PageIdentifier pageID)
 }
     
 void WebProcess::nonVisibleProcessGraphicsCleanupTimerFired()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_pagesInWindows.isEmpty());
     if (!m_pagesInWindows.isEmpty())
         return;
@@ -1648,7 +1653,7 @@ void WebProcess::nonVisibleProcessGraphicsCleanupTimerFired()
 
 #if ENABLE(NON_VISIBLE_WEBPROCESS_MEMORY_CLEANUP_TIMER)
 void WebProcess::nonVisibleProcessMemoryCleanupTimerFired()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_pagesInWindows.isEmpty());
     if (!m_pagesInWindows.isEmpty())
         return;
@@ -1664,14 +1669,14 @@ void WebProcess::nonVisibleProcessMemoryCleanupTimerFired()
 #endif
 
 void WebProcess::registerStorageAreaMap(StorageAreaMap& storageAreaMap)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto identifier = storageAreaMap.identifier();
     ASSERT(!m_storageAreaMaps.contains(identifier));
     m_storageAreaMaps.add(identifier, storageAreaMap);
 }
 
 void WebProcess::unregisterStorageAreaMap(StorageAreaMap& storageAreaMap)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto identifier = storageAreaMap.identifier();
     ASSERT(m_storageAreaMaps.contains(identifier));
     ASSERT(m_storageAreaMaps.get(identifier).get() == &storageAreaMap);
@@ -1679,12 +1684,12 @@ void WebProcess::unregisterStorageAreaMap(StorageAreaMap& storageAreaMap)
 }
 
 WeakPtr<StorageAreaMap> WebProcess::storageAreaMap(StorageAreaMapIdentifier identifier) const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_storageAreaMaps.get(identifier);
 }
 
 void WebProcess::setResourceLoadStatisticsEnabled(bool enabled)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (WebCore::DeprecatedGlobalSettings::resourceLoadStatisticsEnabled() == enabled)
         return;
     WebCore::DeprecatedGlobalSettings::setResourceLoadStatisticsEnabled(enabled);
@@ -1695,7 +1700,7 @@ void WebProcess::setResourceLoadStatisticsEnabled(bool enabled)
 }
 
 void WebProcess::clearResourceLoadStatistics()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ENABLE(INTELLIGENT_TRACKING_PREVENTION)
     if (auto* observer = ResourceLoadObserver::sharedIfExists())
         observer->clearState();
@@ -1705,7 +1710,7 @@ void WebProcess::clearResourceLoadStatistics()
 }
 
 void WebProcess::flushResourceLoadStatistics()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ENABLE(INTELLIGENT_TRACKING_PREVENTION)
     if (auto* observer = ResourceLoadObserver::sharedIfExists())
         observer->updateCentralStatisticsStore([] { });
@@ -1713,7 +1718,7 @@ void WebProcess::flushResourceLoadStatistics()
 }
 
 void WebProcess::seedResourceLoadStatisticsForTesting(const RegistrableDomain& firstPartyDomain, const RegistrableDomain& thirdPartyDomain, bool shouldScheduleNotification, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ENABLE(INTELLIGENT_TRACKING_PREVENTION)
     if (auto* observer = ResourceLoadObserver::sharedIfExists())
         observer->logSubresourceLoadingForTesting(firstPartyDomain, thirdPartyDomain, shouldScheduleNotification);
@@ -1722,7 +1727,7 @@ void WebProcess::seedResourceLoadStatisticsForTesting(const RegistrableDomain& f
 }
 
 RefPtr<API::Object> WebProcess::transformHandlesToObjects(API::Object* object)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     struct Transformer final : UserData::Transformer {
         Transformer(WebProcess& webProcess)
             : m_webProcess(webProcess)
@@ -1773,7 +1778,7 @@ RefPtr<API::Object> WebProcess::transformHandlesToObjects(API::Object* object)
 }
 
 RefPtr<API::Object> WebProcess::transformObjectsToHandles(API::Object* object)
-{
+{//fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     struct Transformer final : UserData::Transformer {
         bool shouldTransformObject(const API::Object& object) const override
         {
@@ -1814,7 +1819,7 @@ RefPtr<API::Object> WebProcess::transformObjectsToHandles(API::Object* object)
 }
 
 void WebProcess::setMemoryCacheDisabled(bool disabled)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     auto& memoryCache = MemoryCache::singleton();
     if (memoryCache.disabled() != disabled)
         memoryCache.setDisabled(disabled);
@@ -1822,7 +1827,7 @@ void WebProcess::setMemoryCacheDisabled(bool disabled)
 
 #if ENABLE(SERVICE_CONTROLS)
 void WebProcess::setEnabledServices(bool hasImageServices, bool hasSelectionServices, bool hasRichContentServices)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_hasImageServices = hasImageServices;
     m_hasSelectionServices = hasSelectionServices;
     m_hasRichContentServices = hasRichContentServices;
@@ -1830,17 +1835,17 @@ void WebProcess::setEnabledServices(bool hasImageServices, bool hasSelectionServ
 #endif
 
 void WebProcess::ensureAutomationSessionProxy(const String& sessionIdentifier)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_automationSessionProxy = makeUnique<WebAutomationSessionProxy>(sessionIdentifier);
 }
 
 void WebProcess::destroyAutomationSessionProxy()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_automationSessionProxy = nullptr;
 }
 
 void WebProcess::prefetchDNS(const String& hostname)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (hostname.isEmpty())
         return;
 
@@ -1853,7 +1858,7 @@ void WebProcess::prefetchDNS(const String& hostname)
 }
 
 bool WebProcess::hasVisibleWebPage() const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageMap.values()) {
         if (page->isVisible())
             return true;
@@ -1862,12 +1867,12 @@ bool WebProcess::hasVisibleWebPage() const
 }
 
 void WebProcess::setBackForwardCacheCapacity(unsigned capacity)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     BackForwardCache::singleton().setMaxSize(capacity);
 }
 
 void WebProcess::clearCachedPage(BackForwardItemIdentifier backForwardItemID, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     HistoryItem* item = WebBackForwardListProxy::itemForID(backForwardItemID);
     if (!item)
         return completionHandler();
@@ -1877,14 +1882,14 @@ void WebProcess::clearCachedPage(BackForwardItemIdentifier backForwardItemID, Co
 }
 
 LibWebRTCNetwork& WebProcess::libWebRTCNetwork()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!m_libWebRTCNetwork)
         m_libWebRTCNetwork = LibWebRTCNetwork::create();
     return *m_libWebRTCNetwork;
 }
 
 void WebProcess::establishRemoteWorkerContextConnectionToNetworkProcess(RemoteWorkerType workerType, PageGroupIdentifier pageGroupID, WebPageProxyIdentifier webPageProxyID, PageIdentifier pageID, const WebPreferencesStore& store, RegistrableDomain&& registrableDomain, std::optional<ScriptExecutionContextIdentifier> serviceWorkerPageIdentifier, RemoteWorkerInitializationData&& initializationData, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     // We are in the Remote Worker context process and the call below establishes our connection to the Network Process
     // by calling ensureNetworkProcessConnection. SWContextManager / SharedWorkerContextManager need to use the same underlying IPC::Connection as the
     // NetworkProcessConnection for synchronization purposes.
@@ -1905,12 +1910,12 @@ void WebProcess::establishRemoteWorkerContextConnectionToNetworkProcess(RemoteWo
 
 #if ENABLE(SERVICE_WORKER)
 void WebProcess::addServiceWorkerRegistration(WebCore::ServiceWorkerRegistrationIdentifier identifier)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_swRegistrationCounts.add(identifier);
 }
 
 bool WebProcess::removeServiceWorkerRegistration(WebCore::ServiceWorkerRegistrationIdentifier identifier)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(m_swRegistrationCounts.contains(identifier));
     return m_swRegistrationCounts.remove(identifier);
 }
@@ -1918,28 +1923,28 @@ bool WebProcess::removeServiceWorkerRegistration(WebCore::ServiceWorkerRegistrat
 
 #if ENABLE(MEDIA_STREAM)
 void WebProcess::addMockMediaDevice(const WebCore::MockMediaDevice& device)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     MockRealtimeMediaSourceCenter::addDevice(device);
 }
 
 void WebProcess::clearMockMediaDevices()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     MockRealtimeMediaSourceCenter::setDevices({ });
 }
 
 void WebProcess::removeMockMediaDevice(const String& persistentId)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     MockRealtimeMediaSourceCenter::removeDevice(persistentId);
 }
 
 void WebProcess::resetMockMediaDevices()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     MockRealtimeMediaSourceCenter::resetDevices();
 }
 
 #if ENABLE(SANDBOX_EXTENSIONS)
 void WebProcess::grantUserMediaDeviceSandboxExtensions(MediaDeviceSandboxExtensions&& extensions)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (size_t i = 0; i < extensions.size(); i++) {
         const auto& extension = extensions[i];
         extension.second->consume();
@@ -1949,7 +1954,7 @@ void WebProcess::grantUserMediaDeviceSandboxExtensions(MediaDeviceSandboxExtensi
 }
 
 static inline void checkDocumentsCaptureStateConsistency(const Vector<String>& extensionIDs)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
 #if ASSERT_ENABLED
     bool isCapturingAudio = WTF::anyOf(Document::allDocumentsMap().values(), [](auto* document) {
         return document->mediaState() & MediaProducer::MicrophoneCaptureMask;
@@ -1966,7 +1971,7 @@ static inline void checkDocumentsCaptureStateConsistency(const Vector<String>& e
 }
 
 void WebProcess::revokeUserMediaDeviceSandboxExtensions(const Vector<String>& extensionIDs)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     checkDocumentsCaptureStateConsistency(extensionIDs);
 
     for (const auto& extensionID : extensionIDs) {
@@ -1983,25 +1988,25 @@ void WebProcess::revokeUserMediaDeviceSandboxExtensions(const Vector<String>& ex
 
 #if ENABLE(VIDEO)
 void WebProcess::suspendAllMediaBuffering()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageMap.values())
         page->suspendAllMediaBuffering();
 }
 
 void WebProcess::resumeAllMediaBuffering()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& page : m_pageMap.values())
         page->resumeAllMediaBuffering();
 }
 #endif
 
 void WebProcess::clearCurrentModifierStateForTesting()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     PlatformKeyboardEvent::setCurrentModifierState({ });
 }
 
 bool WebProcess::areAllPagesThrottleable() const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return WTF::allOf(m_pageMap.values(), [](auto& page) {
         return page->isThrottleable();
     });
@@ -2009,7 +2014,7 @@ bool WebProcess::areAllPagesThrottleable() const
 
 #if HAVE(CVDISPLAYLINK)
 void WebProcess::displayWasRefreshed(uint32_t displayID, const DisplayUpdate& displayUpdate)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ASSERT(RunLoop::isMain());
     m_eventDispatcher->notifyScrollingTreesDisplayWasRefreshed(displayID);
     DisplayRefreshMonitorManager::sharedManager().displayWasUpdated(displayID, displayUpdate);
@@ -2018,18 +2023,18 @@ void WebProcess::displayWasRefreshed(uint32_t displayID, const DisplayUpdate& di
 
 #if ENABLE(INTELLIGENT_TRACKING_PREVENTION)
 void WebProcess::setThirdPartyCookieBlockingMode(ThirdPartyCookieBlockingMode thirdPartyCookieBlockingMode, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_thirdPartyCookieBlockingMode = thirdPartyCookieBlockingMode;
     completionHandler();
 }
 
 void WebProcess::setDomainsWithUserInteraction(HashSet<WebCore::RegistrableDomain>&& domains)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ResourceLoadObserver::shared().setDomainsWithUserInteraction(WTFMove(domains));
 }
 
 void WebProcess::setDomainsWithCrossPageStorageAccess(HashMap<TopFrameDomain, SubResourceDomain>&& domains, CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     for (auto& domain : domains.keys()) {
         for (auto& webPage : m_pageMap.values())
             webPage->addDomainWithPageLevelStorageAccess(domain, domains.get(domain));
@@ -2038,24 +2043,24 @@ void WebProcess::setDomainsWithCrossPageStorageAccess(HashMap<TopFrameDomain, Su
 }
 
 void WebProcess::sendResourceLoadStatisticsDataImmediately(CompletionHandler<void()>&& completionHandler)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     ResourceLoadObserver::shared().updateCentralStatisticsStore(WTFMove(completionHandler));
 }
 #endif
 
 #if ENABLE(GPU_PROCESS)
 void WebProcess::setUseGPUProcessForCanvasRendering(bool useGPUProcessForCanvasRendering)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_useGPUProcessForCanvasRendering = useGPUProcessForCanvasRendering;
 }
 
 void WebProcess::setUseGPUProcessForDOMRendering(bool useGPUProcessForDOMRendering)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_useGPUProcessForDOMRendering = useGPUProcessForDOMRendering;
 }
 
 void WebProcess::setUseGPUProcessForMedia(bool useGPUProcessForMedia)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (useGPUProcessForMedia == m_useGPUProcessForMedia)
         return;
 
@@ -2126,7 +2131,7 @@ void WebProcess::setUseGPUProcessForMedia(bool useGPUProcessForMedia)
 }
 
 bool WebProcess::shouldUseRemoteRenderingFor(RenderingPurpose purpose)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     switch (purpose) {
     case RenderingPurpose::Canvas:
         return m_useGPUProcessForCanvasRendering;
@@ -2145,12 +2150,12 @@ bool WebProcess::shouldUseRemoteRenderingFor(RenderingPurpose purpose)
 
 #if ENABLE(WEBGL)
 void WebProcess::setUseGPUProcessForWebGL(bool useGPUProcessForWebGL)
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     m_useGPUProcessForWebGL = useGPUProcessForWebGL;
 }
 
 bool WebProcess::shouldUseRemoteRenderingForWebGL() const
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return m_useGPUProcessForWebGL;
 }
 #endif // ENABLE(WEBGL)
@@ -2159,7 +2164,7 @@ bool WebProcess::shouldUseRemoteRenderingForWebGL() const
 
 #if ENABLE(MEDIA_STREAM)
 SpeechRecognitionRealtimeMediaSourceManager& WebProcess::ensureSpeechRecognitionRealtimeMediaSourceManager()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     if (!m_speechRecognitionRealtimeMediaSourceManager)
         m_speechRecognitionRealtimeMediaSourceManager = makeUnique<SpeechRecognitionRealtimeMediaSourceManager>(*parentProcessConnection());
 
@@ -2169,21 +2174,21 @@ SpeechRecognitionRealtimeMediaSourceManager& WebProcess::ensureSpeechRecognition
 
 #if ENABLE(GPU_PROCESS) && ENABLE(LEGACY_ENCRYPTED_MEDIA)
 RemoteLegacyCDMFactory& WebProcess::legacyCDMFactory()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return *supplement<RemoteLegacyCDMFactory>();
 }
 #endif
 
 #if ENABLE(GPU_PROCESS) && ENABLE(ENCRYPTED_MEDIA)
 RemoteCDMFactory& WebProcess::cdmFactory()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return *supplement<RemoteCDMFactory>();
 }
 #endif
 
 #if ENABLE(GPU_PROCESS)
 RemoteMediaEngineConfigurationFactory& WebProcess::mediaEngineConfigurationFactory()
-{
+{fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
     return *supplement<RemoteMediaEngineConfigurationFactory>();
 }
 #endif

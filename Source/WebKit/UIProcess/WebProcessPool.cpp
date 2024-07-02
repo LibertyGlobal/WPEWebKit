@@ -1693,6 +1693,10 @@ void WebProcessPool::garbageCollectJavaScriptObjects()
     sendToAllProcesses(Messages::WebProcess::GarbageCollectJavaScriptObjects());
 }
 
+void disableTempMiniMode() {
+    // sendToAllProcesses(Messages::WebProcess::GarbageCollectJavaScriptObjects());
+}
+
 void WebProcessPool::setJavaScriptGarbageCollectorTimerEnabled(bool flag)
 {
     sendToAllProcesses(Messages::WebProcess::SetJavaScriptGarbageCollectorTimerEnabled(flag));
