@@ -806,12 +806,20 @@ void VM::deleteAllCode(DeleteAllCodeEffort effort)
 void VM::shrinkFootprintWhenIdle()
 {
     whenIdle([=, this] () {
+        /*bool _FALSE = false;
+        bool _TRUE = true;
+        bool wasnt_in_temp_mini = temporaryMiniMode.compare_exchange_weak(_FALSE, true);*/
+        fprintf(stderr, "xaxa shrinkFootprintWhenIdle: tempmini before GC is :%d\n", temporaryMiniMode.load());
         sanitizeStackForVM(*this);
         deleteAllCode(DeleteAllCodeIfNotCollecting);
         heap.collectNow(Synchronousness::Sync, CollectionScope::Full);
         // FIXME: Consider stopping various automatic threads here.
         // https://bugs.webkit.org/show_bug.cgi?id=185447
         WTF::releaseFastMallocFreeMemory();
+        /*if (wasnt_in_temp_mini) {
+            temporaryMiniMode.compare_exchange_weak(_TRUE, false);
+        }*/
+        fprintf(stderr, "xaxa shrinkFootprintWhenIdle: tempmini AT EXIT is :%d\n", temporaryMiniMode.load());
     });
 }
 
@@ -1475,5 +1483,7 @@ void VM::removeLoopHintExecutionCounter(const JSInstruction* instruction)
     if (!iter->value.first)
         m_loopHintExecutionCounts.remove(iter);
 }
+
+std::atomic_bool VM::temporaryMiniMode {false};
 
 } // namespace JSC
