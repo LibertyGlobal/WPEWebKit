@@ -442,6 +442,7 @@ void FontCache::invalidateAllFontCaches(ShouldRunInvalidationCallback shouldRunI
 
 void FontCache::releaseNoncriticalMemory()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     purgeInactiveFontData();
     m_fontCascadeCache.clearWidthCaches();
     platformReleaseNoncriticalMemory();
@@ -449,6 +450,7 @@ void FontCache::releaseNoncriticalMemory()
 
 void FontCache::releaseNoncriticalMemoryInAllFontCaches()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     dispatchToAllFontCaches([](FontCache& fontCache) {
         fontCache.releaseNoncriticalMemory();
     });

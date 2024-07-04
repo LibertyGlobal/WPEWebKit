@@ -45,6 +45,7 @@ StructureAlignedMemoryAllocator::StructureAlignedMemoryAllocator(CString name)
 
 StructureAlignedMemoryAllocator::~StructureAlignedMemoryAllocator()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     releaseMemoryFromSubclassDestructor();
 }
 

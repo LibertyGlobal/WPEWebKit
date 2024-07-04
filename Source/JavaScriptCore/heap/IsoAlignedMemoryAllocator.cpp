@@ -36,6 +36,7 @@ IsoAlignedMemoryAllocator::IsoAlignedMemoryAllocator(CString name)
 
 IsoAlignedMemoryAllocator::~IsoAlignedMemoryAllocator()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     releaseMemoryFromSubclassDestructor();
 }
 

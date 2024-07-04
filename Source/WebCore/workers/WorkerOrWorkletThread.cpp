@@ -324,6 +324,7 @@ void WorkerOrWorkletThread::resume()
 
 void WorkerOrWorkletThread::releaseFastMallocFreeMemoryInAllThreads()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     Locker locker { workerOrWorkletThreadsLock() };
     for (auto* workerOrWorkletThread : workerOrWorkletThreads()) {
         workerOrWorkletThread->runLoop().postTask([] (ScriptExecutionContext&) {

@@ -4483,6 +4483,7 @@ void WebPage::didCompletePlatformRenderingUpdate()
 
 void WebPage::releaseMemory(Critical)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
 #if ENABLE(GPU_PROCESS)
     if (m_remoteRenderingBackendProxy)
         m_remoteRenderingBackendProxy->remoteResourceCacheProxy().releaseMemory();

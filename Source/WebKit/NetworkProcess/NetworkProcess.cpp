@@ -305,6 +305,7 @@ AuthenticationManager& NetworkProcess::downloadsAuthenticationManager()
 
 void NetworkProcess::lowMemoryHandler(Critical critical)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     if (m_suppressMemoryPressureHandler)
         return;
 

@@ -634,11 +634,13 @@ TryMallocReturnValue tryFastRealloc(void* object, size_t newSize)
 
 void releaseFastMallocFreeMemoryForThisThread()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     bmalloc::api::scavengeThisThread();
 }
 
 void releaseFastMallocFreeMemory()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     bmalloc::api::scavenge();
 }
 

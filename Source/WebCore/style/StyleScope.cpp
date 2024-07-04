@@ -160,6 +160,7 @@ void Scope::clearResolver()
 
 void Scope::releaseMemory()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     if (!m_shadowRoot) {
         for (auto* descendantShadowRoot : m_document.inDocumentShadowRoots())
             descendantShadowRoot->styleScope().releaseMemory();

@@ -205,7 +205,7 @@ void Scavenger::scavenge()
 
     UniqueLockHolder lock(m_scavengingMutex);
 
-    if (verbose) {
+    if (verbose || Scavenger::get()->freeableMemory() > 10*1024*1024) {
         fprintf(stderr, "--------------------------------\n");
         fprintf(stderr, "--before scavenging--\n");
         dumpStats();
@@ -255,7 +255,7 @@ void Scavenger::scavenge()
         m_deferredDecommits.shrink(0);
     }
 
-    if (verbose) {
+    if (verbose || Scavenger::get()->freeableMemory() > 10*1024*1024) {
         fprintf(stderr, "--after scavenging--\n");
         dumpStats();
         fprintf(stderr, "--------------------------------\n");
@@ -268,7 +268,7 @@ void Scavenger::scavenge()
     if (++_scavcounter % 100 == 0) {
         uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - std::chrono::time_point<std::chrono::steady_clock>()).count();
         auto dt = (now - _last_time);
-        fprintf(stderr, "bmalloc: another 100 scavenges\n");
+        fprintf(stderr, "bmalloc: stats\n");
         if (_last_time > 0) {
             fprintf(stderr, "   dt: %llu[ms], total time spent: %llu ; %.3f\n", dt, _total_time, (float)_total_time/dt );
         }

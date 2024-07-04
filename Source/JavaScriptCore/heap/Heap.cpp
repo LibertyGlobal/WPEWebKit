@@ -461,7 +461,7 @@ void Heap::dumpHeapStatisticsAtVMDestruction()
 
 // The VM is being destroyed and the collector will never run again.
 // Run all pending finalizers now because we won't get another chance.
-void Heap::lastChanceToFinalize()
+void Heap::lastChanceToFinalize() /// TODO ZAWOŁAĆ ????
 {
     MonotonicTime before;
     if (UNLIKELY(Options::logGC())) {

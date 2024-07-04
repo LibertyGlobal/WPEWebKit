@@ -141,6 +141,7 @@ static size_t processMemoryUsage()
 
 void MemoryPressureHandler::respondToMemoryPressure(Critical critical, Synchronous synchronous)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     uninstall();
 
     MonotonicTime startTime = MonotonicTime::now();

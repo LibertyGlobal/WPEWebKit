@@ -587,6 +587,7 @@ WorkerThread& WorkerGlobalScope::thread() const
 
 void WorkerGlobalScope::releaseMemory(Synchronous synchronous)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     ASSERT(isContextThread());
     deleteJSCodeAndGC(synchronous);
     clearDecodedScriptData();
@@ -621,8 +622,10 @@ void WorkerGlobalScope::deleteJSCodeAndGC(Synchronous synchronous)
 
 void WorkerGlobalScope::releaseMemoryInWorkers(Synchronous synchronous)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     Locker locker { allWorkerGlobalScopeIdentifiersLock };
     for (auto& globalScopeIdentifier : allWorkerGlobalScopeIdentifiers()) {
+        fprintf(stderr, "xaxa %s:%d \tNEXT WORKER\n", __PRETTY_FUNCTION__, __LINE__);
         postTaskTo(globalScopeIdentifier, [synchronous](auto& context) {
             downcast<WorkerGlobalScope>(context).releaseMemory(synchronous);
         });

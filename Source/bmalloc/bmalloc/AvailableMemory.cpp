@@ -126,31 +126,35 @@ struct LinuxMemory {
 
     size_t footprint() const
     {
-        if (statmFd == -1)
-            return 0;
-
-        std::array<char, 256> statmBuffer;
-        ssize_t numBytes = pread(statmFd, statmBuffer.data(), statmBuffer.size(), 0);
-        if (numBytes <= 0)
-            return 0;
-
-        std::array<char, 32> rssBuffer;
-        {
-            auto begin = std::find(statmBuffer.begin(), statmBuffer.end(), ' ');
-            if (begin == statmBuffer.end())
+        size_t ret = [this]() -> size_t {
+            if (statmFd == -1)
                 return 0;
 
-            std::advance(begin, 1);
-            auto end = std::find(begin, statmBuffer.end(), ' ');
-            if (end == statmBuffer.end())
+            std::array<char, 256> statmBuffer;
+            ssize_t numBytes = pread(statmFd, statmBuffer.data(), statmBuffer.size(), 0);
+            if (numBytes <= 0)
                 return 0;
 
-            auto last = std::copy_n(begin, std::min<size_t>(31, std::distance(begin, end)), rssBuffer.begin());
-            *last = '\0';
-        }
+            std::array<char, 32> rssBuffer;
+            {
+                auto begin = std::find(statmBuffer.begin(), statmBuffer.end(), ' ');
+                if (begin == statmBuffer.end())
+                    return 0;
 
-        unsigned long dirtyPages = strtoul(rssBuffer.data(), nullptr, 10);
-        return dirtyPages * pageSize;
+                std::advance(begin, 1);
+                auto end = std::find(begin, statmBuffer.end(), ' ');
+                if (end == statmBuffer.end())
+                    return 0;
+
+                auto last = std::copy_n(begin, std::min<size_t>(31, std::distance(begin, end)), rssBuffer.begin());
+                *last = '\0';
+            }
+
+            unsigned long dirtyPages = strtoul(rssBuffer.data(), nullptr, 10);
+            return dirtyPages * pageSize;
+        }();
+        // fprintf(stderr, "xaxa %s footprint: %zu\n", __PRETTY_FUNCTION__, ret);
+        return ret;
     }
 
     long pageSize { 0 };
@@ -253,6 +257,7 @@ MemoryStatus memoryStatus()
 
     double percentInUse = static_cast<double>(memoryFootprint) / static_cast<double>(availableMemory());
     double percentAvailableMemoryInUse = std::min(percentInUse, 1.0);
+    // fprintf(stderr, "xaxa memoryFootprint: %zu percentAvailableMemoryInUse: %.2f\n", memoryFootprint, percentAvailableMemoryInUse);
     return MemoryStatus(memoryFootprint, percentAvailableMemoryInUse);
 }
 #endif

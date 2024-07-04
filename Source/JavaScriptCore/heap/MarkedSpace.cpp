@@ -188,7 +188,7 @@ MarkedSpace::~MarkedSpace()
     ASSERT(!m_blocks.set().size());
 }
 
-void MarkedSpace::freeMemory()
+void MarkedSpace::freeMemory() //// TODO ZAWOŁAĆ TO VIA VM ?????
 {
     forEachBlock(
         [&] (MarkedBlock::Handle* block) {

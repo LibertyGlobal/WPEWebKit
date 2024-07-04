@@ -68,6 +68,7 @@ namespace WebCore {
 
 static void releaseNoncriticalMemory(MaintainMemoryCache maintainMemoryCache)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     RenderTheme::singleton().purgeCaches();
 
     FontCache::releaseNoncriticalMemoryInAllFontCaches();
@@ -92,6 +93,7 @@ static void releaseNoncriticalMemory(MaintainMemoryCache maintainMemoryCache)
 
 static void releaseCriticalMemory(Synchronous synchronous, MaintainBackForwardCache maintainBackForwardCache, MaintainMemoryCache maintainMemoryCache)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     // Right now, the only reason we call release critical memory while not under memory pressure is if the process is about to be suspended.
     if (maintainBackForwardCache == MaintainBackForwardCache::No) {
         PruningReason pruningReason = MemoryPressureHandler::singleton().isUnderMemoryPressure() ? PruningReason::MemoryPressure : PruningReason::ProcessSuspended;

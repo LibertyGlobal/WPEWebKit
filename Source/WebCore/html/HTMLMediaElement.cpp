@@ -8442,13 +8442,13 @@ void HTMLMediaElement::purgeBufferedDataIfPossible()
 {
     ALWAYS_LOG(LOGIDENTIFIER);
 
-    if (!MemoryPressureHandler::singleton().isUnderMemoryPressure() && mediaSession().preferredBufferingPolicy() == BufferingPolicy::Default)
-        return;
+    // if (!MemoryPressureHandler::singleton().isUnderMemoryPressure() && mediaSession().preferredBufferingPolicy() == BufferingPolicy::Default)
+    //     return;
 
-    if (isPlayingToExternalTarget()) {
+    /*if (isPlayingToExternalTarget()) {
         ALWAYS_LOG(LOGIDENTIFIER, "early return because playing to wireless target");
         return;
-    }
+    }*/
 
     setBufferingPolicy(BufferingPolicy::PurgeResources);
 }

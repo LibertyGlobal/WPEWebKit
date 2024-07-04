@@ -1046,13 +1046,27 @@ void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
 
 void WebProcess::garbageCollectJavaScriptObjects()
 {fprintf(stderr,"xexe %s ENTER\n",__PRETTY_FUNCTION__);
-    GCController::singleton().garbageCollectNow();
+    // GCController::singleton().garbageCollectNow();
 
-    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
-    commonVM().setTemporaryMiniMode(true);
-    GCController::singleton().garbageCollectNow();
-    WTF::releaseFastMallocFreeMemory();
+    // releaseMemory(Critical critical, Synchronous synchronous)
+
+    MemoryPressureHandler::singleton().releaseMemory(Critical::Yes, Synchronous::Yes);
+
+    for (auto& page : m_pageMap.values())
+        page->releaseMemory(Critical::Yes);
+
+    // GCController::singleton().garbageCollectNow();
+    // WTF::releaseFastMallocFreeMemory();
     JSLockHolder lock(commonVM());
+    commonVM().setTemporaryMiniMode(true);
+    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
+
+    fprintf(stderr, "------------------- Live JavaScript objects START\n");
+    auto typeCounts = commonVM().heap.objectTypeCounts();
+    // for (auto& it : *typeCounts)
+    //     fprintf(stderr, "xaxa\t %s" ": %d", it.key, it.value);
+    fprintf(stderr, "------------------- Live JavaScript objects END \n");
+
     commonVM().shrinkFootprintWhenIdle();
 }
 

@@ -544,7 +544,9 @@ public:
     }
 
     static void setTemporaryMiniMode(bool val) {
-        temporaryMiniMode.store(val);
+        temporaryMiniMode.store(val); // TODO: CZY TO NIE BEDZIE TYLKO NA 1m WATKU???
+/*        if (val) WTF::fastEnableMiniMode();
+        else WTF::fastDisableMiniMode();*/
     }
 
     static bool useUnlinkedCodeBlockJettisoning()

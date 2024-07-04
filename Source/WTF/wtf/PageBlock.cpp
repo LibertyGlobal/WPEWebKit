@@ -35,6 +35,17 @@
 #include <windows.h>
 #endif
 
+
+#if OS(DARWIN) || PLATFORM(PLAYSTATION) || CPU(MIPS) || CPU(MIPS64) || CPU(LOONGARCH64) || (OS(LINUX) && CPU(ARM64) && !USE(64KB_PAGE_BLOCK))
+wpoekfwpoekfpwoekf
+#elif USE(64KB_PAGE_BLOCK) || CPU(PPC) || CPU(PPC64) || CPU(PPC64LE) || CPU(UNKNOWN)
+wpoekfwpoekfpwoekf
+#elif OS(WINDOWS) || CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(ARM64) || CPU(RISCV64)
+
+#else
+pojpokpsodkf
+#endif
+
 namespace WTF {
 
 static size_t s_pageSize;

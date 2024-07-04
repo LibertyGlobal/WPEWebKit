@@ -148,6 +148,7 @@ void AudioBuffer::invalidate()
 
 void AudioBuffer::releaseMemory()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     Locker locker { m_channelsLock };
     m_channels = { };
     m_channelWrappers = { };
