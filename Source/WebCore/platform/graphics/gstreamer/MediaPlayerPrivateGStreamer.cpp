@@ -533,7 +533,7 @@ bool MediaPlayerPrivateGStreamer::doSeek(const MediaTime& position, float rate, 
     if (!m_downloadBuffer && !m_isChangingRate) {
         GST_DEBUG_OBJECT(pipeline(), "[Buffering] Pausing pipeline, resetting buffering level to 0 and forcing m_isBuffering true before seeking on stream mode");
 
-#ifdef (PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM))
+#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
         m_streamBufferingLevelMovingAverage.reset(0);
 #endif
 
@@ -1330,7 +1330,7 @@ bool MediaPlayerPrivateGStreamer::queryBufferingPercentage(GstBufferingMode& mod
 
     bool shouldDownload = m_fillTimer.isActive();
 
-#ifdef (PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM))
+#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
     // In cases where we know for sure that queue2 is being used (stream mode), let's ask it directly.
     if (!queryOk) {
         queryOk = (!shouldDownload && m_queue2 && gst_element_query(m_queue2.get(), query.get()));
@@ -2056,7 +2056,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         }
 #endif
 
-#ifdef (PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM))
+#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
         if (currentState == GST_STATE_NULL && newState == GST_STATE_READY
             && g_strstr_len(GST_MESSAGE_SRC_NAME(message), 13, "brcmvidfilter")) {
             m_vidfilter = GST_ELEMENT(GST_MESSAGE_SRC(message));
@@ -2311,7 +2311,7 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
     int percentage;
     gst_message_parse_buffering(message, &percentage);
 
-    #ifdef (PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM))
+#if PLATFORM(BCM_NEXUS) || PLATFORM(BROADCOM)
     // The Nexus playpump buffers a lot of data. Let's add it as if it had been buffered by the GstQueue2
     // (only when using in-memory buffering), so we get more realistic percentages.
     if (mode == GST_BUFFERING_STREAM && m_vidfilter)
@@ -2363,7 +2363,7 @@ void MediaPlayerPrivateGStreamer::updateBufferingStatus(GstBufferingMode mode, d
             boolForPrinting(m_didDownloadFinish), lowWatermark, percentage, highWatermark);
     }
 
-    / Hysteresis for m_isBuffering.
+    // Hysteresis for m_isBuffering.
     if (!m_isBuffering && percentage < lowWatermark) {
         GST_TRACE("[Buffering] m_isBuffering: %s, percentage: %f, lowWatermark: %f. Setting m_isBuffering to true",
             boolForPrinting(m_isBuffering), percentage, lowWatermark);

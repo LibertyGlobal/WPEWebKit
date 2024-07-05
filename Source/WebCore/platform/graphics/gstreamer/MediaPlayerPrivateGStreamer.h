@@ -707,7 +707,7 @@ private:
 #endif
 
     bool m_didTryToRecoverPlayingState { false };
-
+    
     // Specific to MediaStream playback.
     MediaTime m_startTime;
     MediaTime m_pausedTime;
