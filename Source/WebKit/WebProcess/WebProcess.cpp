@@ -1050,24 +1050,32 @@ void WebProcess::garbageCollectJavaScriptObjects()
 
     // releaseMemory(Critical critical, Synchronous synchronous)
 
-    MemoryPressureHandler::singleton().releaseMemory(Critical::Yes, Synchronous::Yes);
-
-    for (auto& page : m_pageMap.values())
-        page->releaseMemory(Critical::Yes);
-
-    // GCController::singleton().garbageCollectNow();
-    // WTF::releaseFastMallocFreeMemory();
-    JSLockHolder lock(commonVM());
-    commonVM().setTemporaryMiniMode(true);
     fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects\n");
+    {
+        JSLockHolder lock(commonVM());
+        fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects: commonVM LOCK TAKEN\n");
 
-    fprintf(stderr, "------------------- Live JavaScript objects START\n");
-    auto typeCounts = commonVM().heap.objectTypeCounts();
-    // for (auto& it : *typeCounts)
-    //     fprintf(stderr, "xaxa\t %s" ": %d", it.key, it.value);
-    fprintf(stderr, "------------------- Live JavaScript objects END \n");
+        // MemoryPressureHandler::singleton().releaseMemory(Critical::Yes, Synchronous::Yes);
 
-    commonVM().shrinkFootprintWhenIdle();
+        // for (auto& page : m_pageMap.values())
+        //     page->releaseMemory(Critical::Yes);
+
+        // GCController::singleton().garbageCollectNow();
+        // WTF::releaseFastMallocFreeMemory();
+
+        // commonVM().setTemporaryMiniMode(true);
+
+
+        // fprintf(stderr, "------------------- Live JavaScript objects START\n");
+        // auto typeCounts = commonVM().heap.objectTypeCounts();
+        // for (auto& it : *typeCounts)
+        //     fprintf(stderr, "\t %s" ": %d\n", it.key, it.value);
+        fprintf(stderr, "------------------- Live JavaScript objects END \n");
+
+        commonVM().shrinkFootprintWhenIdle();
+    }
+
+    fprintf(stderr, "xaxa WebProcess::garbageCollectJavaScriptObjects: commonVM LOCK RELEASED\n");
 }
 
 void WebProcess::backgroundResponsivenessPing()

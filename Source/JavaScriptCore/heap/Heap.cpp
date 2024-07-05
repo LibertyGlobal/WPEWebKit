@@ -88,6 +88,8 @@
 #include <wtf/SimpleStats.h>
 #include <wtf/Threading.h>
 
+#include <map>
+
 #if USE(BMALLOC_MEMORY_FOOTPRINT_API)
 #include <bmalloc/bmalloc.h>
 #endif
@@ -982,15 +984,25 @@ std::unique_ptr<TypeCountSet> Heap::protectedObjectTypeCounts()
 
 std::unique_ptr<TypeCountSet> Heap::objectTypeCounts()
 {
+    // cellSize
+    std::map<std::string, size_t> sizePerType;
     std::unique_ptr<TypeCountSet> result = makeUnique<TypeCountSet>();
     HeapIterationScope iterationScope(*this);
     m_objectSpace.forEachLiveCell(
         iterationScope,
         [&] (HeapCell* cell, HeapCell::Kind kind) -> IterationStatus {
-            if (isJSCellKind(kind))
+            if (isJSCellKind(kind)) {
                 recordType(*result, static_cast<JSCell*>(cell));
+                const ClassInfo* info = static_cast<JSCell*>(cell)->classInfo();
+                if (info && info->className) {
+                    sizePerType[std::string(info->className)] += cell->cellSize();
+                }
+            }
             return IterationStatus::Continue;
         });
+    for (auto& entry:sizePerType) {
+        fprintf(stderr,"\t%s : total %zu\n", entry.first.c_str(), entry.second);
+    }
     return result;
 }
 
