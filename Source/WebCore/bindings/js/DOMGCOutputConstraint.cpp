@@ -52,6 +52,7 @@ DOMGCOutputConstraint::~DOMGCOutputConstraint()
 template<typename Visitor>
 void DOMGCOutputConstraint::executeImplImpl(Visitor& visitor)
 {
+    fprintf(stderr, "xexe\tSTART: DOMGCOutputConstraint\n");
     Heap& heap = m_vm.heap;
     
     if (heap.mutatorExecutionVersion() == m_lastExecutionVersion)

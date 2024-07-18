@@ -238,6 +238,8 @@
 #include "LaunchServicesDatabaseManager.h"
 #endif
 
+#include <fstream>
+
 #undef WEBPROCESS_RELEASE_LOG
 #define RELEASE_LOG_SESSION_ID (m_sessionID ? m_sessionID->toUInt64() : 0)
 #if RELEASE_LOG_DISABLED
@@ -1043,6 +1045,15 @@ void WebProcess::isJITEnabled(CompletionHandler<void(bool)>&& completionHandler)
 void WebProcess::garbageCollectJavaScriptObjects()
 {
     GCController::singleton().garbageCollectNow();
+    const char ctlfile[] = "/tmp/WebKitBrowser/dump";
+    const char ctlfile2[] = "/tmp/WebKitBrowser/dump.old";
+    if (std::ifstream(ctlfile)) {
+        fprintf(stderr, "xaxa FILE: %s, exists; DUMP!\n", ctlfile);
+        std::rename(ctlfile, ctlfile2);
+        GCController::singleton().dumpHeap();
+    } else {
+        fprintf(stderr, "xaxa NO FILE: %s, no dump\n", ctlfile);
+    }
 }
 
 void WebProcess::backgroundResponsivenessPing()

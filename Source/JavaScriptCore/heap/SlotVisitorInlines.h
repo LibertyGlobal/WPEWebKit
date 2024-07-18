@@ -45,7 +45,7 @@ ALWAYS_INLINE void SlotVisitor::appendUnbarriered(JSCell* cell)
     
     if (!cell)
         return;
-    
+    // fprintf(stderr, "GC SlotVisitor::appendUnbarriered\t%p\t%s\n", cell, cell->className().characters());
     Dependency dependency;
     if (UNLIKELY(cell->isPreciseAllocation())) {
         if (LIKELY(cell->preciseAllocation().isMarked())) {

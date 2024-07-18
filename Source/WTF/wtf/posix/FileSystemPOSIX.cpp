@@ -217,14 +217,16 @@ CString fileSystemRepresentation(const String& path)
 #if !PLATFORM(COCOA)
 String openTemporaryFile(StringView prefix, PlatformFileHandle& handle, StringView suffix)
 {
+    WE DO NOT GO HERE
     // FIXME: Suffix is not supported, but OK for now since the code using it is macOS-port-only.
     ASSERT_UNUSED(suffix, suffix.isEmpty());
 
     char buffer[PATH_MAX];
-    const char* tmpDir = getenv("TMPDIR");
+    const char* tmpDir = "tmp/WebKitBrowser"; 
+    // //getenv("TMPDIR");
 
-    if (!tmpDir)
-        tmpDir = "/tmp";
+    // if (!tmpDir)
+    //     tmpDir = ;
 
     if (snprintf(buffer, PATH_MAX, "%s/%sXXXXXX", tmpDir, prefix.utf8().data()) >= PATH_MAX)
         goto end;

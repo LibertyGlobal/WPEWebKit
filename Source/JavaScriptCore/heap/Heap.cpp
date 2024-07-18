@@ -2781,6 +2781,7 @@ void Heap::addCoreConstraints()
     m_constraintSet->add(
         "Cs", "Conservative Scan",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this, lastVersion = static_cast<uint64_t>(0)] (auto& visitor) mutable {
+            fprintf(stderr, "xexe\tSTART: Cs\n");
             bool shouldNotProduceWork = lastVersion == m_phaseVersion;
 
             // For the GC Verfier, we would like to use the identical set of conservative roots
@@ -2798,9 +2799,13 @@ void Heap::addCoreConstraints()
                 ConservativeRoots conservativeRoots(*this);
                 SuperSamplerScope superSamplerScope(false);
 
+#if 1 // else coredumps
                 gatherStackRoots(conservativeRoots);
+#endif
+#if 1 // still seems to leak (to recheck? would explain ...)
                 gatherJSStackRoots(conservativeRoots);
                 gatherScratchBufferRoots(conservativeRoots);
+#endif
 
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::ConservativeScan);
                 visitor.append(conservativeRoots);
@@ -2809,6 +2814,7 @@ void Heap::addCoreConstraints()
                     m_verifierSlotVisitor->append(conservativeRoots);
                 }
             }
+#if 1 // else coredumps
             if (Options::useJIT()) {
                 // JITStubRoutines must be visited after scanning ConservativeRoots since JITStubRoutines depend on the hook executed during gathering ConservativeRoots.
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::JITStubRoutines);
@@ -2820,6 +2826,7 @@ void Heap::addCoreConstraints()
                     m_jitStubRoutines->traceMarkedStubRoutines(visitor);
                 }
             }
+#endif
             
             lastVersion = m_phaseVersion;
         })),
@@ -2828,35 +2835,47 @@ void Heap::addCoreConstraints()
     m_constraintSet->add(
         "Msr", "Misc Small Roots",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+
+            fprintf(stderr, "xexe\tSTART: Msr\n");
             VM& vm = this->vm();
-            if constexpr (objcAPIEnabled) {
+
+            if constexpr (objcAPIEnabled) { // objcAPIEnabled is FALSE for us
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::ExternalRememberedSet);
                 scanExternalRememberedSet(vm, visitor);
             }
 
+#if 1   // core dumps w/o this
             if (vm.smallStrings.needsToBeVisited(*m_collectionScope)) {
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::StrongReferences);
                 vm.smallStrings.visitStrongReferences(visitor);
             }
-            
+#endif
+
+#if 1   // still leaking
             {
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::ProtectedValues);
                 for (auto& pair : m_protectedValues)
                     visitor.appendUnbarriered(pair.key);
             }
+#endif
             
+#if 1 // still leaking
             if (!m_markListSet.isEmpty()) {
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::ConservativeScan);
                 MarkedVectorBase::markLists(visitor, m_markListSet);
             }
+#endif
 
+#if 1 // still leaks // ???
             {
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::MarkedJSValueRefArray);
                 m_markedJSValueRefArrays.forEach([&] (MarkedJSValueRefArray* array) {
                     array->visitAggregate(visitor);
                 });
             }
+#endif
 
+#if 0 // #12 seems to work
             {
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::VMExceptions);
                 visitor.appendUnbarriered(vm.exception());
@@ -2866,22 +2885,28 @@ void Heap::addCoreConstraints()
                 // the exception() getter because we want to assert in the getter that the
                 // TerminationException has been reified. Here, we don't care if it is
                 // reified or not.
+#if 0 // test #13
                 visitor.appendUnbarriered(vm.m_terminationException);
+#endif
             }
+#endif // #12
         })),
         ConstraintVolatility::GreyedByExecution);
     
     m_constraintSet->add(
         "Sh", "Strong Handles",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+            fprintf(stderr, "xexe\tSTART: Sh\n");
             SetRootMarkReasonScope rootScope(visitor, RootMarkReason::StrongHandles);
             m_handleSet.visitStrongHandles(visitor);
         })),
         ConstraintVolatility::GreyedByExecution);
     
+#if 1 // not enough, still leaked on Sky Show; also sometimes hangs
     m_constraintSet->add(
         "D", "Debugger",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+            fprintf(stderr, "xexe\tSTART: D\n");
             SetRootMarkReasonScope rootScope(visitor, RootMarkReason::Debugger);
 
             VM& vm = this->vm();
@@ -2895,18 +2920,23 @@ void Heap::addCoreConstraints()
                 shadowChicken->visitChildren(visitor);
         })),
         ConstraintVolatility::GreyedByExecution);
+#endif
     
+#if 1 // not enough, still leaked on Sky Show; also sometimes hangs
     m_constraintSet->add(
         "Ws", "Weak Sets",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+            fprintf(stderr, "xexe\tSTART: Ws\n");
             SetRootMarkReasonScope rootScope(visitor, RootMarkReason::WeakSets);
             m_objectSpace.visitWeakSets(visitor);
         })),
         ConstraintVolatility::GreyedByMarking);
-    
+#endif
+
     m_constraintSet->add(
         "O", "Output",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([] (auto& visitor) {
+            fprintf(stderr, "xexe\tSTART: O\n");
             Heap* heap = visitor.heap();
 
             // The `visitor2` argument is strangely named because the WinCairo port
@@ -2940,11 +2970,13 @@ void Heap::addCoreConstraints()
         ConstraintVolatility::GreyedByMarking,
         ConstraintParallelism::Parallel);
     
+#if 1 // still leaking without it
 #if ENABLE(JIT)
     if (Options::useJIT()) {
         m_constraintSet->add(
             "Jw", "JIT Worklist",
             MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+                fprintf(stderr, "xexe\tSTART: Jw\n");
                 SetRootMarkReasonScope rootScope(visitor, RootMarkReason::JITWorkList);
 
                 JITWorklist::ensureGlobalWorklist().visitWeakReferences(visitor);
@@ -2963,10 +2995,13 @@ void Heap::addCoreConstraints()
             ConstraintVolatility::GreyedByMarking);
     }
 #endif
-    
+#endif 
+
+#if 1 // still leaking
     m_constraintSet->add(
         "Cb", "CodeBlocks",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this] (auto& visitor) {
+            fprintf(stderr, "xexe\tSTART: Cb\n");
             SetRootMarkReasonScope rootScope(visitor, RootMarkReason::CodeBlocks);
             iterateExecutingAndCompilingCodeBlocksWithoutHoldingLocks(visitor,
                 [&] (CodeBlock* codeBlock) {
@@ -2977,8 +3012,12 @@ void Heap::addCoreConstraints()
                 });
         })),
         ConstraintVolatility::SeldomGreyed);
+#endif
     
+#if 1 // removing causes coredump
     m_constraintSet->add(makeUnique<MarkStackMergingConstraint>(*this));
+#endif
+
 }
 
 void Heap::addMarkingConstraint(std::unique_ptr<MarkingConstraint> constraint)

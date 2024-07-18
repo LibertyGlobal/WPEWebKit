@@ -224,7 +224,7 @@ void SlotVisitor::appendSlow(JSCell* cell, Dependency dependency)
 {
     if (UNLIKELY(m_heapAnalyzer))
         m_heapAnalyzer->analyzeEdge(m_currentCell, cell, rootMarkReason());
-
+    // if (!cell->isString()) fprintf(stderr, "GC SlotVisitor::appendSlow\t%p\t%s\n", cell, cell->className().characters());
     appendHiddenSlowImpl(cell, dependency);
 }
 
@@ -252,7 +252,9 @@ ALWAYS_INLINE void SlotVisitor::setMarkedAndAppendToMarkStack(ContainerType& con
 {
     if (container.testAndSetMarked(cell, dependency))
         return;
-    
+
+    // fprintf(stderr, "GC\tmarking:\t%p\t%s\n", cell, cell->className().characters());
+
     ASSERT(cell->structure());
     
     // Indicate that the object is grey and that:

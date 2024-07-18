@@ -95,10 +95,13 @@ Ref<HTMLDocument> HTMLDocument::createSynthesizedDocument(Frame& frame, const UR
 HTMLDocument::HTMLDocument(Frame* frame, const Settings& settings, const URL& url, ScriptExecutionContextIdentifier documentIdentifier, DocumentClasses documentClasses, unsigned constructionFlags)
     : Document(frame, settings, url, documentClasses | DocumentClasses(DocumentClass::HTML), constructionFlags, documentIdentifier)
 {
+    fprintf(stderr,"xexe HTMLDocument::HTMLDocument %p\n", this);
     clearXMLVersion();
 }
 
-HTMLDocument::~HTMLDocument() = default;
+HTMLDocument::~HTMLDocument() {
+    fprintf(stderr,"xexe HTMLDocument::~HTMLDocument %p\n", this);
+}
 
 int HTMLDocument::width()
 {

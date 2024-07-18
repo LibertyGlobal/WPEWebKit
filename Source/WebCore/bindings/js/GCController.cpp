@@ -156,7 +156,7 @@ void GCController::dumpHeap()
     {
         DeferGCForAWhile deferGC(vm); // Prevent concurrent GC from interfering with the full GC that the snapshot does.
 
-        HeapSnapshotBuilder snapshotBuilder(vm.ensureHeapProfiler(), HeapSnapshotBuilder::SnapshotType::GCDebuggingSnapshot);
+        HeapSnapshotBuilder snapshotBuilder(vm.ensureHeapProfiler(), HeapSnapshotBuilder::SnapshotType::InspectorSnapshot); // HeapSnapshotBuilder::SnapshotType::GCDebuggingSnapshot);
         snapshotBuilder.buildSnapshot();
 
         jsonData = snapshotBuilder.json();
