@@ -954,7 +954,7 @@ void WebProcessProxy::didBecomeUnresponsive()
 {
     WEBPROCESSPROXY_RELEASE_LOG_ERROR(Process, "didBecomeUnresponsive:");
 
-    Ref protectedThis { *this };
+    /*Ref protectedThis { *this };
 
     m_isResponsive = NoOrMaybe::No;
 
@@ -973,7 +973,7 @@ void WebProcessProxy::didBecomeUnresponsive()
         disableRemoteWorkers(RemoteWorkerType::ServiceWorker);
         disableRemoteWorkers(RemoteWorkerType::SharedWorker);
         terminate();
-    }
+    }*/
 }
 
 void WebProcessProxy::didBecomeResponsive()

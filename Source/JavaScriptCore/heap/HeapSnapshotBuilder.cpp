@@ -36,6 +36,9 @@
 #include "VM.h"
 #include <wtf/HexNumber.h>
 #include <wtf/text/StringBuilder.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 namespace JSC {
 
@@ -350,7 +353,8 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
     HashMap<UniquedStringImpl*, unsigned> edgeNameIndexes;
     unsigned nextEdgeNameIndex = 0;
 
-    StringBuilder json;
+    // StringBuilder json;
+    std::ofstream jsonfile {"/tmp/WebKitBrowser/snapshot.json"};
 
     auto appendNodeJSON = [&] (const HeapSnapshotNode& node) {
         // Let the client decide if they want to allow or disallow certain nodes.
@@ -420,19 +424,33 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
         }
 
         // <nodeId>, <sizeInBytes>, <nodeClassNameIndex>, <flags>, [<labelIndex>, <cellAddress>, <wrappedAddress>]
-        json.append(',', node.identifier, ',', node.cell->estimatedSizeInBytes(vm), ',', classNameIndex, ',', flags);
+#if 0
+        jsonfile << ',' << node.identifier << node.cell->estimatedSizeInBytes(vm) << classNameIndex << flags;
         if (m_snapshotType == SnapshotType::GCDebuggingSnapshot)
-            json.append(',', labelIndex, ",\"0x", hex(reinterpret_cast<uintptr_t>(node.cell), Lowercase), "\",\"0x", hex(reinterpret_cast<uintptr_t>(wrappedAddress), Lowercase), '"');
+            // jsonfile << ',' << labelIndex << ",\"0x" << hex(reinterpret_cast<uintptr_t>(node.cell), Lowercase).characters() << "\",\"0x" << hex(reinterpret_cast<uintptr_t>(wrappedAddress), Lowercase).characters() << '"';
+            jsonfile << ',' << labelIndex << ",\"0x" << std::hex << reinterpret_cast<uintptr_t>(node.cell) << std::dec << "\",\"0x" << std::hex << reinterpret_cast<uintptr_t>(wrappedAddress) << std::dec << '"';
+#endif
+
+        {
+            StringBuilder tmpjson;
+            tmpjson.append(',', node.identifier, ',', node.cell->estimatedSizeInBytes(vm), ',', classNameIndex, ',', flags);
+            if (m_snapshotType == SnapshotType::GCDebuggingSnapshot)
+                tmpjson.append(',', labelIndex, ",\"0x", hex(reinterpret_cast<uintptr_t>(node.cell), Lowercase), "\",\"0x", hex(reinterpret_cast<uintptr_t>(wrappedAddress), Lowercase), '"');
+
+            jsonfile << tmpjson.toString().utf8().data();
+        }
+
+
     };
 
     bool firstEdge = true;
     auto appendEdgeJSON = [&] (const HeapSnapshotEdge& edge) {
         if (!firstEdge)
-            json.append(',');
+            jsonfile << ',';
         firstEdge = false;
 
         // <fromNodeId>, <toNodeId>, <edgeTypeIndex>, <edgeExtraData>
-        json.append(edge.from.identifier, ',', edge.to.identifier, ',', edgeTypeToNumber(edge.type), ',');
+        jsonfile << edge.from.identifier << ',' << edge.to.identifier << ',' << int(edgeTypeToNumber(edge.type)) << ',';
         switch (edge.type) {
         case EdgeType::Property:
         case EdgeType::Variable: {
@@ -440,41 +458,41 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
             if (result.isNewEntry)
                 nextEdgeNameIndex++;
             unsigned edgeNameIndex = result.iterator->value;
-            json.append(edgeNameIndex);
+            jsonfile << edgeNameIndex;
             break;
         }
         case EdgeType::Index:
-            json.append(edge.u.index);
+            jsonfile << edge.u.index;
             break;
         default:
             // No data for this edge type.
-            json.append('0');
+            jsonfile << '0';
             break;
         }
     };
 
     // version
-    json.append("{\"version\":2");
+    jsonfile << "{\"version\":2";
 
     // type
-    json.append(",\"type\":\"", snapshotTypeToString(m_snapshotType), '"');
+    jsonfile << ",\"type\":\"" << snapshotTypeToString(m_snapshotType) << '"';
 
     // nodes
-    json.append(",\"nodes\":[");
+    jsonfile << ",\"nodes\":[";
     // <root>
     if (m_snapshotType == SnapshotType::GCDebuggingSnapshot)
-        json.append("0,0,0,0,0,\"0x0\",\"0x0\"");
+        jsonfile << "0,0,0,0,0,\"0x0\",\"0x0\"";
     else
-        json.append("0,0,0,0");
+        jsonfile << "0,0,0,0";
 
     for (HeapSnapshot* snapshot = m_profiler.mostRecentSnapshot(); snapshot; snapshot = snapshot->previous()) {
         for (auto& node : snapshot->m_nodes)
             appendNodeJSON(node);
     }
-    json.append(']');
+    jsonfile << ']';
 
     // node class names
-    json.append(",\"nodeClassNames\":[");
+    jsonfile << ",\"nodeClassNames\":[";
     Vector<String> orderedClassNames(classNameIndexes.size());
     for (auto& entry : classNameIndexes)
         orderedClassNames[entry.value] = entry.key;
@@ -482,12 +500,18 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
     bool firstClassName = true;
     for (auto& className : orderedClassNames) {
         if (!firstClassName)
-            json.append(',');
+            jsonfile << ',';
         firstClassName = false;
-        json.appendQuotedJSONString(className);
+        {
+            StringBuilder tmpjson;
+            tmpjson.appendQuotedJSONString(className);
+            auto str = tmpjson.toString();
+            jsonfile << str.utf8().data();
+        }
+        
     }
     orderedClassNames.clear();
-    json.append(']');
+    jsonfile << ']';
 
     // Process edges.
     // Replace pointers with identifiers.
@@ -530,16 +554,16 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
     });
 
     // edges
-    json.append(",\"edges\":[");
+    jsonfile << ",\"edges\":[";
     for (auto& edge : m_edges)
         appendEdgeJSON(edge);
-    json.append(']');
+    jsonfile << ']';
 
     // edge types
-    json.append(",\"edgeTypes\":[\"", edgeTypeToString(EdgeType::Internal), "\",\"", edgeTypeToString(EdgeType::Property), "\",\"", edgeTypeToString(EdgeType::Index), "\",\"", edgeTypeToString(EdgeType::Variable), "\"]");
+    jsonfile << ",\"edgeTypes\":[\"" << edgeTypeToString(EdgeType::Internal) << "\",\"" << edgeTypeToString(EdgeType::Property) << "\",\"" << edgeTypeToString(EdgeType::Index) << "\",\"" << edgeTypeToString(EdgeType::Variable) << "\"]";
 
     // edge names
-    json.append(",\"edgeNames\":[");
+    jsonfile << ",\"edgeNames\":[";
     Vector<UniquedStringImpl*> orderedEdgeNames(edgeNameIndexes.size());
     for (auto& entry : edgeNameIndexes)
         orderedEdgeNames[entry.value] = entry.key;
@@ -547,15 +571,21 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
     bool firstEdgeName = true;
     for (auto& edgeName : orderedEdgeNames) {
         if (!firstEdgeName)
-            json.append(',');
+            jsonfile << ',';
         firstEdgeName = false;
-        json.appendQuotedJSONString(edgeName);
+        {
+            StringBuilder tmpjson;
+            tmpjson.appendQuotedJSONString(edgeName);
+            auto str = tmpjson.toString();
+            jsonfile << str.utf8().data();
+        }
+        
     }
     orderedEdgeNames.clear();
-    json.append(']');
+    jsonfile << ']';
 
     if (m_snapshotType == SnapshotType::GCDebuggingSnapshot) {
-        json.append(",\"roots\":[");
+        jsonfile << ",\"roots\":[";
 
         HeapSnapshot* snapshot = m_profiler.mostRecentSnapshot();
 
@@ -568,17 +598,17 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
             }
 
             if (!firstNode)
-                json.append(',');
+                jsonfile << ',';
 
             firstNode = false;
-            json.append(snapshotNode.value().identifier);
+            jsonfile << snapshotNode.value().identifier;
 
             // Maybe we should just always encode the root names.
             auto rootName = rootMarkReasonDescription(it.value.markReason);
             auto result = labelIndexes.add(rootName, nextLabelIndex);
             if (result.isNewEntry)
                 nextLabelIndex++;
-            json.append(',', result.iterator->value);
+            jsonfile << ',' << result.iterator->value; // << "," << rootName.characters();
 
             unsigned reachabilityReasonIndex = 0;
             if (it.value.reachabilityFromOpaqueRootReasons) {
@@ -587,15 +617,16 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
                     nextLabelIndex++;
                 reachabilityReasonIndex = result.iterator->value;
             }
-            json.append(',', reachabilityReasonIndex);
+            jsonfile << ',' << reachabilityReasonIndex;
         }
 
-        json.append(']');
+        jsonfile << ']';
     }
 
-    if (m_snapshotType == SnapshotType::GCDebuggingSnapshot) {
+    if (m_snapshotType == SnapshotType::GCDebuggingSnapshot)
+    {
         // internal node descriptions
-        json.append(",\"labels\":[");
+        jsonfile << ",\"labels\":[";
 
         Vector<String> orderedLabels(labelIndexes.size());
         for (auto& entry : labelIndexes)
@@ -604,18 +635,24 @@ String HeapSnapshotBuilder::json(Function<bool (const HeapSnapshotNode&)> allowN
         bool firstLabel = true;
         for (auto& label : orderedLabels) {
             if (!firstLabel)
-                json.append(',');
+                jsonfile << ',';
 
             firstLabel = false;
-            json.appendQuotedJSONString(label);
+            {
+                StringBuilder tmpjson;
+                tmpjson.appendQuotedJSONString(label);
+                auto str = tmpjson.toString();
+                jsonfile << str.utf8().data();
+            }
+            
         }
         orderedLabels.clear();
 
-        json.append(']');
+        jsonfile << ']';
     }
 
-    json.append('}');
-    return json.toString();
+    jsonfile <<'}';
+    return WTF::String::fromUTF8("{}");
 }
 
 } // namespace JSC

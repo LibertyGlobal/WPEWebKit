@@ -137,7 +137,7 @@ private:
 
     void processDidBecomeUnresponsive(WebKit::WebPageProxy&) override
     {
-        webkitWebViewSetIsWebProcessResponsive(m_webView, false);
+        // webkitWebViewSetIsWebProcessResponsive(m_webView, false);
     }
 
     void decidePolicyForNavigationAction(WebPageProxy&, Ref<API::NavigationAction>&& navigationAction, Ref<WebFramePolicyListenerProxy>&& listener, API::Object* /* userData */) override

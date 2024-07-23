@@ -186,7 +186,7 @@ ALWAYS_INLINE JSC::GCClient::IsoSubspace* subspaceForImpl(JSC::VM& vm, GetClient
         return clientSpace;
 
     auto& heapData = clientData.heapData();
-    Locker locker { heapData.lock() };
+    //Locker locker { heapData.lock() };
 
     auto& subspaces = heapData.subspaces();
     JSC::IsoSubspace* space = getServer(subspaces);

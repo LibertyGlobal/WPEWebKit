@@ -112,7 +112,7 @@ void BackgroundProcessResponsivenessTimer::timeoutTimerFired()
 }
 
 void BackgroundProcessResponsivenessTimer::setResponsive(bool isResponsive)
-{
+{ /*
     if (m_isResponsive == isResponsive)
         return;
 
@@ -128,7 +128,7 @@ void BackgroundProcessResponsivenessTimer::setResponsive(bool isResponsive)
     } else {
         RELEASE_LOG_ERROR(PerformanceLogging, "Notifying the client that background WebProcess with pid %d has become unresponsive", m_webProcessProxy.processIdentifier());
         client().didBecomeUnresponsive();
-    }
+    }*/
 }
 
 bool BackgroundProcessResponsivenessTimer::shouldBeActive() const

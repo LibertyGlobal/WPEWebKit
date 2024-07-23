@@ -164,6 +164,7 @@ void NetworkProcessProxy::requestTermination()
 
 void NetworkProcessProxy::didBecomeUnresponsive()
 {
+    /*
     RELEASE_LOG_ERROR(Process, "NetworkProcessProxy::didBecomeUnresponsive: NetworkProcess with PID %d became unresponsive, terminating it", processIdentifier());
 
     // Let network process terminates itself and generate crash report for investigation of hangs.
@@ -182,7 +183,7 @@ void NetworkProcessProxy::didBecomeUnresponsive()
     }
 
     terminate();
-    networkProcessDidTerminate(ProcessTerminationReason::Unresponsive);
+    networkProcessDidTerminate(ProcessTerminationReason::Unresponsive);*/
 }
 
 void NetworkProcessProxy::sendCreationParametersToNewProcess()

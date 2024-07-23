@@ -47,6 +47,7 @@ void ResponsivenessTimer::invalidate()
 
 void ResponsivenessTimer::timerFired()
 {
+    return; 
     if (!m_waitingForTimer)
         return;
 
