@@ -405,6 +405,26 @@ void MediaPlayerPrivateGStreamer::prepareToPlay()
 
 void MediaPlayerPrivateGStreamer::play()
 {
+    //This piece of code is just for debug purpose only, not allowing more than one play/pause per wpe instance
+    //This can be used to check if app is issuing multiple play/pause which causes issues in certain cases
+    //It is enabled when the environment variable DEBUG_ONLY_ALLOW_FIRST_PLAY is defined
+    static bool onlyAllowFirstPlay = false;
+    static std::once_flag once;
+    std::call_once(once, []() {
+        auto s = String::fromLatin1(std::getenv("DEBUG_ONLY_ALLOW_FIRST_PLAY"));
+        if (!s.isEmpty()) {
+            String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
+            onlyAllowFirstPlay = (value == "1"_s || value == "t"_s || value == "true"_s);
+        }
+    });
+
+    static int timesCalled = 0;
+    timesCalled++;
+    if (onlyAllowFirstPlay && timesCalled > 1) {
+        GST_INFO("!!!! REFUSING to play() a %dth time FOR DEBUGGING PURPOSES !!!!", timesCalled);
+        return;
+    }
+
     if (isMediaStreamPlayer()) {
         m_pausedTime = MediaTime::invalidTime();
         if (m_startTime.isInvalid())
@@ -412,7 +432,8 @@ void MediaPlayerPrivateGStreamer::play()
     }
 
     if (!m_playbackRate) {
-        if (m_playbackRatePausedState == PlaybackRatePausedState::ManuallyPaused)
+        if (m_playbackRatePausedState == PlaybackRatePausedState::InitiallyPaused
+            || m_playbackRatePausedState == PlaybackRatePausedState::ManuallyPaused)
             m_playbackRatePausedState = PlaybackRatePausedState::RatePaused;
         return;
     }
@@ -430,6 +451,26 @@ void MediaPlayerPrivateGStreamer::play()
 
 void MediaPlayerPrivateGStreamer::pause()
 {
+    //This piece of code is just for debug purpose only, not allowing more than one play/pause per wpe instance
+    //This can be used to check if app is issuing multiple play/pause which causes issues in certain cases
+    //It is enabled when the environment variable DEBUG_ONLY_ALLOW_FIRST_PLAY is defined
+    static bool onlyAllowFirstPlay = false;
+    static std::once_flag once;
+    std::call_once(once, []() {
+        auto s = String::fromLatin1(std::getenv("DEBUG_ONLY_ALLOW_FIRST_PLAY"));
+        if (!s.isEmpty()) {
+            String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
+            onlyAllowFirstPlay = (value == "1"_s || value == "t"_s || value == "true"_s);
+        }
+    });
+
+    static int timesCalled = 0;
+    timesCalled++;
+    if (onlyAllowFirstPlay && timesCalled > 0) {
+        GST_INFO("!!!! REFUSING to pause() a %dth time FOR DEBUGGING PURPOSES !!!!", timesCalled);
+        return;
+    }
+
     if (isMediaStreamPlayer())
         m_pausedTime = currentMediaTime();
 
@@ -487,6 +528,16 @@ bool MediaPlayerPrivateGStreamer::doSeek(const MediaTime& position, float rate, 
     if (m_hasWebKitWebSrcSentEOS && m_downloadBuffer) {
         GST_DEBUG_OBJECT(pipeline(), "Setting high-percent=0 on GstDownloadBuffer to force 100%% buffered reporting");
         g_object_set(m_downloadBuffer.get(), "high-percent", 0, nullptr);
+    }
+
+    // Stream mode. Seek will automatically deplete buffer level, so we always want to pause the pipeline and wait until the
+    // buffer is replenished. But we don't want this behaviour on immediate seeks that only change the playback rate.
+    if (!m_downloadBuffer && !m_isChangingRate) {
+        GST_DEBUG_OBJECT(pipeline(), "[Buffering] Pausing pipeline, resetting buffering level to 0 and forcing m_isBuffering true before seeking on stream mode");
+
+        // Make sure that m_isBuffering is set to true, so that when buffering completes it's set to false again and playback resumes.
+        updateBufferingStatus(GST_BUFFERING_STREAM, 0.0, true);
+        changePipelineState(GST_STATE_PAUSED);
     }
 
     GST_DEBUG_OBJECT(pipeline(), "[Seek] Performing actual seek to %" GST_TIME_FORMAT " (endTime: %" GST_TIME_FORMAT ") at rate %f", GST_TIME_ARGS(toGstClockTime(startTime)), GST_TIME_ARGS(toGstClockTime(endTime)), rate);
@@ -1224,6 +1275,50 @@ void MediaPlayerPrivateGStreamer::commitLoad()
     updateStates();
 }
 
+std::optional<int> MediaPlayerPrivateGStreamer::queryBufferingPercentage()
+{
+    GRefPtr<GstQuery> query = adoptGRef(gst_query_new_buffering(GST_FORMAT_PERCENT));
+
+    bool isQueryOk = false;
+    const char* elementName = nullptr;
+
+    if (!isQueryOk) {
+        isQueryOk = (m_audioSink && gst_element_query(m_audioSink.get(), query.get()));
+        if (isQueryOk)
+            elementName = "audiosink";
+    }
+    if (!isQueryOk) {
+        isQueryOk = (m_videoSink && gst_element_query(m_videoSink.get(), query.get()));
+        if (isQueryOk)
+            elementName = "videosink";
+    }
+    if (!isQueryOk) {
+        isQueryOk = gst_element_query(m_pipeline.get(), query.get());
+        if (isQueryOk)
+            elementName = "pipeline";
+    }
+    if (!isQueryOk)
+        return std::nullopt;
+
+    int percentage = 0;
+    GstBufferingMode mode;
+    gst_query_parse_buffering_percent(query.get(), nullptr, &percentage);
+    gst_query_parse_buffering_stats(query.get(), &mode, nullptr, nullptr, nullptr);
+
+    if (!elementName)
+        elementName = "<undefined>";
+    GST_TRACE_OBJECT(pipeline(), "[Buffering] %s reports %d buffering", elementName, percentage);
+
+    if (mode != GST_BUFFERING_DOWNLOAD) {
+        GST_WARNING_OBJECT(pipeline(), "[Buffering] mode isn't GST_BUFFERING_DOWNLOAD, but it should be!");
+        ASSERT_NOT_REACHED();
+        return percentage;
+    }
+
+    return percentage;
+}
+
+// This method is only called when doing on-disk buffering. No need to apply any of the extra corrections done for Broadcom when stream buffering.
 void MediaPlayerPrivateGStreamer::fillTimerFired()
 {
     if (m_didErrorOccur) {
@@ -1232,16 +1327,11 @@ void MediaPlayerPrivateGStreamer::fillTimerFired()
         return;
     }
 
-    GRefPtr<GstQuery> query = adoptGRef(gst_query_new_buffering(GST_FORMAT_PERCENT));
     double fillStatus = 100.0;
-    GstBufferingMode mode = GST_BUFFERING_DOWNLOAD;
+    std::optional<int> percentage = queryBufferingPercentage();
 
-    if (gst_element_query(pipeline(), query.get())) {
-        gst_query_parse_buffering_stats(query.get(), &mode, nullptr, nullptr, nullptr);
-
-        int percentage;
-        gst_query_parse_buffering_percent(query.get(), nullptr, &percentage);
-        fillStatus = percentage;
+    if (percentage.has_value()) {
+        fillStatus = percentage.value();
     } else if (m_httpResponseTotalSize) {
         GST_DEBUG_OBJECT(pipeline(), "[Buffering] Query failed, falling back to network read position estimation");
         fillStatus = 100.0 * (static_cast<double>(m_networkReadPosition) / static_cast<double>(m_httpResponseTotalSize));
@@ -1250,7 +1340,7 @@ void MediaPlayerPrivateGStreamer::fillTimerFired()
         return;
     }
 
-    updateBufferingStatus(mode, fillStatus);
+    updateBufferingStatus(GST_BUFFERING_DOWNLOAD, fillStatus);
 }
 
 void MediaPlayerPrivateGStreamer::loadStateChanged()
@@ -2116,7 +2206,7 @@ void MediaPlayerPrivateGStreamer::processBufferingStats(GstMessage* message)
     int percentage;
     gst_message_parse_buffering(message, &percentage);
 
-    updateBufferingStatus(mode, percentage);
+    updateBufferingStatus(mode, static_cast<double>(percentage));
 }
 
 void MediaPlayerPrivateGStreamer::updateMaxTimeLoaded(double percentage)
@@ -2129,46 +2219,70 @@ void MediaPlayerPrivateGStreamer::updateMaxTimeLoaded(double percentage)
     GST_DEBUG_OBJECT(pipeline(), "[Buffering] Updated maxTimeLoaded: %s", toString(m_maxTimeLoaded).utf8().data());
 }
 
-void MediaPlayerPrivateGStreamer::updateBufferingStatus(GstBufferingMode mode, double percentage)
+void MediaPlayerPrivateGStreamer::updateBufferingStatus(GstBufferingMode mode, double percentage, bool resetHistory)
 {
-    bool wasBuffering = m_isBuffering;
+    m_wasBuffering = m_isBuffering;
+    m_previousBufferingPercentage = m_bufferingPercentage;
 
 #ifndef GST_DISABLE_GST_DEBUG
     GUniquePtr<char> modeString(g_enum_to_string(GST_TYPE_BUFFERING_MODE, mode));
     GST_DEBUG_OBJECT(pipeline(), "[Buffering] mode: %s, status: %f%%", modeString.get(), percentage);
 #endif
 
-    m_didDownloadFinish = percentage == 100;
+    double highWatermark = 100.0;
+    double lowWatermark = 100.0;
+    if (mode == GST_BUFFERING_STREAM && m_isLegacyPlaybin) {
+        highWatermark = 80.0;
+        lowWatermark = 20.0;
+    }
 
-    if (!m_didDownloadFinish)
+    // Hysteresis for m_didDownloadFinish.
+    if (m_didDownloadFinish && percentage < lowWatermark) {
+        GST_TRACE("[Buffering] m_didDownloadFinish: %s, percentage: %f, lowWatermark: %f. Setting m_didDownloadFinish to false",
+            boolForPrinting(m_didDownloadFinish), percentage, lowWatermark);
+        m_didDownloadFinish = false;
+    } else if (!m_didDownloadFinish && percentage >= highWatermark) {
+        GST_TRACE("[Buffering] m_didDownloadFinish: %s, percentage: %f, highWatermark: %f. Setting m_didDownloadFinish to true",
+            boolForPrinting(m_didDownloadFinish), percentage, highWatermark);
+        m_didDownloadFinish = true;
+    } else {
+        GST_TRACE("[Buffering] m_didDownloadFinish remains %s, lowWatermark: %f, percentage: %f, highWatermark: %f",
+            boolForPrinting(m_didDownloadFinish), lowWatermark, percentage, highWatermark);
+    }
+
+    // Hysteresis for m_isBuffering.
+    if (!m_isBuffering && percentage < lowWatermark) {
+        GST_TRACE("[Buffering] m_isBuffering: %s, percentage: %f, lowWatermark: %f. Setting m_isBuffering to true",
+            boolForPrinting(m_isBuffering), percentage, lowWatermark);
         m_isBuffering = true;
-    else
+    } else if (m_isBuffering && percentage >= highWatermark) {
+        GST_TRACE("[Buffering] m_isBuffering: %s, percentage: %f, highWatermark: %f. Setting m_isBuffering to false",
+            boolForPrinting(m_isBuffering), percentage, highWatermark);
+        m_isBuffering = false;
+    } else {
+        GST_TRACE("[Buffering] m_isBuffering remains %s, lowWatermark: %f, percentage: %f, highWatermark: %f",
+            boolForPrinting(m_isBuffering), lowWatermark, percentage, highWatermark);
+    }
+
+    if (m_didDownloadFinish)
         m_fillTimer.stop();
 
-    // Force buffering flag to be always false so we don't enter buffering state at all
-    m_isBuffering = false;
     m_bufferingPercentage = percentage;
-    switch (mode) {
-    case GST_BUFFERING_STREAM: {
-        updateMaxTimeLoaded(percentage);
 
-        m_bufferingPercentage = percentage;
-        if (m_didDownloadFinish || !wasBuffering)
-            updateStates();
-
-        break;
+    // resetHistory is used to forget about the past values and set them like the new ones. This is useful when resetting
+    // the percentage to 0 before a seek, in order to prevent that setting to be undone by chance in updateStates() if
+    // the pipeline is in GST_STATE_CHANGE_ASYNC. We want to make sure that we start from an m_isBuffering true state, so
+    // that the change to m_isBuffering false is detected. We want to prevent updateStates() undoing a change to true and
+    // keeping m_isBuffering to false, delay it, and when the buffering percentage reaches the high watermark it's ignored
+    // because of m_isBuffering being false because of the delay.
+    if (resetHistory) {
+        m_wasBuffering = m_isBuffering;
+        m_previousBufferingPercentage = m_bufferingPercentage;
     }
-    case GST_BUFFERING_DOWNLOAD: {
-        updateMaxTimeLoaded(percentage);
-        updateStates();
-        break;
-    }
-    default:
-#ifndef GST_DISABLE_GST_DEBUG
-        GST_DEBUG_OBJECT(pipeline(), "Unhandled buffering mode: %s", modeString.get());
-#endif
-        break;
-    }
+    updateMaxTimeLoaded(percentage);
+    updateStates();
+    GST_TRACE("[Buffering] Settled results: m_wasBuffering: %s, m_isBuffering: %s, m_previousBufferingPercentage: %d, m_bufferingPercentage: %d",
+        boolForPrinting(m_wasBuffering), boolForPrinting(m_isBuffering), m_previousBufferingPercentage, m_bufferingPercentage);
 }
 
 #if USE(GSTREAMER_MPEGTS)
@@ -2472,6 +2586,10 @@ void MediaPlayerPrivateGStreamer::updateStates()
         m_currentState = state;
         stateReallyChanged = true;
     }
+
+    // updateBufferingStatus() must have been called at some point before updateStates() and have set m_wasBuffering, m_isBuffering,
+    // m_previousBufferingPercentage and m_bufferingPercentage. We take decisions here based on their values.
+
     bool shouldUpdatePlaybackState = false;
     switch (getStateResult) {
     case GST_STATE_CHANGE_SUCCESS: {
@@ -2483,8 +2601,6 @@ void MediaPlayerPrivateGStreamer::updateStates()
             break;
 
         m_shouldResetPipeline = m_currentState <= GST_STATE_READY;
-
-        bool didBuffering = m_isBuffering;
 
         // Update ready and network states.
         switch (m_currentState) {
@@ -2499,18 +2615,8 @@ void MediaPlayerPrivateGStreamer::updateStates()
         case GST_STATE_PAUSED:
             FALLTHROUGH;
         case GST_STATE_PLAYING:
-            if (m_isBuffering) {
-                GRefPtr<GstQuery> query = adoptGRef(gst_query_new_buffering(GST_FORMAT_PERCENT));
-
-                m_isBuffering = m_bufferingPercentage < 100;
-                if ((m_audioSink && gst_element_query(m_audioSink.get(), query.get()))
-                    || (m_videoSink && gst_element_query(m_videoSink.get(), query.get()))
-                    || gst_element_query(m_pipeline.get(), query.get())) {
-                    gboolean isBuffering = m_isBuffering;
-                    gst_query_parse_buffering_percent(query.get(), &isBuffering, nullptr);
-                    GST_TRACE_OBJECT(pipeline(), "[Buffering] m_isBuffering forcefully updated from %d to %d", m_isBuffering, isBuffering);
-                    m_isBuffering = isBuffering;
-                }
+            if (m_wasBuffering) {
+                GST_TRACE("[Buffering] m_isBuffering: %s --> %s", boolForPrinting(m_wasBuffering), boolForPrinting(m_isBuffering));
 
                 if (!m_isBuffering) {
                     GST_INFO_OBJECT(pipeline(), "[Buffering] Complete.");
@@ -2543,7 +2649,7 @@ void MediaPlayerPrivateGStreamer::updateStates()
                 m_areVolumeAndMuteInitialized = true;
             }
 
-            if ((didBuffering && !m_isBuffering && !m_isPaused && m_playbackRate)
+            if ((m_wasBuffering && !m_isBuffering && !m_isPaused && m_playbackRatePausedState != PlaybackRatePausedState::ManuallyPaused && m_playbackRate)
                 || m_playbackRatePausedState == PlaybackRatePausedState::ShouldMoveToPlaying) {
                 m_playbackRatePausedState = PlaybackRatePausedState::Playing;
                 GST_INFO_OBJECT(pipeline(), "[Buffering] Restarting playback (because of buffering or resuming from zero playback rate)");
@@ -2552,7 +2658,7 @@ void MediaPlayerPrivateGStreamer::updateStates()
         } else if (m_currentState == GST_STATE_PLAYING) {
             m_isPaused = false;
 
-            shouldPauseForBuffering = (m_isBuffering && !m_isLiveStream.value_or(false));
+            shouldPauseForBuffering = (!m_wasBuffering && m_isBuffering && !m_isLiveStream.value_or(false));
             if (shouldPauseForBuffering || !m_playbackRate) {
                 GST_INFO_OBJECT(pipeline(), "[Buffering] Pausing stream for buffering or because of zero playback rate.");
                 changePipelineState(GST_STATE_PAUSED);
@@ -2581,6 +2687,15 @@ void MediaPlayerPrivateGStreamer::updateStates()
     case GST_STATE_CHANGE_ASYNC:
         GST_DEBUG_OBJECT(pipeline(), "Async: State: %s, pending: %s", gst_element_state_get_name(m_currentState), gst_element_state_get_name(pending));
         // Change in progress.
+
+	// Delay the m_isBuffering change by returning it to its previous value. Without this, the false --> true change
+        // would go unnoticed by the code that should trigger a pause.
+        if (m_wasBuffering != m_isBuffering && !m_isPaused && m_playbackRate) {
+            GST_TRACE_OBJECT(pipeline(), "[Buffering] Delaying m_isBuffering %s --> %s to force the proper change from not buffering to buffering when the async state change completes.", boolForPrinting(m_wasBuffering), boolForPrinting(m_isBuffering));
+            m_isBuffering = m_wasBuffering;
+            m_bufferingPercentage = m_previousBufferingPercentage;
+        }
+
         break;
     case GST_STATE_CHANGE_FAILURE:
         GST_DEBUG_OBJECT(pipeline(), "Failure: State: %s, pending: %s", gst_element_state_get_name(m_currentState), gst_element_state_get_name(pending));

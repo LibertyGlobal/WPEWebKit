@@ -255,6 +255,8 @@ public:
     // to avoid deadlocks from threads in the playback pipeline waiting for the main thread.
     AbortableTaskQueue& sinkTaskQueue() { return m_sinkTaskQueue; }
 
+    bool shouldDownload() { return m_fillTimer.isActive(); }
+
 #if USE(GSTREAMER_HOLEPUNCH)
     class GStreamerHolePunchHost : public ThreadSafeRefCounted<GStreamerHolePunchHost> {
     public:
@@ -292,13 +294,20 @@ protected:
     };
 
     enum class PlaybackRatePausedState {
-        ManuallyPaused, // Initialization or user explicitly paused. This takes preference over RatePaused. You don't
-                        // transition from Manually to Rate Paused unless there is a play while rate == 0.
-        RatePaused, // Pipeline was playing and rate was set to zero.
-        ShouldMoveToPlaying, // Pipeline was paused because of zero rate and it should be playing. This is not a
-                             // definitive state, just an operational transition from RatePaused to Playing to keep the
-                             // pipeline state changes contained in updateStates.
-        Playing, // Pipeline is playing and it should be.
+        // Initialization. This takes preference over RatePaused. You don't
+        // transition from Initially to Rate Paused unless there is a play while rate == 0.
+        InitiallyPaused,
+        // User explicitly paused. This takes preference over RatePaused. You don't
+        // transition from Manually to Rate Paused unless there is a play while rate == 0.
+        ManuallyPaused,
+        // Pipeline was playing and rate was set to zero.
+        RatePaused,
+        // Pipeline was paused because of zero rate and it should be playing. This is not a
+        // definitive state, just an operational transition from RatePaused to Playing to keep the
+        // pipeline state changes contained in updateStates.
+        ShouldMoveToPlaying,
+        // Pipeline is playing and it should be.
+        Playing,
     };
 
     static bool isAvailable();
@@ -388,7 +397,7 @@ protected:
     mutable std::optional<bool> m_isLiveStream;
     bool m_isPaused { true };
     float m_playbackRate { 1 };
-    PlaybackRatePausedState m_playbackRatePausedState { PlaybackRatePausedState::ManuallyPaused };
+    PlaybackRatePausedState m_playbackRatePausedState { PlaybackRatePausedState::InitiallyPaused };
     GstState m_currentState { GST_STATE_NULL };
     GstState m_oldState { GST_STATE_NULL };
     GstState m_requestedState { GST_STATE_VOID_PENDING };
@@ -514,7 +523,7 @@ private:
 
     virtual void updateDownloadBufferingFlag();
     void processBufferingStats(GstMessage*);
-    void updateBufferingStatus(GstBufferingMode, double percentage);
+    void updateBufferingStatus(GstBufferingMode, double percentage, bool resetHistory = false);
     void updateMaxTimeLoaded(double percentage);
 
 #if USE(GSTREAMER_MPEGTS)
@@ -538,6 +547,7 @@ private:
     void configureElementPlatformQuirks(GstElement*);
 #endif
 
+    std::optional<int> queryBufferingPercentage();
     void setPlaybinURL(const URL& urlString);
 
     void updateTracks(const GRefPtr<GstObject>& collectionOwner);
@@ -583,8 +593,14 @@ private:
     RefPtr<TextureMapperPlatformLayerProxy> m_platformLayerProxy;
 #endif
 #endif
+
+    // These attributes can ONLY be changed from updateBufferingStatus() in order to keep the
+    // hysteresis level detection consistent between buffer percentage update cycles.
+    bool m_wasBuffering { false };
     bool m_isBuffering { false };
+    int m_previousBufferingPercentage { 0 };
     int m_bufferingPercentage { 0 };
+
     bool m_hasWebKitWebSrcSentEOS { false };
     mutable unsigned long long m_totalBytes { 0 };
     URL m_url;
