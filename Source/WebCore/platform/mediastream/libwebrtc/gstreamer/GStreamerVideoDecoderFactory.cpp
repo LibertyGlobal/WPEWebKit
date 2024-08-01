@@ -102,7 +102,7 @@ public:
         auto capsfilter = CreateFilter();
         auto decoder = makeElement("decodebin");
 
-        updateCapsFromImageSize(codecSettings.max_render_resolution().Width(), codecSettings.max_render_resolution().Height());
+        UpdateCaps(codecSettings.max_render_resolution().Width(), codecSettings.max_render_resolution().Height());
 
         m_pipeline = makeElement("pipeline");
         connectSimpleBusMessageCallback(m_pipeline.get());
@@ -211,13 +211,8 @@ public:
             return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
         }
 
-        if (inputImage._encodedWidth && inputImage._encodedHeight)
-            updateCapsFromImageSize(inputImage._encodedWidth, inputImage._encodedHeight);
-
-        if (UNLIKELY(!m_caps)) {
-            GST_ERROR("Encoded image caps not set");
-            ASSERT_NOT_REACHED();
-            return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+        if (inputImage._encodedWidth > 0 && inputImage._encodedHeight > 0) {
+            UpdateCaps(inputImage._encodedWidth, inputImage._encodedHeight);
         }
 
         // FIXME: Use a GstBufferPool.
@@ -227,8 +222,7 @@ public:
         gst_buffer_add_reference_timestamp_meta(buffer.get(), m_rtpTimestampCaps.get(), inputImage.RtpTimestamp(), GST_CLOCK_TIME_NONE);
 
         auto sample = adoptGRef(gst_sample_new(buffer.get(), m_caps.get(), nullptr, nullptr));
-        
-	switch (gst_app_src_push_sample(GST_APP_SRC(m_src), sample.get())) {
+        switch (gst_app_src_push_sample(GST_APP_SRC(m_src), sample.get())) {
         case GST_FLOW_OK:
             break;
         case GST_FLOW_FLUSHING:
@@ -256,14 +250,16 @@ public:
         return WEBRTC_VIDEO_CODEC_OK;
     }
 
-    virtual void updateCapsFromImageSize(int width, int height)
+    virtual void UpdateCaps(gint width, gint height)
     {
-        if (m_width == width && m_height == height)
-            return;
-
-        m_width = width;
-        m_height = height;
-        m_caps = adoptGRef(gst_caps_new_simple(Caps(), "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, nullptr));
+        if (m_width != width || m_height != height) {
+            m_width = width;
+            m_height = height;
+            m_caps = adoptGRef(gst_caps_new_simple(Caps(),
+                "width", G_TYPE_INT, width,
+                "height", G_TYPE_INT, height,
+                nullptr));
+        }
     }
 
     void AddDecoderIfSupported(std::vector<webrtc::SdpVideoFormat>& codecList)
@@ -330,15 +326,17 @@ public:
         return GStreamerWebRTCVideoDecoder::Configure(codecSettings);
     }
 
-    void updateCapsFromImageSize(int width, int height) final
+    void UpdateCaps(gint width, gint height) final
     {
-        if (m_width == width && m_height == height)
-            return;
-
-        m_width = width;
-        m_height = height;
-        m_caps = adoptGRef(gst_caps_new_simple(Caps(), "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-            "alignment", G_TYPE_STRING, "au", nullptr));
+        if (m_width != width || m_height != height) {
+            m_width = width;
+            m_height = height;
+            m_caps = adoptGRef(gst_caps_new_simple(Caps(),
+                "width", G_TYPE_INT, width,
+                "height", G_TYPE_INT, height,
+                "alignment", G_TYPE_STRING, "au",
+                nullptr));
+        }
     }
     const gchar* Caps() final { return "video/x-h264"; }
     const gchar* Name() final { return cricket::kH264CodecName; }
