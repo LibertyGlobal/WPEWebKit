@@ -100,6 +100,8 @@
 #include "JSCGLibWrapperObject.h"
 #endif
 
+extern std::atomic_bool CONSERVATIVE_SCAN_ENABLED;
+
 namespace JSC {
 
 namespace {
@@ -2781,8 +2783,9 @@ void Heap::addCoreConstraints()
     m_constraintSet->add(
         "Cs", "Conservative Scan",
         MAKE_MARKING_CONSTRAINT_EXECUTOR_PAIR(([this, lastVersion = static_cast<uint64_t>(0)] (auto& visitor) mutable {
+            // this prevents Full GC in 2.38
+            if (!CONSERVATIVE_SCAN_ENABLED.load()) return;
             bool shouldNotProduceWork = lastVersion == m_phaseVersion;
-
             // For the GC Verfier, we would like to use the identical set of conservative roots
             // as the real GC. Otherwise, the GC verifier may report false negatives due to
             // variations in stack values. For this same reason, we will skip this constraint

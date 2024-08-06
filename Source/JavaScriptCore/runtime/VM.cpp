@@ -133,6 +133,8 @@
 #include "RegExp.h"
 #endif
 
+std::atomic_bool CONSERVATIVE_SCAN_ENABLED {true};
+
 namespace JSC {
 
 Atomic<unsigned> VM::s_numberOfIDs;
@@ -807,8 +809,12 @@ void VM::shrinkFootprintWhenIdle()
 {
     whenIdle([=, this] () {
         sanitizeStackForVM(*this);
-        deleteAllCode(DeleteAllCodeIfNotCollecting);
+        deleteAllCode(PreventCollectionAndDeleteAllCode);
+        fprintf(stderr, "------------ DISABLE CONSERVATIVE SCAN AND COLLECT SYNC --------------\n");
+        CONSERVATIVE_SCAN_ENABLED.store(false);
         heap.collectNow(Synchronousness::Sync, CollectionScope::Full);
+        CONSERVATIVE_SCAN_ENABLED.store(true);
+        fprintf(stderr, "------------ DONE, REENABLED CONSERVATIVE SCAN --------------\n");
         // FIXME: Consider stopping various automatic threads here.
         // https://bugs.webkit.org/show_bug.cgi?id=185447
         WTF::releaseFastMallocFreeMemory();
