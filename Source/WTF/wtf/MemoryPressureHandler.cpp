@@ -36,6 +36,11 @@
 #include <wtf/RAMSize.h>
 #include <wtf/text/StringToIntegerConversion.h>
 
+#if PLATFORM(BCM_NEXUS)
+#include <fstream>
+#endif
+
+
 namespace WTF {
 
 WTF_EXPORT_PRIVATE bool MemoryPressureHandler::ReliefLogger::s_loggingEnabled = false;
@@ -289,6 +294,20 @@ void MemoryPressureHandler::measurementTimerFired()
     if (footprintPeak < footprint)
         footprintPeak = footprint;
     RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB, video footprint: %zu MB", footprint / MB, footprintPeak / MB, footprintVideo / MB);
+
+
+#if PLATFORM(BCM_NEXUS)
+    size_t gfxTotal, gfxPeak, gfxUsed;
+    brcmHeapMemoryFootprint("GFX", gfxTotal, gfxPeak, gfxUsed);
+    RELEASE_LOG(MemoryPressure, "GFX memory usage %zuMB/%zu%%, peak memory %zuMB/%zu%%",
+        ((gfxTotal * gfxUsed) / 100), gfxUsed, ((gfxTotal * gfxPeak) / 100), gfxPeak);
+
+    size_t crrTotal, crrPeak, crrUsed;
+    brcmHeapMemoryFootprint("CRR", crrTotal, crrPeak, crrUsed);
+    RELEASE_LOG(MemoryPressure, "CRR memory usage %zuMB/%zu%%, peak memory %zuMB/%zu%%",
+        ((crrTotal * crrUsed) / 100), crrUsed, ((crrTotal * crrPeak) / 100), crrPeak);
+#endif
+
     auto killThreshold = thresholdForMemoryKill(MemoryType::Normal);
     auto killThresholdVideo = thresholdForMemoryKill(MemoryType::Video);
     if ((killThreshold && footprint >= *killThreshold) || (killThresholdVideo && footprintVideo >= *killThresholdVideo)) {
@@ -455,5 +474,22 @@ MemoryPressureHandler::Configuration::Configuration(size_t base, size_t baseVide
     , pollInterval(interval)
 {
 }
+
+#if PLATFORM(BCM_NEXUS)
+bool brcmHeapMemoryFootprint(const std::string& heap, size_t& valueTotal, size_t& valuePeek, size_t& valueUsed)
+{
+    auto fileStream = std::ifstream("/proc/brcm/core");
+    for (std::string line; std::getline(fileStream, line); )
+    {
+        if (strstr(line.c_str(), heap.c_str()) != NULL) {
+            unsigned tmp;
+            std::sscanf(line.c_str(), "%x %x %x %x %zu %x %zu%% %zu%%",
+                &tmp, &tmp, &tmp, &tmp, &valueTotal, &tmp, &valueUsed, &valuePeek);
+           return true;
+        }
+    }
+    return false;
+}
+#endif
 
 } // namespace WebCore
