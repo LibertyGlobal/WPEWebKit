@@ -95,13 +95,18 @@ IntOutsets FilterOperations::outsets() const
             break;
         }
         case FilterOperation::REFERENCE:
-            ASSERT_NOT_REACHED();
+            // FIXME: Need to compute outsets for reference filters. webkit.org/b/237538
             break;
         default:
             break;
         }
     }
     return totalOutsets;
+}
+
+IntOutsets FilterOperations::accumulatedFilterOutsets(IntOutsets parentOutsets) const
+{
+    return outsets() + parentOutsets;
 }
 
 bool FilterOperations::transformColor(Color& color) const

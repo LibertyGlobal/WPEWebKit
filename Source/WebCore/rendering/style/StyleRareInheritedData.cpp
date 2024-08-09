@@ -69,6 +69,7 @@ struct GreaterThanOrSameSizeAsStyleRareInheritedData : public RefCounted<Greater
 #if ENABLE(DARK_MODE_CSS)
     StyleColorScheme colorScheme;
 #endif
+    IntOutsets accumulatedFilterOutesets;
 };
 
 static_assert(sizeof(StyleRareInheritedData) <= sizeof(GreaterThanOrSameSizeAsStyleRareInheritedData), "StyleRareInheritedData should bit pack");
@@ -165,6 +166,7 @@ StyleRareInheritedData::StyleRareInheritedData()
 #if ENABLE(TOUCH_EVENTS)
     , tapHighlightColor(RenderStyle::initialTapHighlightColor())
 #endif
+    , accumulatedFilterOutsets(IntOutsets())
 {
 }
 
@@ -268,6 +270,7 @@ inline StyleRareInheritedData::StyleRareInheritedData(const StyleRareInheritedDa
 #if ENABLE(TOUCH_EVENTS)
     , tapHighlightColor(o.tapHighlightColor)
 #endif
+    , accumulatedFilterOutsets(o.accumulatedFilterOutsets)
 {
 }
 
@@ -341,6 +344,7 @@ bool StyleRareInheritedData::operator==(const StyleRareInheritedData& o) const
         && textEmphasisCustomMark == o.textEmphasisCustomMark
         && arePointingToEqualData(quotes, o.quotes)
         && appleColorFilter == o.appleColorFilter
+        && accumulatedFilterOutsets == o.accumulatedFilterOutsets
         && tabSize == o.tabSize
         && lineGrid == o.lineGrid
         && imageOrientation == o.imageOrientation

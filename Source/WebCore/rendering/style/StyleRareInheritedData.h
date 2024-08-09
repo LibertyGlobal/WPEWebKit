@@ -205,6 +205,8 @@ public:
     Color tapHighlightColor;
 #endif
 
+    IntOutsets accumulatedFilterOutsets;
+
 private:
     StyleRareInheritedData();
     StyleRareInheritedData(const StyleRareInheritedData&);

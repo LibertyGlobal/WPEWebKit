@@ -5874,6 +5874,7 @@
                 "aliases": [
                     "-webkit-filter"
                 ],
+                "custom": "Value",
                 "conditional-converter": "FilterOperations"
             },
             "specification":  {
