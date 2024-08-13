@@ -324,6 +324,13 @@ void MemoryPressureHandler::measurementTimerFired()
         releaseMemory(Critical::No, Synchronous::No);
         break;
     case MemoryUsagePolicy::Strict:
+    	if (footprint > m_configuration.baseThreshold || footprintVideo > m_configuration.baseThresholdVideo) {
+            WTFLogAlways("MemoryPressure: Critical memory usage (PID=%d) [MB]: %zu (of %zu), video: %zu (of %zu)\n",
+                          getpid(), footprint / MB, m_configuration.baseThreshold / MB,
+                          footprintVideo / MB, m_configuration.baseThresholdVideo / MB);
+            releaseMemory(Critical::Yes, Synchronous::Yes);
+            break;
+    	}
         releaseMemory(Critical::Yes, Synchronous::No);
         break;
     }
