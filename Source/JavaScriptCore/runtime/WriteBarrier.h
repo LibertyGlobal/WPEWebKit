@@ -98,7 +98,7 @@ public:
     T* get() const
     {
         // Copy m_cell to a local to avoid multiple-read issues. (See <http://webkit.org/b/110854>)
-        StorageType cell = this->cell();
+        StorageType cell = m_cell;
         if (cell)
             validateCell(reinterpret_cast<JSCell*>(static_cast<void*>(Traits::unwrap(cell))));
         return Traits::unwrap(cell);
@@ -106,7 +106,7 @@ public:
 
     T* operator*() const
     {
-        StorageType cell = this->cell();
+        StorageType cell = m_cell;
         ASSERT(cell);
         auto unwrapped = Traits::unwrap(cell);
         validateCell<T>(unwrapped);
@@ -115,7 +115,7 @@ public:
 
     T* operator->() const
     {
-        StorageType cell = this->cell();
+        StorageType cell = m_cell;
         ASSERT(cell);
         auto unwrapped = Traits::unwrap(cell);
         validateCell(unwrapped);
@@ -135,9 +135,9 @@ public:
         return SlotHelper<T, Traits>::reinterpret(&m_cell);
     }
     
-    explicit operator bool() const { return !!cell(); }
+    explicit operator bool() const { return !!m_cell; }
     
-    bool operator!() const { return !cell(); }
+    bool operator!() const { return !m_cell; }
 
     void setWithoutWriteBarrier(T* value)
     {
@@ -147,11 +147,9 @@ public:
         Traits::exchange(this->m_cell, value);
     }
 
-    T* unvalidatedGet() const { return Traits::unwrap(cell()); }
+    T* unvalidatedGet() const { return Traits::unwrap(m_cell); }
 
 private:
-    StorageType cell() const { return m_cell; }
-
     StorageType m_cell;
 };
 
@@ -283,7 +281,7 @@ public:
     Structure* get() const
     {
         // Copy m_structureID to a local to avoid multiple-read issues. (See <http://webkit.org/b/110854>)
-        StructureID structureID = value();
+        StructureID structureID = m_structureID;
         if (structureID) {
             Structure* structure = structureID.decode();
             validateCell(reinterpret_cast<JSCell*>(structure));
@@ -294,7 +292,7 @@ public:
 
     Structure* operator*() const
     {
-        StructureID structureID = value();
+        StructureID structureID = m_structureID;
         ASSERT(structureID);
         Structure* structure = structureID.decode();
         validateCell(reinterpret_cast<JSCell*>(structure));
@@ -303,7 +301,7 @@ public:
 
     Structure* operator->() const
     {
-        StructureID structureID = value();
+        StructureID structureID = m_structureID;
         ASSERT(structureID);
         Structure* structure = structureID.decode();
         validateCell(reinterpret_cast<JSCell*>(structure));
@@ -317,12 +315,12 @@ public:
 
     explicit operator bool() const
     {
-        return !!value();
+        return !!m_structureID;
     }
 
     bool operator!() const
     {
-        return !value();
+        return !m_structureID;
     }
 
     void setWithoutWriteBarrier(Structure* value)
@@ -339,7 +337,7 @@ public:
 
     Structure* unvalidatedGet() const
     {
-        StructureID structureID = value();
+        StructureID structureID = m_structureID;
         if (structureID)
             return structureID.decode();
         return nullptr;
