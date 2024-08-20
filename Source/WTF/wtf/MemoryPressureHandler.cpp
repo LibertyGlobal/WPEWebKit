@@ -308,12 +308,12 @@ void MemoryPressureHandler::measurementTimerFired()
         ((crrTotal * crrUsed) / 100), crrUsed, ((crrTotal * crrPeak) / 100), crrPeak);
 #endif
 
-    auto killThreshold = thresholdForMemoryKill(MemoryType::Normal);
+   /* auto killThreshold = thresholdForMemoryKill(MemoryType::Normal);
     auto killThresholdVideo = thresholdForMemoryKill(MemoryType::Video);
     if ((killThreshold && footprint >= *killThreshold) || (killThresholdVideo && footprintVideo >= *killThresholdVideo)) {
         shrinkOrDie(*killThreshold, *killThresholdVideo);
         return;
-    }
+    }*/
 
     setMemoryUsagePolicyBasedOnFootprints(footprint, footprintVideo);
 
@@ -331,7 +331,7 @@ void MemoryPressureHandler::measurementTimerFired()
             releaseMemory(Critical::Yes, Synchronous::Yes);
             break;
     	}
-        releaseMemory(Critical::Yes, Synchronous::No);
+        releaseMemory(Critical::Yes, Synchronous::Yes);
         break;
     }
 
