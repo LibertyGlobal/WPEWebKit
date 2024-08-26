@@ -3502,7 +3502,7 @@ ExceptionOr<void> HTMLMediaElement::setCurrentTimeForBindings(double time)
         return { };
     }
 
-    seek(MediaTime::createWithDouble(time));
+    seek(MediaTime::createWithDouble(clampTo(time, 0.0)));
     return { };
 }
 
