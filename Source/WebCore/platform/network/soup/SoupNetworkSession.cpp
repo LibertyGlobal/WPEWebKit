@@ -134,11 +134,14 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID)
     if (soup_auth_negotiate_supported() && !m_sessionID.isEphemeral())
         soup_session_add_feature_by_type(m_soupSession.get(), SOUP_TYPE_AUTH_NEGOTIATE);
 
-#if ENABLE(DEVELOPER_MODE)
+// DEVELOPER_MODE is disabled by default even on dbg builds and I would like just only load custom file here
+//#if ENABLE(DEVELOPER_MODE)
     // Optionally load a custom path with the TLS CAFile. This is used on the GTK/WPE bundles. See script generate-bundle
     // Don't enable this outside DEVELOPER_MODE because using a non-default TLS database has surprising undesired effects
     // on how certificate verification is performed. See https://webkit.org/b/237107#c14 and git commit 82999879b on glib
-    const char* customTLSCAFile = g_getenv("WEBKIT_TLS_CAFILE_PEM");
+    // generated ca-certificates for that case is original one + extra CA, that was
+    // used to generate certificates used by node.js webrtc application and coturn server
+    const char* customTLSCAFile = "/etc/ssl/certs/ca-certificates.crt";
     if (customTLSCAFile) {
         GUniqueOutPtr<GError> error;
         GRefPtr<GTlsDatabase> customTLSDB = adoptGRef(g_tls_file_database_new(customTLSCAFile, &error.outPtr()));
@@ -147,7 +150,7 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID)
         else
             soup_session_set_tls_database(m_soupSession.get(), customTLSDB.get());
     }
-#endif // ENABLE(DEVELOPER_MODE)
+//#endif // ENABLE(DEVELOPER_MODE)
 
     setupLogger();
 }
