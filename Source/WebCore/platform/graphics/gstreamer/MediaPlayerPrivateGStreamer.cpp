@@ -405,26 +405,6 @@ void MediaPlayerPrivateGStreamer::prepareToPlay()
 
 void MediaPlayerPrivateGStreamer::play()
 {
-    //This piece of code is just for debug purpose only, not allowing more than one play/pause per wpe instance
-    //This can be used to check if app is issuing multiple play/pause which causes issues in certain cases
-    //It is enabled when the environment variable DEBUG_ONLY_ALLOW_FIRST_PLAY is defined
-    static bool onlyAllowFirstPlay = false;
-    static std::once_flag once;
-    std::call_once(once, []() {
-        auto s = String::fromLatin1(std::getenv("DEBUG_ONLY_ALLOW_FIRST_PLAY"));
-        if (!s.isEmpty()) {
-            String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
-            onlyAllowFirstPlay = (value == "1"_s || value == "t"_s || value == "true"_s);
-        }
-    });
-
-    static int timesCalled = 0;
-    timesCalled++;
-    if (onlyAllowFirstPlay && timesCalled > 1) {
-        GST_INFO("!!!! REFUSING to play() a %dth time FOR DEBUGGING PURPOSES !!!!", timesCalled);
-        return;
-    }
-
     if (isMediaStreamPlayer()) {
         m_pausedTime = MediaTime::invalidTime();
         if (m_startTime.isInvalid())
@@ -435,6 +415,12 @@ void MediaPlayerPrivateGStreamer::play()
         if (m_playbackRatePausedState == PlaybackRatePausedState::InitiallyPaused
             || m_playbackRatePausedState == PlaybackRatePausedState::ManuallyPaused)
             m_playbackRatePausedState = PlaybackRatePausedState::RatePaused;
+        return;
+    }
+
+    if(m_isBuffering)
+    {
+        GST_DEBUG_OBJECT(pipeline(), "Ignoring play request during buffering");
         return;
     }
 
@@ -451,26 +437,6 @@ void MediaPlayerPrivateGStreamer::play()
 
 void MediaPlayerPrivateGStreamer::pause()
 {
-    //This piece of code is just for debug purpose only, not allowing more than one play/pause per wpe instance
-    //This can be used to check if app is issuing multiple play/pause which causes issues in certain cases
-    //It is enabled when the environment variable DEBUG_ONLY_ALLOW_FIRST_PLAY is defined
-    static bool onlyAllowFirstPlay = false;
-    static std::once_flag once;
-    std::call_once(once, []() {
-        auto s = String::fromLatin1(std::getenv("DEBUG_ONLY_ALLOW_FIRST_PLAY"));
-        if (!s.isEmpty()) {
-            String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
-            onlyAllowFirstPlay = (value == "1"_s || value == "t"_s || value == "true"_s);
-        }
-    });
-
-    static int timesCalled = 0;
-    timesCalled++;
-    if (onlyAllowFirstPlay && timesCalled > 0) {
-        GST_INFO("!!!! REFUSING to pause() a %dth time FOR DEBUGGING PURPOSES !!!!", timesCalled);
-        return;
-    }
-
     if (isMediaStreamPlayer())
         m_pausedTime = currentMediaTime();
 
