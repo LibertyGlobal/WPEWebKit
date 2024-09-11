@@ -1782,18 +1782,6 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
         readWriteConstructParamFlags);
 
     /**
-     * WebKitSettings:enable-ice-candidate-filtering:
-     *
-     * Enable or disable ICE candidate filtering.
-     *
-     */
-    sObjProperties[PROP_ENABLE_ICE_CANDIDATE_FILTERING] = g_param_spec_boolean(
-        "enable-ice-candidate-filtering",
-        _("Enable ICE candidate filtering"),
-        _("Whether ICE candidate filtering should be enabled."),
-        TRUE,
-        readWriteConstructParamFlags);
-
     /**
      * WebKitSettings:webrtc-udp-ports-range:
      *
