@@ -34,7 +34,7 @@ void WKSoupSessionSetPreferredLanguages(WKContextRef context, WKArrayRef languag
         if (equalIgnoringASCIICase(string, "C") || equalIgnoringASCIICase(string, "POSIX"))
             languagesVector.uncheckedAppend("en-us"_s);
         else
-            languagesVector.uncheckedAppend(string.convertToASCIILowercase().replace("_", "-"));
+            languagesVector.uncheckedAppend(string.replace("_", "-"));
     }
 
     overrideUserPreferredLanguages(languagesVector);
