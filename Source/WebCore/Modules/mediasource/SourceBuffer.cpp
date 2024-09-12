@@ -821,10 +821,27 @@ static PlatformTimeRanges removeSamplesFromTrackBuffer(const DecodeOrderSampleMa
     return erasedRanges;
 }
 
+void SourceBuffer::reenqueueMediaIfNeeded(const MediaTime& currentTime)
+{
+    for (auto& trackBufferPair : m_trackBufferMap) {
+        TrackBuffer& trackBuffer = trackBufferPair.value;
+        const AtomicString& trackID = trackBufferPair.key;
+
+        // fprintf(stderr, "JJ: before needsReenqueueing, reenqueueMediaIfNeeded, id: %s, needsReenq: %d\n", trackID.string().utf8().data(), trackBuffer.needsReenqueueing);
+
+        if (trackBuffer.needsReenqueueing) {
+            // fprintf(stderr, "JJ: reenqueuing at time : %f\n", currentTime.toFloat());
+            reenqueueMediaForTime(trackBuffer, trackID, currentTime);
+        } else
+            provideMediaData(trackBuffer, trackID);
+    }
+}
+
 void SourceBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& end, bool keepDecodeQueue)
 {
     LOG(MediaSource, "SourceBuffer::removeCodedFrames(%p) - start(%s), end(%s)", this, toString(start).utf8().data(), toString(end).utf8().data());
 
+    // LOG(Media, "JJ: BEFORE SourceBuffer::removeCodedFrames(%p) - buffered = %s", this, toString(m_buffered->ranges()).utf8().data());
     // 3.5.9 Coded Frame Removal Algorithm
     // https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html#sourcebuffer-coded-frame-removal
 
@@ -835,7 +852,12 @@ void SourceBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& en
 
     // 2. Let end be the end presentation timestamp for the removal range.
     // 3. For each track buffer in this source buffer, run the following steps:
-    for (auto& trackBuffer : m_trackBufferMap.values()) {
+    for (auto& trackBufferPair : m_trackBufferMap) {
+
+
+        auto& trackBuffer = trackBufferPair.value;
+        // LOG(Media, "JJ: before removeCodedFrames, trackID: %s", trackBufferPair.key.string().utf8().data());
+
         // 3.1. Let remove end timestamp be the current value of duration
         // 3.2 If this track buffer has a random access point timestamp that is greater than or equal to end, then update
         // remove end timestamp to that random access point timestamp.
@@ -911,27 +933,38 @@ void SourceBuffer::removeCodedFrames(const MediaTime& start, const MediaTime& en
         // not yet displayed samples.
         if (trackBuffer.lastEnqueuedPresentationTime.isValid() && currentMediaTime < trackBuffer.lastEnqueuedPresentationTime
 #if defined(METROLOGICAL)
-            && !hasAudio()
+            // && !hasAudio()
             && !keepDecodeQueue
 #endif
             ) {
             PlatformTimeRanges possiblyEnqueuedRanges(currentMediaTime, trackBuffer.lastEnqueuedPresentationTime);
             possiblyEnqueuedRanges.intersectWith(erasedRanges);
-            if (possiblyEnqueuedRanges.length())
+            if (possiblyEnqueuedRanges.length()) {
+                // LOG(Media, "JJ: m_needsReenqueueing == true; currentMediaTime: %f, trackBuffer.lastEnqueuedPresentationTime: %f, trackID: %s", currentMediaTime.toFloat(), trackBuffer.lastEnqueuedPresentationTime.toFloat(), trackBufferPair.key.string().utf8().data());                
                 trackBuffer.needsReenqueueing = true;
+            } else {
+                // LOG(Media, "JJ: m_needsReenqueueing == true; currentMediaTime: %f, trackBuffer.lastEnqueuedPresentationTime: %f, trackID: %s", currentMediaTime.toFloat(), trackBuffer.lastEnqueuedPresentationTime.toFloat(), trackBufferPair.key.string().utf8().data());                
+            }
+        } else {
+                // LOG(Media, "JJ: no if (trackBuffer.lastEnqueuedPresentationTime.isValid()...., trackID: %s, currentMediaTime: %f, trackBuffer.lastEnqueuedPresentationTime: %f, !keepDecodeQueue: %d", trackBufferPair.key.string().utf8().data(), currentMediaTime.toFloat(), trackBuffer.lastEnqueuedPresentationTime.toFloat(), !keepDecodeQueue); 
+
         }
 
         erasedRanges.invert();
         trackBuffer.buffered.intersectWith(erasedRanges);
         setBufferedDirty(true);
+        // LOG(Media, "JJ: after removeCodedFrames, trackID: %s", trackBufferPair.key.string().utf8().data());
 
         // 3.4 If this object is in activeSourceBuffers, the current playback position is greater than or equal to start
         // and less than the remove end timestamp, and HTMLMediaElement.readyState is greater than HAVE_METADATA, then set
         // the HTMLMediaElement.readyState attribute to HAVE_METADATA and stall playback.
-        if (m_active && currentMediaTime >= start && currentMediaTime < end && m_private->readyState() > MediaPlayer::HaveMetadata)
+        if (m_active && currentMediaTime >= start && currentMediaTime < end && m_private->readyState() > MediaPlayer::HaveMetadata) {
+            // LOG(Media, "JJ: should stall playback! (%p), trackID: %s - buffered = %s", this, trackBufferPair.key.string().utf8().data(), toString(m_buffered->ranges()).utf8().data());
+
             shouldStallPlayback = true;
+        }
     }
-    
+    reenqueueMediaIfNeeded(currentMediaTime);
     updateBufferedFromTrackBuffers();
     if (shouldStallPlayback)
        m_private->setReadyState(MediaPlayer::HaveMetadata);
