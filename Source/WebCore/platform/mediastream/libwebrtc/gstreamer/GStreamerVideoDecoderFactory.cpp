@@ -54,6 +54,15 @@ public:
         , m_needsKeyframe(true)
     {
         m_rtpTimestampCaps = adoptGRef(gst_caps_new_empty_simple("timestamp/x-rtp"));
+        s_instance = this;
+    }
+
+    virtual ~GStreamerWebRTCVideoDecoder() {
+        if (s_instance == this) {
+            s_instance = nullptr;
+        } else {
+            ASSERT_NOT_REACHED();
+        }
     }
 
     static void decodebinPadAddedCb(GstElement*, GstPad* srcpad, GstPad* sinkpad)
@@ -91,6 +100,12 @@ public:
         if (!ev)
             return 0;
         return ev->value;
+    static void handleDecodingError()
+    {
+        if (s_instance) {
+            GST_INFO_OBJECT(s_instance->pipeline(), "Decoding error from westerossink, will request keyframe");
+            s_instance->m_needsKeyframe = true;
+        }
     }
 
     bool Configure(const webrtc::VideoDecoder::Settings& codecSettings) override
@@ -290,6 +305,8 @@ public:
     const char* ImplementationName() const override { return "GStreamer"; }
     virtual const gchar* Name() = 0;
 
+    static GStreamerWebRTCVideoDecoder* s_instance;
+
 protected:
     GRefPtr<GstCaps> m_caps;
     int m_width;
@@ -436,6 +453,12 @@ std::vector<webrtc::SdpVideoFormat> GStreamerVideoDecoderFactory::GetSupportedFo
     H264Decoder().AddDecoderIfSupported(formats);
 
     return formats;
+}
+
+GStreamerWebRTCVideoDecoder* GStreamerWebRTCVideoDecoder::s_instance = nullptr;
+//FIXME find a better way to forward the error
+void MediaStreamDecodingErrorCallback(GstElement*, guint, gpointer, gpointer) {
+    GStreamerWebRTCVideoDecoder::handleDecodingError();
 }
 
 #undef GST_CAT_DEFAULT
