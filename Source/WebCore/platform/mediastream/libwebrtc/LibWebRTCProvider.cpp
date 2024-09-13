@@ -392,6 +392,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> LibWebRTCProvider::createPee
         auto basicPortAllocator = makeUniqueWithoutFastMallocCheck<cricket::BasicPortAllocator>(&networkManager, &packetSocketFactory);
 
         basicPortAllocator->set_allow_tcp_listen(false);
+	basicPortAllocator->SetPortRange(1, 65535);
         portAllocator = WTFMove(basicPortAllocator);
     });
 
