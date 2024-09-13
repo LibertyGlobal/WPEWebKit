@@ -72,6 +72,28 @@ public:
             ASSERT_NOT_REACHED();
     }
 
+#if PLATFORM(BROADCOM) || PLATFORM(REALTEK)
+    static unsigned getGstAutoplugSelectResult(const char* nick)
+    {
+        static GEnumClass* enumClass = static_cast<GEnumClass*>(g_type_class_ref(g_type_from_name("GstAutoplugSelectResult")));
+        ASSERT(enumClass);
+        GEnumValue* ev = g_enum_get_value_by_nick(enumClass, nick);
+        if (!ev)
+            return 0;
+        return ev->value;
+    }
+
+    static unsigned decodebinAutoplugSelect(GstElement *, GstPad *, GstCaps *, GstElementFactory *factory, gpointer)
+    {
+        if (g_str_has_prefix(gst_plugin_feature_get_plugin_name(GST_PLUGIN_FEATURE_CAST(factory)), "brcm")) {
+            return getGstAutoplugSelectResult("skip");
+        }
+        if (g_str_has_prefix(gst_plugin_feature_get_plugin_name(GST_PLUGIN_FEATURE_CAST(factory)), "omx")) {
+            return getGstAutoplugSelectResult("skip");
+        }
+        return getGstAutoplugSelectResult("try");
+    }
+#endif
     GstElement* pipeline()
     {
         return m_pipeline.get();
@@ -91,15 +113,7 @@ public:
         GST_INFO_OBJECT(pipeline(), "--> needs keyframe (%s)", error->message);
         m_needsKeyframe = true;
     }
-
-    static unsigned getGstAutoplugSelectResult(const char* nick)
-    {
-        static GEnumClass* enumClass = static_cast<GEnumClass*>(g_type_class_ref(g_type_from_name("GstAutoplugSelectResult")));
-        ASSERT(enumClass);
-        GEnumValue* ev = g_enum_get_value_by_nick(enumClass, nick);
-        if (!ev)
-            return 0;
-        return ev->value;
+ 
     static void handleDecodingError()
     {
         if (s_instance) {
@@ -125,7 +139,10 @@ public:
         auto sinkpad = adoptGRef(gst_element_get_static_pad(capsfilter, "sink"));
         g_signal_connect(decoder, "pad-added", G_CALLBACK(decodebinPadAddedCb), sinkpad.get());
 
-        auto& quirksManager = GStreamerQuirksManager::singleton();
+#if PLATFORM(BROADCOM) || PLATFORM(REALTEK)
+        g_signal_connect(decoder, "autoplug-select", G_CALLBACK(decodebinAutoplugSelect), nullptr);
+#endif
+	auto& quirksManager = GStreamerQuirksManager::singleton();
         if (quirksManager.isEnabled()) {
             g_signal_connect(decoder, "autoplug-select", G_CALLBACK(+[](GstElement*, GstPad*, GstCaps*, GstElementFactory* factory, gpointer) -> unsigned {
                 auto& quirksManager = GStreamerQuirksManager::singleton();
@@ -309,8 +326,8 @@ public:
 
 protected:
     GRefPtr<GstCaps> m_caps;
-    int m_width;
-    int m_height;
+    gint m_width;
+    gint m_height;
     bool m_requireParse = false;
     bool m_needsKeyframe;
 
