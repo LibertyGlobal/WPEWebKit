@@ -2348,8 +2348,8 @@ void MediaPlayerPrivateGStreamer::configureElementPlatformQuirks(GstElement* ele
 
 #if ENABLE(MEDIA_STREAM)
     if (m_streamPrivate && !g_strcmp0(G_OBJECT_TYPE_NAME(G_OBJECT(element)), "GstWesterosSink") && gstObjectHasProperty(element, "immediate-output")) {
-        GST_DEBUG_OBJECT(pipeline(), "Enable 'immediate-output' in WesterosSink");
-        g_object_set(element, "immediate-output", TRUE, nullptr);
+        //GST_DEBUG_OBJECT(pipeline(), "Enable 'immediate-output' in WesterosSink");
+        //g_object_set(element, "immediate-output", TRUE, nullptr);
         GST_DEBUG_OBJECT(pipeline(), "Enable decoding error callback in WesterosSink");
         g_object_set(element, "report-decode-errors", TRUE, nullptr);
         g_signal_connect_swapped(element, "decode-error-callback", G_CALLBACK(WebCore::MediaStreamDecodingErrorCallback), this);
