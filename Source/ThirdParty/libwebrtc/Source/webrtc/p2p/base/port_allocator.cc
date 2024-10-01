@@ -21,6 +21,16 @@
 
 namespace cricket {
 
+StunServerConfig::StunServerConfig() : protocol_address( rtc::SocketAddress(), ProtocolType::PROTO_UDP) {};
+
+StunServerConfig::StunServerConfig(const rtc::SocketAddress& address,
+                                   ProtocolType proto)
+    : protocol_address(address, proto) {};
+
+StunServerConfig::StunServerConfig(const StunServerConfig&) = default;
+
+StunServerConfig::~StunServerConfig() = default;
+
 RelayServerConfig::RelayServerConfig() {}
 
 RelayServerConfig::RelayServerConfig(const rtc::SocketAddress& address,
@@ -121,7 +131,7 @@ void PortAllocator::set_restrict_ice_credentials_change(bool value) {
 
 // Deprecated
 bool PortAllocator::SetConfiguration(
-    const ServerAddresses& stun_servers,
+    const StunServerConfigs& stun_servers,
     const std::vector<RelayServerConfig>& turn_servers,
     int candidate_pool_size,
     bool prune_turn_ports,
@@ -135,7 +145,7 @@ bool PortAllocator::SetConfiguration(
 }
 
 bool PortAllocator::SetConfiguration(
-    const ServerAddresses& stun_servers,
+    const StunServerConfigs& stun_servers,
     const std::vector<RelayServerConfig>& turn_servers,
     int candidate_pool_size,
     webrtc::PortPrunePolicy turn_port_prune_policy,
@@ -149,8 +159,16 @@ bool PortAllocator::SetConfiguration(
   // the network thread.
   RTC_DCHECK(candidate_pool_size == 0 || thread_checker_.IsCurrent());
   bool ice_servers_changed =
-      (stun_servers != stun_servers_ || turn_servers != turn_servers_);
-  stun_servers_ = stun_servers;
+      (stun_servers != stun_servers_config_ || turn_servers != turn_servers_);
+
+  stun_servers_config_ = stun_servers;
+  stun_servers_.clear();
+  for (const StunServerConfig& config : stun_servers_config_) {
+    if (config.protocol_address.proto == ProtocolType::PROTO_UDP) {
+      stun_servers_.insert(config.protocol_address.address);
+    }
+  }
+
   turn_servers_ = turn_servers;
   turn_port_prune_policy_ = turn_port_prune_policy;
 

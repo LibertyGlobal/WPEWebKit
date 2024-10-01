@@ -148,6 +148,28 @@ struct RelayCredentials {
 };
 
 typedef std::vector<ProtocolAddress> PortList;
+
+struct RTC_EXPORT StunServerConfig {
+  StunServerConfig();
+  StunServerConfig(const rtc::SocketAddress& address, ProtocolType proto = ProtocolType::PROTO_UDP);
+  StunServerConfig(const StunServerConfig&);
+  ~StunServerConfig();
+
+  bool operator==(const StunServerConfig& o) const {
+    return protocol_address == o.protocol_address;
+  }
+
+  bool operator!=(const StunServerConfig& o) const { return !(*this == o); }
+
+  TlsCertPolicy tls_cert_policy = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
+  std::vector<std::string> tls_alpn_protocols;
+  std::vector<std::string> tls_elliptic_curves;
+  rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr;
+  ProtocolAddress protocol_address;
+};
+
+typedef std::vector<StunServerConfig> StunServerConfigs;
+
 // TODO(deadbeef): Rename to TurnServerConfig.
 struct RTC_EXPORT RelayServerConfig {
   RelayServerConfig();
@@ -364,14 +386,14 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   //
   // Returns true if the configuration could successfully be changed.
   // Deprecated
-  bool SetConfiguration(const ServerAddresses& stun_servers,
+  bool SetConfiguration(const StunServerConfigs& stun_servers,
                         const std::vector<RelayServerConfig>& turn_servers,
                         int candidate_pool_size,
                         bool prune_turn_ports,
                         webrtc::TurnCustomizer* turn_customizer = nullptr,
                         const absl::optional<int>&
                             stun_candidate_keepalive_interval = absl::nullopt);
-  bool SetConfiguration(const ServerAddresses& stun_servers,
+  bool SetConfiguration(const StunServerConfigs& stun_servers,
                         const std::vector<RelayServerConfig>& turn_servers,
                         int candidate_pool_size,
                         webrtc::PortPrunePolicy turn_port_prune_policy,
@@ -385,6 +407,11 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   const ServerAddresses& stun_servers() const {
     CheckRunOnValidThreadIfInitialized();
     return stun_servers_;
+  }
+
+  const StunServerConfigs& stun_servers_config() const {
+    CheckRunOnValidThreadIfInitialized();
+    return stun_servers_config_;
   }
 
   const std::vector<RelayServerConfig>& turn_servers() const {
@@ -642,7 +669,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   webrtc::VpnPreference vpn_preference_ = webrtc::VpnPreference::kDefault;
 
  private:
-  ServerAddresses stun_servers_;
+  ServerAddresses stun_servers_; /* ordinary UDP servers */
+  StunServerConfigs stun_servers_config_; /* complete configuration */
   std::vector<RelayServerConfig> turn_servers_;
   int candidate_pool_size_ = 0;  // Last value passed into SetConfiguration.
   std::vector<std::unique_ptr<PortAllocatorSession>> pooled_sessions_;

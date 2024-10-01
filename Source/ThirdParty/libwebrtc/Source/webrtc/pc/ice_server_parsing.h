@@ -29,12 +29,12 @@ namespace webrtc {
 // PeerConnection through RTCConfiguration.
 RTC_EXPORT RTCError
 ParseIceServersOrError(const PeerConnectionInterface::IceServers& servers,
-                       cricket::ServerAddresses* stun_servers,
+                       cricket::StunServerConfigs* stun_servers,
                        std::vector<cricket::RelayServerConfig>* turn_servers);
 
 [[deprecated("use ParseIceServersOrError")]] RTC_EXPORT RTCErrorType
 ParseIceServers(const PeerConnectionInterface::IceServers& servers,
-                cricket::ServerAddresses* stun_servers,
+                cricket::StunServerConfigs* stun_servers,
                 std::vector<cricket::RelayServerConfig>* turn_servers);
 
 }  // namespace webrtc

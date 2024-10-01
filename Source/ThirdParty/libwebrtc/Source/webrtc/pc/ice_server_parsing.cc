@@ -158,7 +158,7 @@ std::tuple<bool, absl::string_view, int> ParseHostnameAndPortFromString(
 RTCError ParseIceServerUrl(
     const PeerConnectionInterface::IceServer& server,
     absl::string_view url,
-    cricket::ServerAddresses* stun_servers,
+    cricket::StunServerConfigs* stun_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   // RFC 7064
   // stunURI       = scheme ":" host [ ":" port ]
@@ -267,10 +267,27 @@ RTCError ParseIceServerUrl(
   }
 
   switch (service_type) {
-    case ServiceType::STUN:
-    case ServiceType::STUNS:
-      stun_servers->insert(rtc::SocketAddress(address, port));
+    case ServiceType::STUN: {
+      // for "stun" locators UDP only case, no TCP
+      cricket::StunServerConfig config = 
+          cricket::StunServerConfig(rtc::SocketAddress(address, port));
+      stun_servers->push_back(config);
       break;
+    }
+    case ServiceType::STUNS: {
+      // for "stuns" locators UDP + DTLS case, no TCP
+      cricket::StunServerConfig config = 
+          cricket::StunServerConfig(rtc::SocketAddress(address, port), cricket::PROTO_DTLS);
+      if (server.tls_cert_policy ==
+          PeerConnectionInterface::kTlsCertPolicyInsecureNoCheck) {
+        config.tls_cert_policy =
+            cricket::TlsCertPolicy::TLS_CERT_POLICY_INSECURE_NO_CHECK;
+      }
+      config.tls_alpn_protocols = server.tls_alpn_protocols;
+      config.tls_elliptic_curves = server.tls_elliptic_curves;
+      stun_servers->push_back(config);
+      break;
+    }
     case ServiceType::TURN:
     case ServiceType::TURNS: {
       if (server.username.empty() || server.password.empty()) {
@@ -328,7 +345,7 @@ RTCError ParseIceServerUrl(
 
 RTCError ParseIceServersOrError(
     const PeerConnectionInterface::IceServers& servers,
-    cricket::ServerAddresses* stun_servers,
+    cricket::StunServerConfigs* stun_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   for (const PeerConnectionInterface::IceServer& server : servers) {
     if (!server.urls.empty()) {
@@ -361,7 +378,7 @@ RTCError ParseIceServersOrError(
 
 RTCErrorType ParseIceServers(
     const PeerConnectionInterface::IceServers& servers,
-    cricket::ServerAddresses* stun_servers,
+    cricket::StunServerConfigs* stun_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   return ParseIceServersOrError(servers, stun_servers, turn_servers).type();
 }

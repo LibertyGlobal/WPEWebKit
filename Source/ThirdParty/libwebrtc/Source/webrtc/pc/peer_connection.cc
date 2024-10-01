@@ -371,7 +371,7 @@ bool DtlsEnabled(const PeerConnectionInterface::RTCConfiguration& configuration,
 // non-empty list of servers, usage gets recorded via `usage_pattern`.
 RTCError ParseAndValidateIceServersFromConfiguration(
     const PeerConnectionInterface::RTCConfiguration& configuration,
-    cricket::ServerAddresses& stun_servers,
+    cricket::StunServerConfigs& stun_servers,
     std::vector<cricket::RelayServerConfig>& turn_servers,
     UsagePattern& usage_pattern) {
   RTC_DCHECK(stun_servers.empty());
@@ -717,7 +717,7 @@ RTCError PeerConnection::Initialize(
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::Initialize");
 
-  cricket::ServerAddresses stun_servers;
+  cricket::StunServerConfigs stun_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
   RTCError parse_error = ParseAndValidateIceServersFromConfiguration(
       configuration, stun_servers, turn_servers, usage_pattern_);
@@ -1629,7 +1629,7 @@ RTCError PeerConnection::SetConfiguration(
   }
 
   // Parse ICE servers before hopping to network thread.
-  cricket::ServerAddresses stun_servers;
+  cricket::StunServerConfigs stun_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
   validate_error = ParseAndValidateIceServersFromConfiguration(
       configuration, stun_servers, turn_servers, usage_pattern_);
@@ -2162,7 +2162,7 @@ void PeerConnection::OnSctpDataChannelStateChanged(
 
 PeerConnection::InitializePortAllocatorResult
 PeerConnection::InitializePortAllocator_n(
-    const cricket::ServerAddresses& stun_servers,
+    const cricket::StunServerConfigs& stun_servers,
     const std::vector<cricket::RelayServerConfig>& turn_servers,
     const RTCConfiguration& configuration) {
   RTC_DCHECK_RUN_ON(network_thread());
@@ -2204,6 +2204,11 @@ PeerConnection::InitializePortAllocator_n(
   port_allocator_->SetCandidateFilter(
       ConvertIceTransportTypeToCandidateFilter(configuration.type));
   port_allocator_->set_max_ipv6_networks(configuration.max_ipv6_networks);
+  
+  auto stun_servers_copy = stun_servers;
+  for (auto& stun_server : stun_servers_copy) {
+    stun_server.tls_cert_verifier = tls_cert_verifier_.get();
+  }
 
   auto turn_servers_copy = turn_servers;
   for (auto& turn_server : turn_servers_copy) {
@@ -2212,7 +2217,7 @@ PeerConnection::InitializePortAllocator_n(
   // Call this last since it may create pooled allocator sessions using the
   // properties set above.
   port_allocator_->SetConfiguration(
-      stun_servers, std::move(turn_servers_copy),
+      std::move(stun_servers_copy), std::move(turn_servers_copy),
       configuration.ice_candidate_pool_size,
       configuration.GetTurnPortPrunePolicy(), configuration.turn_customizer,
       configuration.stun_candidate_keepalive_interval);
@@ -2223,7 +2228,7 @@ PeerConnection::InitializePortAllocator_n(
 }
 
 bool PeerConnection::ReconfigurePortAllocator_n(
-    const cricket::ServerAddresses& stun_servers,
+    const cricket::StunServerConfigs& stun_servers,
     const std::vector<cricket::RelayServerConfig>& turn_servers,
     IceTransportsType type,
     int candidate_pool_size,
@@ -2234,6 +2239,12 @@ bool PeerConnection::ReconfigurePortAllocator_n(
   RTC_DCHECK_RUN_ON(network_thread());
   port_allocator_->SetCandidateFilter(
       ConvertIceTransportTypeToCandidateFilter(type));
+
+  auto stun_servers_copy = stun_servers;
+  for (auto& stun_server : stun_servers_copy) {
+    stun_server.tls_cert_verifier = tls_cert_verifier_.get();
+  }
+
   // Add the custom tls turn servers if they exist.
   auto turn_servers_copy = turn_servers;
   for (auto& turn_server : turn_servers_copy) {
@@ -2242,7 +2253,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
   // Call this last since it may create pooled allocator sessions using the
   // candidate filter set above.
   return port_allocator_->SetConfiguration(
-      stun_servers, std::move(turn_servers_copy), candidate_pool_size,
+      std::move(stun_servers_copy), std::move(turn_servers_copy), candidate_pool_size,
       turn_port_prune_policy, turn_customizer,
       stun_candidate_keepalive_interval);
 }

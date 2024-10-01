@@ -20,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "p2p/base/port.h"
+#include "p2p/base/port_allocator.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/system/rtc_export.h"
@@ -115,7 +116,12 @@ class RTC_EXPORT UDPPort : public Port {
   void set_stun_keepalive_lifetime(int lifetime) {
     stun_keepalive_lifetime_ = lifetime;
   }
-
+  void set_stun_server_config(const StunServerConfig& cfg) {
+    stun_server_config_ = cfg;
+  }
+  void set_priority(uint32_t priority) {
+    preference_priority = priority;
+  }
   StunRequestManager& request_manager() { return request_manager_; }
 
  protected:
@@ -141,6 +147,7 @@ class RTC_EXPORT UDPPort : public Port {
           const webrtc::FieldTrialsView* field_trials);
 
   bool Init();
+  bool InitDtls(const rtc::SocketAddress& remote_address);
 
   int SendTo(const void* data,
              size_t size,
@@ -154,6 +161,8 @@ class RTC_EXPORT UDPPort : public Port {
 
   void OnLocalAddressReady(rtc::AsyncPacketSocket* socket,
                            const rtc::SocketAddress& address);
+  void OnLocalAddressReadyDtls(rtc::AsyncPacketSocket* socket,
+                               const rtc::SocketAddress& address);
 
   void PostAddAddress(bool is_final) override;
 
@@ -252,6 +261,8 @@ class RTC_EXPORT UDPPort : public Port {
   ServerAddresses bind_request_succeeded_servers_;
   ServerAddresses bind_request_failed_servers_;
   StunRequestManager request_manager_;
+  StunServerConfig stun_server_config_;
+  uint32_t preference_priority = 0;
   rtc::AsyncPacketSocket* socket_;
   int error_;
   int send_error_count_ = 0;
@@ -284,6 +295,19 @@ class StunPort : public UDPPort {
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials);
 
+  static std::unique_ptr<StunPort> CreateDtls(
+      rtc::Thread* thread,
+      rtc::PacketSocketFactory* factory,
+      const rtc::Network* network,
+      uint16_t min_port,
+      uint16_t max_port,
+      absl::string_view username,
+      absl::string_view password,
+      const StunServerConfig& cfg,
+      absl::optional<int> stun_keepalive_interval,
+      const webrtc::FieldTrialsView* field_trials,
+      uint32_t priority);
+
   void PrepareAddress() override;
 
  protected:
@@ -295,6 +319,15 @@ class StunPort : public UDPPort {
            absl::string_view username,
            absl::string_view password,
            const ServerAddresses& servers,
+           const webrtc::FieldTrialsView* field_trials);
+  StunPort(rtc::Thread* thread,
+           rtc::PacketSocketFactory* factory,
+           const rtc::Network* network,
+           uint16_t min_port,
+           uint16_t max_port,
+           absl::string_view username,
+           absl::string_view password,
+           const StunServerConfig& cfg,
            const webrtc::FieldTrialsView* field_trials);
 };
 
