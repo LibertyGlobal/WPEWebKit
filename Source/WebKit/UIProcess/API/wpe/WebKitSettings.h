@@ -532,7 +532,21 @@ webkit_settings_get_enable_ice_candidate_filtering             (WebKitSettings *
 
 WEBKIT_API void
 webkit_settings_set_enable_ice_candidate_filtering             (WebKitSettings *settings,
-                                                                gboolean        enabled);
+                                                                gboolean        val);
+
+WEBKIT_API guint16
+webkit_settings_get_min_rtc_peer_port_range                    (WebKitSettings *settings);
+
+WEBKIT_API void
+webkit_settings_set_min_rtc_peer_port_range                    (WebKitSettings *settings,
+                                                                guint16        val);
+
+WEBKIT_API guint16
+webkit_settings_get_max_rtc_peer_port_range                    (WebKitSettings *settings);
+
+WEBKIT_API void
+webkit_settings_set_max_rtc_peer_port_range                    (WebKitSettings *settings,
+                                                                guint16        val);
 
 G_END_DECLS
 

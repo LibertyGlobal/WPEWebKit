@@ -2576,6 +2576,36 @@ WebMParserEnabled:
     WebKit:
       default: true
 
+WebRTCPeerPortMax:
+  type: uint32_t
+  condition: ENABLE(WEB_RTC)
+  humanReadableName: "TBD"
+  humanReadableDescription: "TBD"
+  defaultValue:
+    WebKitLegacy:
+      default: 0
+    WebKit:
+      "USE(LIBWEBRTC)": 6055
+      default: 6055
+    WebCore:
+      "USE(LIBWEBRTC)": 6055
+      default: 6055
+
+WebRTCPeerPortMin:
+  type: uint32_t
+  condition: ENABLE(WEB_RTC)
+  humanReadableName: "TBD"
+  humanReadableDescription: "TBD"
+  defaultValue:
+    WebKitLegacy:
+      default: 0
+    WebKit:
+      "USE(LIBWEBRTC)": 6050
+      default: 6050
+    WebCore:
+      "USE(LIBWEBRTC)": 6050
+      default: 6050
+
 WebSecurityEnabled:
   type: bool
   inspectorOverride: true

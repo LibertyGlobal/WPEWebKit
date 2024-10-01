@@ -4405,3 +4405,41 @@ void webkit_settings_set_enable_ice_candidate_filtering(WebKitSettings* settings
     priv->preferences->setICECandidateFilteringEnabled(enabled);
     g_object_notify(G_OBJECT(settings), "enable-ice-candidate-filtering");
 }
+
+guint16 webkit_settings_get_min_rtc_peer_port_range(WebKitSettings *settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), 0);
+
+    return settings->priv->preferences->webRTCPeerPortMin();
+}
+
+void webkit_settings_set_min_rtc_peer_port_range(WebKitSettings *settings, guint16 val)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = priv->preferences->webRTCPeerPortMin();
+    if (currentValue == val)
+        return;
+
+    priv->preferences->setWebRTCPeerPortMin(val);
+}
+
+guint16 webkit_settings_get_max_rtc_peer_port_range(WebKitSettings *settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), 0);
+
+    return settings->priv->preferences->webRTCPeerPortMax();
+}
+
+void webkit_settings_set_max_rtc_peer_port_range(WebKitSettings *settings, guint16 val)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = priv->preferences->webRTCPeerPortMax();
+    if (currentValue == val)
+        return;
+
+    priv->preferences->setWebRTCPeerPortMax(val);
+}

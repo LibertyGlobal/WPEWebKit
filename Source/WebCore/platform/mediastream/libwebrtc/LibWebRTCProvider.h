@@ -105,6 +105,7 @@ public:
 
     WEBCORE_EXPORT void disableEnumeratingAllNetworkInterfaces();
     WEBCORE_EXPORT void enableEnumeratingAllNetworkInterfaces();
+    WEBCORE_EXPORT void setPortRange(uint16_t pMin, uint16_t pMax);
     bool isEnumeratingAllNetworkInterfacesEnabled() const;
 
     bool m_enableEnumeratingAllNetworkInterfaces { false };
@@ -151,6 +152,8 @@ private:
     bool m_supportsVP9VTB { false };
     bool m_useDTLS10 { false };
     bool m_disableNonLocalhostConnections { false };
+    uint16_t m_minPeerPort { 0 };
+    uint16_t m_maxPeerPort { 0 };
 };
 
 inline LibWebRTCAudioModule* LibWebRTCProvider::audioModule()

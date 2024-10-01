@@ -278,6 +278,14 @@ void LibWebRTCProvider::enableEnumeratingAllNetworkInterfaces()
     m_enableEnumeratingAllNetworkInterfaces = true;
 }
 
+void LibWebRTCProvider::setPortRange(uint16_t pMin, uint16_t pMax)
+{
+    if (pMin < pMax) {
+        m_minPeerPort = pMin;
+        m_maxPeerPort = pMax;
+    }
+}
+
 void LibWebRTCProvider::disableNonLocalhostConnections()
 {
     m_disableNonLocalhostConnections = true;
@@ -395,7 +403,11 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> LibWebRTCProvider::createPee
     std::unique_ptr<cricket::BasicPortAllocator> portAllocator;
     factoryAndThreads.signalingThread->BlockingCall([&]() {
         auto basicPortAllocator = makeUniqueWithoutFastMallocCheck<cricket::BasicPortAllocator>(&networkManager, &packetSocketFactory);
-
+        
+        if (m_minPeerPort < m_maxPeerPort) {
+            basicPortAllocator->SetPortRange(m_minPeerPort, m_maxPeerPort);
+            printf("MS: SetPortRange: %d %d\n", m_minPeerPort, m_maxPeerPort); fflush(stdout);
+        }
         basicPortAllocator->set_allow_tcp_listen(false);
         portAllocator = WTFMove(basicPortAllocator);
     });
