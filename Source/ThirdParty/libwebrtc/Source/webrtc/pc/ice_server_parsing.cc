@@ -159,6 +159,7 @@ RTCError ParseIceServerUrl(
     const PeerConnectionInterface::IceServer& server,
     absl::string_view url,
     cricket::ServerAddresses* stun_servers,
+    cricket::ServerAddresses* stun_dtls_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   // RFC 7064
   // stunURI       = scheme ":" host [ ":" port ]
@@ -268,8 +269,10 @@ RTCError ParseIceServerUrl(
 
   switch (service_type) {
     case ServiceType::STUN:
-    case ServiceType::STUNS:
       stun_servers->insert(rtc::SocketAddress(address, port));
+      break;
+    case ServiceType::STUNS:
+      stun_dtls_servers->insert(rtc::SocketAddress(address, port));
       break;
     case ServiceType::TURN:
     case ServiceType::TURNS: {
@@ -329,6 +332,7 @@ RTCError ParseIceServerUrl(
 RTCError ParseIceServersOrError(
     const PeerConnectionInterface::IceServers& servers,
     cricket::ServerAddresses* stun_servers,
+    cricket::ServerAddresses* stun_dtls_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   for (const PeerConnectionInterface::IceServer& server : servers) {
     if (!server.urls.empty()) {
@@ -338,7 +342,7 @@ RTCError ParseIceServersOrError(
                                "ICE server parsing failed: Empty uri.");
         }
         RTCError err =
-            ParseIceServerUrl(server, url, stun_servers, turn_servers);
+            ParseIceServerUrl(server, url, stun_servers, stun_dtls_servers, turn_servers);
         if (!err.ok()) {
           return err;
         }
@@ -346,7 +350,7 @@ RTCError ParseIceServersOrError(
     } else if (!server.uri.empty()) {
       // Fallback to old .uri if new .urls isn't present.
       RTCError err =
-          ParseIceServerUrl(server, server.uri, stun_servers, turn_servers);
+          ParseIceServerUrl(server, server.uri, stun_servers, stun_dtls_servers, turn_servers);
 
       if (!err.ok()) {
         return err;
@@ -362,8 +366,9 @@ RTCError ParseIceServersOrError(
 RTCErrorType ParseIceServers(
     const PeerConnectionInterface::IceServers& servers,
     cricket::ServerAddresses* stun_servers,
+    cricket::ServerAddresses* stun_dtls_servers,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
-  return ParseIceServersOrError(servers, stun_servers, turn_servers).type();
+  return ParseIceServersOrError(servers, stun_servers, stun_dtls_servers, turn_servers).type();
 }
 
 }  // namespace webrtc

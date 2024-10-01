@@ -122,6 +122,7 @@ void PortAllocator::set_restrict_ice_credentials_change(bool value) {
 // Deprecated
 bool PortAllocator::SetConfiguration(
     const ServerAddresses& stun_servers,
+    const ServerAddresses& stun_dtls_servers,
     const std::vector<RelayServerConfig>& turn_servers,
     int candidate_pool_size,
     bool prune_turn_ports,
@@ -129,13 +130,14 @@ bool PortAllocator::SetConfiguration(
     const absl::optional<int>& stun_candidate_keepalive_interval) {
   webrtc::PortPrunePolicy turn_port_prune_policy =
       prune_turn_ports ? webrtc::PRUNE_BASED_ON_PRIORITY : webrtc::NO_PRUNE;
-  return SetConfiguration(stun_servers, turn_servers, candidate_pool_size,
+  return SetConfiguration(stun_servers, stun_dtls_servers, turn_servers, candidate_pool_size,
                           turn_port_prune_policy, turn_customizer,
                           stun_candidate_keepalive_interval);
 }
 
 bool PortAllocator::SetConfiguration(
     const ServerAddresses& stun_servers,
+    const ServerAddresses& stun_dtls_servers,
     const std::vector<RelayServerConfig>& turn_servers,
     int candidate_pool_size,
     webrtc::PortPrunePolicy turn_port_prune_policy,
@@ -151,6 +153,7 @@ bool PortAllocator::SetConfiguration(
   bool ice_servers_changed =
       (stun_servers != stun_servers_ || turn_servers != turn_servers_);
   stun_servers_ = stun_servers;
+  stun_dtls_servers_ = stun_dtls_servers;
   turn_servers_ = turn_servers;
   turn_port_prune_policy_ = turn_port_prune_policy;
 

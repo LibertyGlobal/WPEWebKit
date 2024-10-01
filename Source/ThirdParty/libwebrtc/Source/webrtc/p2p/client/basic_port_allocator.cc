@@ -178,7 +178,7 @@ BasicPortAllocator::BasicPortAllocator(
   RTC_CHECK(socket_factory_);
   RTC_DCHECK(relay_port_factory_);
   RTC_DCHECK(network_manager_);
-  SetConfiguration(ServerAddresses(), std::vector<RelayServerConfig>(), 0,
+  SetConfiguration(ServerAddresses(), ServerAddresses(), std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, customizer);
 }
 
@@ -186,6 +186,7 @@ BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
     rtc::PacketSocketFactory* socket_factory,
     const ServerAddresses& stun_servers,
+    const ServerAddresses& stun_dtls_servers,
     const webrtc::FieldTrialsView* field_trials)
     : field_trials_(field_trials),
       network_manager_(network_manager),
@@ -195,7 +196,7 @@ BasicPortAllocator::BasicPortAllocator(
   RTC_CHECK(socket_factory_);
   RTC_DCHECK(relay_port_factory_);
   RTC_DCHECK(network_manager_);
-  SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
+  SetConfiguration(stun_servers, stun_dtls_servers, std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, nullptr);
 }
 
@@ -264,7 +265,7 @@ void BasicPortAllocator::AddTurnServerForTesting(
   CheckRunOnValidThreadAndInitialized();
   std::vector<RelayServerConfig> new_turn_servers = turn_servers();
   new_turn_servers.push_back(turn_server);
-  SetConfiguration(stun_servers(), new_turn_servers, candidate_pool_size(),
+  SetConfiguration(stun_servers(), stun_dtls_servers(), new_turn_servers, candidate_pool_size(),
                    turn_port_prune_policy(), turn_customizer());
 }
 
@@ -605,7 +606,7 @@ void BasicPortAllocatorSession::GetPortConfigurations() {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   auto config = std::make_unique<PortConfiguration>(
-      allocator_->stun_servers(), username(), password(),
+      allocator_->stun_servers(), allocator_->stun_dtls_servers(), username(), password(),
       allocator()->field_trials());
 
   for (const RelayServerConfig& turn_server : allocator_->turn_servers()) {
@@ -1447,8 +1448,10 @@ void AllocationSequence::Process(int epoch) {
 
   switch (phase_) {
     case PHASE_UDP:
+      printf("TESTIT: PHASE_UDP\n"); fflush(stdout);
       CreateUDPPorts();
       CreateStunPorts();
+      CreateDTLSStunPorts();
       break;
 
     case PHASE_RELAY:
@@ -1476,6 +1479,55 @@ void AllocationSequence::Process(int epoch) {
     ++epoch_;
     port_allocation_complete_callback_();
   }
+}
+void AllocationSequence::CreateDTLSStunPorts() {
+  printf("TESTIT: CreateDTLSStunPorts pre\n"); fflush(stdout);
+  if (IsFlagSet(PORTALLOCATOR_DISABLE_STUN)) {
+    RTC_LOG(LS_VERBOSE) << "AllocationSequence: STUN ports disabled, skipping.";
+    return;
+  }
+
+  //if (IsFlagSet(PORTALLOCATOR_ENABLE_SHARED_SOCKET)) {
+  //  printf("TESTIT: CreateDTLSStunPorts post shared socket enabled\n"); fflush(stdout);
+  //  return;
+  //}
+
+  if (!(config_ && !config_->StunDtlsServers().empty())) {
+    RTC_LOG(LS_WARNING)
+        << "AllocationSequence: No STUN dtls server configured, skipping.";
+    printf("TESTIT: CreateDTLSStunPorts post no dtls servers\n"); fflush(stdout);
+    return;
+  }
+
+
+  // Relative priority of candidates from this TURN server in relation
+  // to the candidates from other servers. Required because ICE priorities
+  // need to be unique.
+  int relative_priority = config_->StunDtlsServers().size();
+  for (rtc::SocketAddress adr : config_->stun_dtls_servers) {
+    printf("TESTIT: CreateDTLSStunPort single %x:%d %d\n", adr.ip(), adr.port(), relative_priority); fflush(stdout);
+    CreateDTLSStunPort(adr);
+    relative_priority--;
+  }
+  printf("TESTIT: CreateDTLSStunPorts post\n"); fflush(stdout);
+}
+
+void AllocationSequence::CreateDTLSStunPort(const rtc::SocketAddress& adr) {
+  printf("TESTIT: CreateDTLSStunPort pre\n"); fflush(stdout);
+  //cricket::ServerAddresses adrs = {adr};
+  std::unique_ptr<StunPort> port = StunPort::CreateDtls(
+      session_->network_thread(), session_->socket_factory(), network_,
+      session_->allocator()->min_port(), session_->allocator()->max_port(),
+      session_->username(), session_->password(), adr,
+      session_->allocator()->stun_candidate_keepalive_interval(),
+      session_->allocator()->field_trials());
+  if (port) {
+    port->SetIceTiebreaker(session_->ice_tiebreaker());
+    session_->AddAllocatedPort(port.release(), this);
+    // Since StunPort is not created using shared socket, `port` will not be
+    // added to the dequeue.
+  }
+  printf("TESTIT: CreateDTLSStunPort post\n"); fflush(stdout);
 }
 
 void AllocationSequence::CreateUDPPorts() {
@@ -1737,10 +1789,11 @@ void AllocationSequence::OnPortDestroyed(PortInterface* port) {
 
 PortConfiguration::PortConfiguration(
     const ServerAddresses& stun_servers,
+    const ServerAddresses& stun_dtls_servers,
     absl::string_view username,
     absl::string_view password,
     const webrtc::FieldTrialsView* field_trials)
-    : stun_servers(stun_servers), username(username), password(password) {
+    : stun_servers(stun_servers), stun_dtls_servers(stun_dtls_servers), username(username), password(password) {
   if (!stun_servers.empty())
     stun_address = *(stun_servers.begin());
   // Note that this won't change once the config is initialized.
@@ -1748,6 +1801,10 @@ PortConfiguration::PortConfiguration(
     use_turn_server_as_stun_server_disabled =
         field_trials->IsDisabled("WebRTC-UseTurnServerAsStunServer");
   }
+}
+
+ServerAddresses PortConfiguration::StunDtlsServers() {
+  return stun_dtls_servers;
 }
 
 ServerAddresses PortConfiguration::StunServers() {

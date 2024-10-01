@@ -141,6 +141,7 @@ class RTC_EXPORT UDPPort : public Port {
           const webrtc::FieldTrialsView* field_trials);
 
   bool Init();
+  bool InitDtls(const rtc::SocketAddress& address);
 
   int SendTo(const void* data,
              size_t size,
@@ -284,6 +285,18 @@ class StunPort : public UDPPort {
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials);
 
+  static std::unique_ptr<StunPort> CreateDtls(
+      rtc::Thread* thread,
+      rtc::PacketSocketFactory* factory,
+      const rtc::Network* network,
+      uint16_t min_port,
+      uint16_t max_port,
+      absl::string_view username,
+      absl::string_view password,
+      const rtc::SocketAddress& adr,
+      absl::optional<int> stun_keepalive_interval,
+      const webrtc::FieldTrialsView* field_trials);
+
   void PrepareAddress() override;
 
  protected:
@@ -296,6 +309,20 @@ class StunPort : public UDPPort {
            absl::string_view password,
            const ServerAddresses& servers,
            const webrtc::FieldTrialsView* field_trials);
+  StunPort(rtc::Thread* thread,
+           rtc::PacketSocketFactory* factory,
+           const rtc::Network* network,
+           uint16_t min_port,
+           uint16_t max_port,
+           absl::string_view username,
+           absl::string_view password,
+           const rtc::SocketAddress& adr,
+           const webrtc::FieldTrialsView* field_trials);
+  /*private:
+    TlsCertPolicy tls_cert_policy_ = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
+    std::vector<std::string> tls_alpn_protocols_;
+    std::vector<std::string> tls_elliptic_curves_;
+    rtc::SSLCertificateVerifier* tls_cert_verifier_; */
 };
 
 }  // namespace cricket

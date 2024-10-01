@@ -372,11 +372,12 @@ bool DtlsEnabled(const PeerConnectionInterface::RTCConfiguration& configuration,
 RTCError ParseAndValidateIceServersFromConfiguration(
     const PeerConnectionInterface::RTCConfiguration& configuration,
     cricket::ServerAddresses& stun_servers,
+    cricket::ServerAddresses& stun_dtls_servers,
     std::vector<cricket::RelayServerConfig>& turn_servers,
     UsagePattern& usage_pattern) {
   RTC_DCHECK(stun_servers.empty());
   RTC_DCHECK(turn_servers.empty());
-  RTCError err = ParseIceServersOrError(configuration.servers, &stun_servers,
+  RTCError err = ParseIceServersOrError(configuration.servers, &stun_servers, &stun_dtls_servers,
                                         &turn_servers);
   if (!err.ok()) {
     return err;
@@ -718,9 +719,10 @@ RTCError PeerConnection::Initialize(
   TRACE_EVENT0("webrtc", "PeerConnection::Initialize");
 
   cricket::ServerAddresses stun_servers;
+  cricket::ServerAddresses stun_dtls_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
   RTCError parse_error = ParseAndValidateIceServersFromConfiguration(
-      configuration, stun_servers, turn_servers, usage_pattern_);
+      configuration, stun_servers, stun_dtls_servers, turn_servers, usage_pattern_);
   if (!parse_error.ok()) {
     return parse_error;
   }
@@ -730,7 +732,7 @@ RTCError PeerConnection::Initialize(
     RTC_DCHECK_RUN_ON(network_thread());
     network_thread_safety_ = PendingTaskSafetyFlag::Create();
     InitializePortAllocatorResult pa_result =
-        InitializePortAllocator_n(stun_servers, turn_servers, configuration);
+        InitializePortAllocator_n(stun_servers, stun_dtls_servers, turn_servers, configuration);
     // Send information about IPv4/IPv6 status.
     PeerConnectionAddressFamilyCounter address_family =
         pa_result.enable_ipv6 ? kPeerConnection_IPv6 : kPeerConnection_IPv4;
@@ -1630,9 +1632,10 @@ RTCError PeerConnection::SetConfiguration(
 
   // Parse ICE servers before hopping to network thread.
   cricket::ServerAddresses stun_servers;
+  cricket::ServerAddresses stun_dtls_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
   validate_error = ParseAndValidateIceServersFromConfiguration(
-      configuration, stun_servers, turn_servers, usage_pattern_);
+      configuration, stun_servers, stun_dtls_servers, turn_servers, usage_pattern_);
   if (!validate_error.ok()) {
     return validate_error;
   }
@@ -1650,7 +1653,7 @@ RTCError PeerConnection::SetConfiguration(
   // Apply part of the configuration on the network thread.  In theory this
   // shouldn't fail.
   if (!network_thread()->BlockingCall(
-          [this, needs_ice_restart, &ice_config, &stun_servers, &turn_servers,
+          [this, needs_ice_restart, &ice_config, &stun_servers, &stun_dtls_servers, &turn_servers,
            &modified_config, has_local_description] {
             RTC_DCHECK_RUN_ON(network_thread());
             // As described in JSEP, calling setConfiguration with new ICE
@@ -1664,7 +1667,7 @@ RTCError PeerConnection::SetConfiguration(
             transport_controller_->SetActiveResetSrtpParams(
                 modified_config.active_reset_srtp_params);
             return ReconfigurePortAllocator_n(
-                stun_servers, turn_servers, modified_config.type,
+                stun_servers, stun_dtls_servers, turn_servers, modified_config.type,
                 modified_config.ice_candidate_pool_size,
                 modified_config.GetTurnPortPrunePolicy(),
                 modified_config.turn_customizer,
@@ -2163,6 +2166,7 @@ void PeerConnection::OnSctpDataChannelStateChanged(
 PeerConnection::InitializePortAllocatorResult
 PeerConnection::InitializePortAllocator_n(
     const cricket::ServerAddresses& stun_servers,
+    const cricket::ServerAddresses& stun_dtls_servers,
     const std::vector<cricket::RelayServerConfig>& turn_servers,
     const RTCConfiguration& configuration) {
   RTC_DCHECK_RUN_ON(network_thread());
@@ -2212,7 +2216,7 @@ PeerConnection::InitializePortAllocator_n(
   // Call this last since it may create pooled allocator sessions using the
   // properties set above.
   port_allocator_->SetConfiguration(
-      stun_servers, std::move(turn_servers_copy),
+      stun_servers, stun_dtls_servers, std::move(turn_servers_copy),
       configuration.ice_candidate_pool_size,
       configuration.GetTurnPortPrunePolicy(), configuration.turn_customizer,
       configuration.stun_candidate_keepalive_interval);
@@ -2224,6 +2228,7 @@ PeerConnection::InitializePortAllocator_n(
 
 bool PeerConnection::ReconfigurePortAllocator_n(
     const cricket::ServerAddresses& stun_servers,
+    const cricket::ServerAddresses& stun_dtls_servers,
     const std::vector<cricket::RelayServerConfig>& turn_servers,
     IceTransportsType type,
     int candidate_pool_size,
@@ -2242,7 +2247,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
   // Call this last since it may create pooled allocator sessions using the
   // candidate filter set above.
   return port_allocator_->SetConfiguration(
-      stun_servers, std::move(turn_servers_copy), candidate_pool_size,
+      stun_servers, stun_dtls_servers, std::move(turn_servers_copy), candidate_pool_size,
       turn_port_prune_policy, turn_customizer,
       stun_candidate_keepalive_interval);
 }
