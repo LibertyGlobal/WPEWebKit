@@ -31,6 +31,7 @@
 #if ENABLE(ENCRYPTED_MEDIA) && ENABLE(THUNDER)
 
 #include <open_cdm.h>
+#include <WPEFramework/interfaces/DRMCallbackData.h>
 #include <wtf/BoxPtr.h>
 
 namespace WTF {

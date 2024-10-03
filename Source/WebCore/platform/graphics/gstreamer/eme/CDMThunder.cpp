@@ -309,6 +309,24 @@ CDMInstanceSessionThunder::CDMInstanceSessionThunder(CDMInstanceThunder& instanc
             session->errorCallback(WTFMove(buffer));
         });
     };
+
+    // bind_license_callback)(const OpenCDMSession* session, void* userData, const DrmBindCallbackData *callbackData);
+    m_thunderSessionCallbacks.bind_license_callback = [](const OpenCDMSession* session, void* userData, uint32_t callbackType, const void *callbackData) {
+        fprintf(stderr, "xaxax %s:%d \n", __FILE__, __LINE__);
+        if (callbackData) switch (callbackType) {
+            case PRD30_EXTENDED_RESTRICTION_CONDITION:
+            {
+                const PRD30_EXTENDED_RESTRICTION_CONDITION_DATA *data = static_cast<const PRD30_EXTENDED_RESTRICTION_CONDITION_DATA *>(callbackData);
+
+                fprintf(stderr, "xaxa %s:%d PRD30_EXTENDED_RESTRICTION_CONDITION %s %lld/%lld ", __FILE__, __LINE__, data->fValid ? "VALID" : "NOT_VALID", data->dwBeginDate, data->dwEndDate);
+                for (size_t i=0; i<16; ++i) fprintf(stderr, "%x/%x,", data->kid[i], data->lid[i]);
+                fprintf(stderr, "\n");
+            }
+                break;
+            default:
+                fprintf(stderr, "xaxa %s:%d default/ callbackType=%x\n", __FILE__, __LINE__, callbackType);
+        }
+    };
 }
 
 RefPtr<CDMInstanceSession> CDMInstanceThunder::createSession()
