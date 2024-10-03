@@ -20,6 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "p2p/base/port.h"
+#include "p2p/base/port_allocator.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/system/rtc_export.h"
@@ -115,7 +116,9 @@ class RTC_EXPORT UDPPort : public Port {
   void set_stun_keepalive_lifetime(int lifetime) {
     stun_keepalive_lifetime_ = lifetime;
   }
-
+  void set_stun_server_config(const StunServerConfig& cfg) {
+    stun_server_config_ = cfg;
+  }
   StunRequestManager& request_manager() { return request_manager_; }
 
  protected:
@@ -141,7 +144,7 @@ class RTC_EXPORT UDPPort : public Port {
           const webrtc::FieldTrialsView* field_trials);
 
   bool Init();
-  bool InitDtls(const rtc::SocketAddress& address);
+  bool InitDtls(const rtc::SocketAddress& remote_address);
 
   int SendTo(const void* data,
              size_t size,
@@ -253,6 +256,7 @@ class RTC_EXPORT UDPPort : public Port {
   ServerAddresses bind_request_succeeded_servers_;
   ServerAddresses bind_request_failed_servers_;
   StunRequestManager request_manager_;
+  StunServerConfig stun_server_config_;
   rtc::AsyncPacketSocket* socket_;
   int error_;
   int send_error_count_ = 0;
@@ -293,7 +297,7 @@ class StunPort : public UDPPort {
       uint16_t max_port,
       absl::string_view username,
       absl::string_view password,
-      const rtc::SocketAddress& adr,
+      const StunServerConfig& cfg,
       absl::optional<int> stun_keepalive_interval,
       const webrtc::FieldTrialsView* field_trials);
 
@@ -316,13 +320,8 @@ class StunPort : public UDPPort {
            uint16_t max_port,
            absl::string_view username,
            absl::string_view password,
-           const rtc::SocketAddress& adr,
+           const StunServerConfig& cfg,
            const webrtc::FieldTrialsView* field_trials);
-  /*private:
-    TlsCertPolicy tls_cert_policy_ = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
-    std::vector<std::string> tls_alpn_protocols_;
-    std::vector<std::string> tls_elliptic_curves_;
-    rtc::SSLCertificateVerifier* tls_cert_verifier_; */
 };
 
 }  // namespace cricket

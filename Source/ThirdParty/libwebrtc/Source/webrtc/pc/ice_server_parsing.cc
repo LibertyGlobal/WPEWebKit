@@ -159,7 +159,7 @@ RTCError ParseIceServerUrl(
     const PeerConnectionInterface::IceServer& server,
     absl::string_view url,
     cricket::ServerAddresses* stun_servers,
-    cricket::ServerAddresses* stun_dtls_servers,
+    std::vector<cricket::StunServerConfig>* stun_servers_config,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   // RFC 7064
   // stunURI       = scheme ":" host [ ":" port ]
@@ -268,12 +268,31 @@ RTCError ParseIceServerUrl(
   }
 
   switch (service_type) {
-    case ServiceType::STUN:
+    case ServiceType::STUN: {
+      // for "stun" locators UDP only case, no TCP
+
+      // TODO: try to remove that and simplify number of parameters in API at multiple levels
       stun_servers->insert(rtc::SocketAddress(address, port));
+
+      cricket::StunServerConfig config = 
+          cricket::StunServerConfig(rtc::SocketAddress(address, port));
+      stun_servers_config->push_back(config);
       break;
-    case ServiceType::STUNS:
-      stun_dtls_servers->insert(rtc::SocketAddress(address, port));
+    }
+    case ServiceType::STUNS: {
+      // for "stuns" locators UDP + DTLS case, no TCP
+      cricket::StunServerConfig config = 
+          cricket::StunServerConfig(rtc::SocketAddress(address, port), cricket::PROTO_DTLS);
+      if (server.tls_cert_policy ==
+          PeerConnectionInterface::kTlsCertPolicyInsecureNoCheck) {
+        config.tls_cert_policy =
+            cricket::TlsCertPolicy::TLS_CERT_POLICY_INSECURE_NO_CHECK;
+      }
+      config.tls_alpn_protocols = server.tls_alpn_protocols;
+      config.tls_elliptic_curves = server.tls_elliptic_curves;
+      stun_servers_config->push_back(config);
       break;
+    }
     case ServiceType::TURN:
     case ServiceType::TURNS: {
       if (server.username.empty() || server.password.empty()) {
@@ -332,7 +351,7 @@ RTCError ParseIceServerUrl(
 RTCError ParseIceServersOrError(
     const PeerConnectionInterface::IceServers& servers,
     cricket::ServerAddresses* stun_servers,
-    cricket::ServerAddresses* stun_dtls_servers,
+    std::vector<cricket::StunServerConfig>* stun_servers_config,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
   for (const PeerConnectionInterface::IceServer& server : servers) {
     if (!server.urls.empty()) {
@@ -342,7 +361,7 @@ RTCError ParseIceServersOrError(
                                "ICE server parsing failed: Empty uri.");
         }
         RTCError err =
-            ParseIceServerUrl(server, url, stun_servers, stun_dtls_servers, turn_servers);
+            ParseIceServerUrl(server, url, stun_servers, stun_servers_config, turn_servers);
         if (!err.ok()) {
           return err;
         }
@@ -350,7 +369,7 @@ RTCError ParseIceServersOrError(
     } else if (!server.uri.empty()) {
       // Fallback to old .uri if new .urls isn't present.
       RTCError err =
-          ParseIceServerUrl(server, server.uri, stun_servers, stun_dtls_servers, turn_servers);
+          ParseIceServerUrl(server, server.uri, stun_servers, stun_servers_config, turn_servers);
 
       if (!err.ok()) {
         return err;
@@ -366,9 +385,9 @@ RTCError ParseIceServersOrError(
 RTCErrorType ParseIceServers(
     const PeerConnectionInterface::IceServers& servers,
     cricket::ServerAddresses* stun_servers,
-    cricket::ServerAddresses* stun_dtls_servers,
+    std::vector<cricket::StunServerConfig>* stun_servers_config,
     std::vector<cricket::RelayServerConfig>* turn_servers) {
-  return ParseIceServersOrError(servers, stun_servers, stun_dtls_servers, turn_servers).type();
+  return ParseIceServersOrError(servers, stun_servers, stun_servers_config, turn_servers).type();
 }
 
 }  // namespace webrtc

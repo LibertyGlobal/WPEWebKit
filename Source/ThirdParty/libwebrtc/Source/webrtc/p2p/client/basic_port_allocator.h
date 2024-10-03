@@ -44,7 +44,7 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
                      const ServerAddresses& stun_servers,
-                     const ServerAddresses& stun_dtls_servers,
+                     const std::vector<cricket::StunServerConfig>& stun_servers_config,
                      const webrtc::FieldTrialsView* field_trials = nullptr);
   ~BasicPortAllocator() override;
 
@@ -297,7 +297,7 @@ struct RTC_EXPORT PortConfiguration {
   // TODO(jiayl): remove `stun_address` when Chrome is updated.
   rtc::SocketAddress stun_address;
   ServerAddresses stun_servers;
-  ServerAddresses stun_dtls_servers;
+  std::vector<StunServerConfig> stun_servers_config;
   std::string username;
   std::string password;
   bool use_turn_server_as_stun_server_disabled = false;
@@ -306,7 +306,7 @@ struct RTC_EXPORT PortConfiguration {
   RelayList relays;
 
   PortConfiguration(const ServerAddresses& stun_servers,
-                    const ServerAddresses& stun_dtls_servers,
+                    const std::vector<StunServerConfig>& stun_servers_config,
                     absl::string_view username,
                     absl::string_view password,
                     const webrtc::FieldTrialsView* field_trials = nullptr);
@@ -314,8 +314,6 @@ struct RTC_EXPORT PortConfiguration {
   // Returns addresses of both the explicitly configured STUN servers,
   // and TURN servers that should be used as STUN servers.
   ServerAddresses StunServers();
-
-  ServerAddresses StunDtlsServers();
 
   // Adds another relay server, with the given ports and modifier, to the list.
   void AddRelay(const RelayServerConfig& config);
@@ -387,7 +385,7 @@ class AllocationSequence : public sigslot::has_slots<> {
 
  private:
   void CreateTurnPort(const RelayServerConfig& config, int relative_priority);
-  void CreateDTLSStunPort(const rtc::SocketAddress& adr);
+  void CreateDTLSStunPort(const cricket::StunServerConfig& config);
   typedef std::vector<ProtocolType> ProtocolList;
 
   void Process(int epoch);

@@ -228,32 +228,31 @@ bool UDPPort::Init() {
   return true;
 }
 
-bool UDPPort::InitDtls(const rtc::SocketAddress& address) {
-  stun_keepalive_lifetime_ = GetStunKeepaliveLifetime();
-  if (!SharedSocket()) {
-    RTC_DCHECK(socket_ == nullptr);
-    rtc::PacketSocketOptions udp_options;
-    StunServerConfig cfg;
-    int opts = rtc::PacketSocketFactory::OPT_STUN;
-    if (cfg.tls_cert_policy == TlsCertPolicy::TLS_CERT_POLICY_SECURE) {
-      opts |= rtc::PacketSocketFactory::OPT_DTLS;
-      printf("TESTIT: setup DTLS\n"); fflush(stdout);
-    } else {
-      opts |= rtc::PacketSocketFactory::OPT_DTLS_INSECURE;
-    }
-    udp_options.tls_alpn_protocols = cfg.tls_alpn_protocols;
-    udp_options.tls_elliptic_curves = cfg.tls_elliptic_curves;
-    udp_options.tls_cert_verifier = cfg.tls_cert_verifier;
-    udp_options.opts = opts;
-
-    socket_ = socket_factory()->CreateClientUdpSocket(
-        rtc::SocketAddress(Network()->GetBestIP(), 0), address, min_port(), max_port(), udp_options);
-    if (!socket_) {
-      RTC_LOG(LS_WARNING) << ToString() << ": UDP socket creation failed";
-      return false;
-    }
-    socket_->SignalReadPacket.connect(this, &UDPPort::OnReadPacket);
+bool UDPPort::InitDtls(const rtc::SocketAddress& remote_address) {
+  if (SharedSocket()) {
+    return false;
   }
+  stun_keepalive_lifetime_ = GetStunKeepaliveLifetime();
+  RTC_DCHECK(socket_ == nullptr);
+  rtc::PacketSocketOptions udp_options;
+  int opts = rtc::PacketSocketFactory::OPT_STUN;
+  if (stun_server_config_.tls_cert_policy == TlsCertPolicy::TLS_CERT_POLICY_SECURE) {
+    opts |= rtc::PacketSocketFactory::OPT_DTLS;
+  } else {
+    opts |= rtc::PacketSocketFactory::OPT_DTLS_INSECURE;
+  }
+  udp_options.tls_alpn_protocols = stun_server_config_.tls_alpn_protocols;
+  udp_options.tls_elliptic_curves = stun_server_config_.tls_elliptic_curves;
+  udp_options.tls_cert_verifier = stun_server_config_.tls_cert_verifier;
+  udp_options.opts = opts;
+
+  socket_ = socket_factory()->CreateClientUdpSocket(
+  rtc::SocketAddress(Network()->GetBestIP(), 0), remote_address, min_port(), max_port(), udp_options);
+  if (!socket_) {
+    RTC_LOG(LS_WARNING) << ToString() << ": UDP socket creation failed";
+    return false;
+  }
+  socket_->SignalReadPacket.connect(this, &UDPPort::OnReadPacket);
   socket_->SignalSentPacket.connect(this, &UDPPort::OnSentPacket);
   socket_->SignalReadyToSend.connect(this, &UDPPort::OnReadyToSend);
   socket_->SignalAddressReady.connect(this, &UDPPort::OnLocalAddressReady);
@@ -525,14 +524,16 @@ void UDPPort::SendStunBindingRequest(const rtc::SocketAddress& stun_addr) {
 
   } else {
     if (!socket_) {
-      printf("TESTIT: delayed init dtls\n"); fflush(stdout);
       // delayed binding
-      InitDtls(stun_addr);
-      printf("TESTIT: delayed init dtls force return\n"); fflush(stdout);
+      if (!InitDtls(stun_addr)) {
+        const char* reason = "STUN Cannot initialize DTLS.";
+        RTC_LOG(LS_WARNING) << reason;
+        OnStunBindingOrResolveRequestFailed(stun_addr, SERVER_NOT_REACHABLE_ERROR,
+                                            reason);
+      }
       return;
     }
     if (socket_->GetState() == rtc::AsyncPacketSocket::STATE_BOUND) {
-      printf("TESTIT: stun request: bound\n"); fflush(stdout);
       // Check if `server_addr_` is compatible with the port's ip.
       if (IsCompatibleAddress(stun_addr)) {
         printf("TESTIT: stun request: sending\n"); fflush(stdout);
@@ -540,7 +541,6 @@ void UDPPort::SendStunBindingRequest(const rtc::SocketAddress& stun_addr) {
             new StunBindingRequest(this, stun_addr, rtc::TimeMillis()));
       }
     } else {
-      printf("TESTIT: stun request: not bound\n"); fflush(stdout);
       // Since we can't send stun messages to the server, we should mark this
       // port ready.
       const char* reason = "STUN server address is incompatible.";
@@ -715,17 +715,17 @@ std::unique_ptr<StunPort> StunPort::CreateDtls(
     uint16_t max_port,
     absl::string_view username,
     absl::string_view password,
-    const rtc::SocketAddress& adr,
+    const StunServerConfig& cfg,
     absl::optional<int> stun_keepalive_interval,
     const webrtc::FieldTrialsView* field_trials) {
   // Using `new` to access a non-public constructor.
   auto port = absl::WrapUnique(new StunPort(thread, factory, network, min_port,
                                             max_port, username, password,
-                                            adr, field_trials));
+                                            cfg, field_trials));
+  const cricket::ServerAddresses adrs = { cfg.protocol_address.address };
+  port->set_server_addresses(adrs);
   port->set_stun_keepalive_delay(stun_keepalive_interval);
-  //if (!port->InitDtls(adr)) {
-  //  return nullptr;
-  //}
+  port->set_stun_server_config(cfg);
   return port;
 }
 
@@ -736,7 +736,7 @@ StunPort::StunPort(rtc::Thread* thread,
                    uint16_t max_port,
                    absl::string_view username,
                    absl::string_view password,
-                   const rtc::SocketAddress& adr,
+                   const StunServerConfig& cfg,
                    const webrtc::FieldTrialsView* field_trials)
     : UDPPort(thread,
               STUN_PORT_TYPE,
@@ -748,9 +748,6 @@ StunPort::StunPort(rtc::Thread* thread,
               password,
               false,
               field_trials) {
-  const cricket::ServerAddresses adrs = { adr };
-  printf("TESTIT: set single address\n"); fflush(stdout);
-  set_server_addresses(adrs);
 }
 
 StunPort::StunPort(rtc::Thread* thread,
