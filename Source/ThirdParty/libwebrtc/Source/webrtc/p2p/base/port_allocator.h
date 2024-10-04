@@ -168,6 +168,8 @@ struct RTC_EXPORT StunServerConfig {
   ProtocolAddress protocol_address;
 };
 
+typedef std::vector<StunServerConfig> StunServerConfigs;
+
 // TODO(deadbeef): Rename to TurnServerConfig.
 struct RTC_EXPORT RelayServerConfig {
   RelayServerConfig();
@@ -384,16 +386,14 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   //
   // Returns true if the configuration could successfully be changed.
   // Deprecated
-  bool SetConfiguration(const ServerAddresses& stun_servers,
-                        const std::vector<StunServerConfig>& stun_servers_config,
+  bool SetConfiguration(const StunServerConfigs& stun_servers,
                         const std::vector<RelayServerConfig>& turn_servers,
                         int candidate_pool_size,
                         bool prune_turn_ports,
                         webrtc::TurnCustomizer* turn_customizer = nullptr,
                         const absl::optional<int>&
                             stun_candidate_keepalive_interval = absl::nullopt);
-  bool SetConfiguration(const ServerAddresses& stun_servers,
-                        const std::vector<StunServerConfig>& stun_servers_config,
+  bool SetConfiguration(const StunServerConfigs& stun_servers,
                         const std::vector<RelayServerConfig>& turn_servers,
                         int candidate_pool_size,
                         webrtc::PortPrunePolicy turn_port_prune_policy,
@@ -409,7 +409,7 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
     return stun_servers_;
   }
 
-  const std::vector<StunServerConfig>& stun_servers_config() const {
+  const StunServerConfigs& stun_servers_config() const {
     CheckRunOnValidThreadIfInitialized();
     return stun_servers_config_;
   }
@@ -669,8 +669,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   webrtc::VpnPreference vpn_preference_ = webrtc::VpnPreference::kDefault;
 
  private:
-  ServerAddresses stun_servers_;
-  std::vector<StunServerConfig> stun_servers_config_;
+  ServerAddresses stun_servers_; /* ordinary UDP servers */
+  StunServerConfigs stun_servers_config_; /* complete configuration */
   std::vector<RelayServerConfig> turn_servers_;
   int candidate_pool_size_ = 0;  // Last value passed into SetConfiguration.
   std::vector<std::unique_ptr<PortAllocatorSession>> pooled_sessions_;

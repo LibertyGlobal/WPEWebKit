@@ -43,8 +43,7 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
                      const webrtc::FieldTrialsView* field_trials = nullptr);
   BasicPortAllocator(rtc::NetworkManager* network_manager,
                      rtc::PacketSocketFactory* socket_factory,
-                     const ServerAddresses& stun_servers,
-                     const std::vector<cricket::StunServerConfig>& stun_servers_config,
+                     const cricket::StunServerConfigs& stun_servers,
                      const webrtc::FieldTrialsView* field_trials = nullptr);
   ~BasicPortAllocator() override;
 
@@ -297,7 +296,7 @@ struct RTC_EXPORT PortConfiguration {
   // TODO(jiayl): remove `stun_address` when Chrome is updated.
   rtc::SocketAddress stun_address;
   ServerAddresses stun_servers;
-  std::vector<StunServerConfig> stun_servers_config;
+  StunServerConfigs stun_servers_config;
   std::string username;
   std::string password;
   bool use_turn_server_as_stun_server_disabled = false;
@@ -306,7 +305,7 @@ struct RTC_EXPORT PortConfiguration {
   RelayList relays;
 
   PortConfiguration(const ServerAddresses& stun_servers,
-                    const std::vector<StunServerConfig>& stun_servers_config,
+                    const StunServerConfigs& stun_servers_config,
                     absl::string_view username,
                     absl::string_view password,
                     const webrtc::FieldTrialsView* field_trials = nullptr);

@@ -499,15 +499,13 @@ class PeerConnection : public PeerConnectionInternal,
     bool enable_ipv6;
   };
   InitializePortAllocatorResult InitializePortAllocator_n(
-      const cricket::ServerAddresses& stun_servers,
-      const std::vector<cricket::StunServerConfig>& stun_servers_config,
+      const cricket::StunServerConfigs& stun_servers,
       const std::vector<cricket::RelayServerConfig>& turn_servers,
       const RTCConfiguration& configuration);
   // Called when SetConfiguration is called to apply the supported subset
   // of the configuration on the network thread.
   bool ReconfigurePortAllocator_n(
-      const cricket::ServerAddresses& stun_servers,
-      const std::vector<cricket::StunServerConfig>& stun_servers_config,
+      const cricket::StunServerConfigs& stun_servers,
       const std::vector<cricket::RelayServerConfig>& turn_servers,
       IceTransportsType type,
       int candidate_pool_size,

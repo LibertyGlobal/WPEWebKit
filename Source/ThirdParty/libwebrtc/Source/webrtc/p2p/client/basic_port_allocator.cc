@@ -178,15 +178,14 @@ BasicPortAllocator::BasicPortAllocator(
   RTC_CHECK(socket_factory_);
   RTC_DCHECK(relay_port_factory_);
   RTC_DCHECK(network_manager_);
-  SetConfiguration(ServerAddresses(), std::vector<StunServerConfig>(), std::vector<RelayServerConfig>(), 0,
+  SetConfiguration(StunServerConfigs(), std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, customizer);
 }
 
 BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
     rtc::PacketSocketFactory* socket_factory,
-    const ServerAddresses& stun_servers,
-    const std::vector<cricket::StunServerConfig>& stun_servers_config,
+    const cricket::StunServerConfigs& stun_servers,
     const webrtc::FieldTrialsView* field_trials)
     : field_trials_(field_trials),
       network_manager_(network_manager),
@@ -196,7 +195,7 @@ BasicPortAllocator::BasicPortAllocator(
   RTC_CHECK(socket_factory_);
   RTC_DCHECK(relay_port_factory_);
   RTC_DCHECK(network_manager_);
-  SetConfiguration(stun_servers, stun_servers_config, std::vector<RelayServerConfig>(), 0,
+  SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, nullptr);
 }
 
@@ -265,7 +264,7 @@ void BasicPortAllocator::AddTurnServerForTesting(
   CheckRunOnValidThreadAndInitialized();
   std::vector<RelayServerConfig> new_turn_servers = turn_servers();
   new_turn_servers.push_back(turn_server);
-  SetConfiguration(stun_servers(), stun_servers_config(), new_turn_servers, candidate_pool_size(),
+  SetConfiguration(stun_servers_config(), new_turn_servers, candidate_pool_size(),
                    turn_port_prune_policy(), turn_customizer());
 }
 
@@ -1496,7 +1495,7 @@ void AllocationSequence::CreateDTLSStunPorts() {
   // need to be unique.
   // TODO: priority ???
   int relative_priority = config_->stun_servers_config.size();
-  for (cricket::StunServerConfig server : config_->stun_servers_config) {
+  for (const cricket::StunServerConfig& server : config_->stun_servers_config) {
     if (server.protocol_address.proto == cricket::ProtocolType::PROTO_DTLS) {
       CreateDTLSStunPort(server.protocol_address.address);
       relative_priority--;
@@ -1778,7 +1777,7 @@ void AllocationSequence::OnPortDestroyed(PortInterface* port) {
 
 PortConfiguration::PortConfiguration(
     const ServerAddresses& stun_servers,
-    const std::vector<StunServerConfig>& stun_servers_config,
+    const StunServerConfigs& stun_servers_config,
     absl::string_view username,
     absl::string_view password,
     const webrtc::FieldTrialsView* field_trials)
