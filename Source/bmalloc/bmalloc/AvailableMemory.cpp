@@ -63,6 +63,15 @@ namespace bmalloc {
 
 static constexpr size_t availableMemoryGuess = 512 * bmalloc::MB;
 
+double from_env_or_default(const char *envname, size_t defaultValue) {
+    double val = defaultValue;
+    const char *ev = getenv(envname);
+    if (ev) {
+        val = atof(ev);
+    }
+    return val;
+}
+
 #if BOS(DARWIN)
 static size_t memorySizeAccordingToKernel()
 {
