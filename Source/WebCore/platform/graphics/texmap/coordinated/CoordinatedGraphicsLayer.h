@@ -134,7 +134,7 @@ public:
     void computePixelAlignment(FloatPoint& position, FloatSize&, FloatPoint3D& anchorPoint, FloatSize& alignmentOffset);
 
     IntRect transformedVisibleRect();
-
+    IntRect transformedVisibleRectIncludingFuture();
     void invalidateCoordinator();
     void setCoordinatorIncludingSubLayersIfNeeded(CoordinatedGraphicsLayerClient*);
 
@@ -211,7 +211,9 @@ private:
 
     Nicosia::PlatformLayer::LayerID m_id;
     GraphicsLayerTransform m_layerTransform;
+    GraphicsLayerTransform m_layerFutureTransform;
     TransformationMatrix m_cachedInverseTransform;
+    TransformationMatrix m_cachedFutureInverseTransform;
     FloatSize m_pixelAlignmentOffset;
     FloatSize m_adjustedSize;
     FloatPoint m_adjustedPosition;
