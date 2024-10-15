@@ -34,6 +34,7 @@
 
 #include <wtf/Function.h>
 #include <wtf/NeverDestroyed.h>
+#include <wtf/text/StringToIntegerConversion.h>
 
 namespace WebCore {
 
@@ -305,6 +306,31 @@ std::optional<MediaCapabilitiesDecodingInfo> WebRTCProvider::videoDecodingCapabi
 std::optional<MediaCapabilitiesEncodingInfo> WebRTCProvider::videoEncodingCapabilitiesOverride(const VideoConfiguration&)
 {
     return { };
+}
+
+void WebRTCProvider::setPortAllocatorRange(StringView range)
+{
+    auto components = range.toStringWithoutCopying().split(':');
+    if (UNLIKELY(components.size() != 2)) {
+        WTFLogAlways("Invalid format for UDP port range. Should be \"min-port:max-port\"");
+        ASSERT_NOT_REACHED();
+        return;
+    }
+
+    auto minPort = WTF::parseInteger<int>(components[0]).value_or(0);
+    auto maxPort = WTF::parseInteger<int>(components[1]).value_or(0);
+    if (!minPort || !maxPort) {
+        WTFLogAlways("Invalid format for UDP port range. Should be \"min-port:max-port\"");
+        ASSERT_NOT_REACHED();
+        return;
+    }
+
+    m_portAllocatorRange = { { minPort, maxPort } };
+}
+
+std::optional<std::pair<int, int>> WebRTCProvider::portAllocatorRange() const
+{
+    return m_portAllocatorRange;
 }
 
 } // namespace WebCore
