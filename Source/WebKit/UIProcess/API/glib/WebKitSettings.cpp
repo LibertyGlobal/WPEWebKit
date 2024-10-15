@@ -67,6 +67,9 @@ struct _WebKitSettingsPrivate {
         fantasyFontFamily = preferences->fantasyFontFamily().utf8();
         pictographFontFamily = preferences->pictographFontFamily().utf8();
         defaultCharset = preferences->defaultTextEncodingName().utf8();
+#if ENABLE(WEB_RTC)
+        webrtcUDPPortsRange = preferences->webRTCUDPPortRange().utf8();
+#endif
     }
 
     RefPtr<WebPreferences> preferences;
@@ -80,6 +83,9 @@ struct _WebKitSettingsPrivate {
     CString defaultCharset;
     CString userAgent;
     CString mediaContentTypesRequiringHardwareSupport;
+#if ENABLE(WEB_RTC)
+    CString webrtcUDPPortsRange;
+#endif
     bool allowModalDialogs { false };
     bool zoomTextOnly { false };
 #if PLATFORM(GTK)
@@ -180,6 +186,7 @@ enum {
     PROP_ALLOW_MOVE_TO_SUSPEND_ON_WINDOW_CLOSE,
     PROP_ENABLE_DIRECTORY_UPLOAD,
     PROP_ENABLE_ICE_CANDIDATE_FILTERING,
+    PROP_WEBRTC_UDP_PORTS_RANGE,
     N_PROPERTIES,
 };
 
@@ -434,6 +441,9 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     case PROP_ENABLE_ICE_CANDIDATE_FILTERING:
         webkit_settings_set_enable_ice_candidate_filtering(settings, g_value_get_boolean(value));
         break;
+    case PROP_WEBRTC_UDP_PORTS_RANGE:
+        webkit_settings_set_webrtc_udp_ports_range(settings, g_value_get_string(value));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
         break;
@@ -658,6 +668,9 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_ENABLE_ICE_CANDIDATE_FILTERING:
         g_value_set_boolean(value, webkit_settings_get_enable_ice_candidate_filtering(settings));
+        break;
+    case PROP_WEBRTC_UDP_PORTS_RANGE:
+        g_value_set_string(value, webkit_settings_get_webrtc_udp_ports_range(settings));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -1750,6 +1763,25 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
         _("Enable ICE candidate filtering"),
         _("Whether ICE candidate filtering should be enabled."),
         FALSE,
+        readWriteConstructParamFlags);
+
+    /**
+     * WebKitSettings:webrtc-udp-ports-range:
+     *
+     * Allow customization of the WebRTC UDP ports range.
+     *
+     * In some constrained environments where a firewall blocks UDP network traffic excepted on a
+     * specific port range, this settings can be used to give hints to the WebRTC backend regarding
+     * which ports to allocate. The format is min-port:max-port, so for instance 20000:30000. The
+     * default value is 0:0 which means the OS will use no hints from the WebRTC backend.
+     *
+     * Since: 2.48
+     */
+    sObjProperties[PROP_WEBRTC_UDP_PORTS_RANGE] = g_param_spec_string(
+        "webrtc-udp-ports-range",
+        _("WebRTC UDP ports range"),
+        _("WebRTC UDP ports range, the format is min-port:max-port"),
+        nullptr, // A null string forces the default value.
         readWriteConstructParamFlags);
 
     g_object_class_install_properties(gObjectClass, N_PROPERTIES, sObjProperties);
@@ -4404,4 +4436,52 @@ void webkit_settings_set_enable_ice_candidate_filtering(WebKitSettings* settings
 
     priv->preferences->setICECandidateFilteringEnabled(enabled);
     g_object_notify(G_OBJECT(settings), "enable-ice-candidate-filtering");
+}
+
+/**
+ * webkit_settings_get_webrtc_udp_ports_range:
+ * @settings: a #WebKitSettings
+ *
+ * Get the [property@Settings:webrtc-udp-ports-range] property.
+ *
+ * Returns: The WebRTC UDP ports range, or %NULL if un-set.
+ *
+ * Since: 2.48
+ */
+const gchar*
+webkit_settings_get_webrtc_udp_ports_range(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+#if ENABLE(WEB_RTC)
+    return settings->priv->webrtcUDPPortsRange.data();
+#else
+    return nullptr;
+#endif
+}
+
+/**
+ * webkit_settings_set_webrtc_udp_ports_range:
+ * @settings: a #WebKitSettings
+ * @udp_port_range: Value to be set
+ *
+ * Set the [property@Settings:webrtc-udp-ports-range] property.
+ *
+ * Since: 2.48
+ */
+void
+webkit_settings_set_webrtc_udp_ports_range(WebKitSettings* settings, const gchar* udpPortsRange)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+#if ENABLE(WEB_RTC)
+    WebKitSettingsPrivate* priv = settings->priv;
+    if (!g_strcmp0(priv->webrtcUDPPortsRange.data(), udpPortsRange))
+        return;
+
+    auto portRange = String::fromLatin1(udpPortsRange);
+    priv->preferences->setWebRTCUDPPortRange(portRange);
+    priv->webrtcUDPPortsRange = portRange.utf8();
+    g_object_notify_by_pspec(G_OBJECT(settings), sObjProperties[PROP_WEBRTC_UDP_PORTS_RANGE]);
+#else
+    UNUSED_PARAM(udpPortsRange);
+#endif
 }

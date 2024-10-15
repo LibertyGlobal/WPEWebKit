@@ -534,6 +534,13 @@ WEBKIT_API void
 webkit_settings_set_enable_ice_candidate_filtering             (WebKitSettings *settings,
                                                                 gboolean        enabled);
 
+WEBKIT_API const gchar*
+webkit_settings_get_webrtc_udp_ports_range                     (WebKitSettings *settings);
+
+WEBKIT_API void
+webkit_settings_set_webrtc_udp_ports_range                     (WebKitSettings *settings,
+                                                                const gchar    *udp_port_range);
+
 G_END_DECLS
 
 #endif /* WebKitSettings_h */

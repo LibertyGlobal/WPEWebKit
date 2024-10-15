@@ -64,6 +64,23 @@ private:
 };
 ALLOW_DEPRECATED_DECLARATIONS_END
 
+LibWebRTCProvider::LibWebRTCProvider(WebPage& webPage)
+    : m_webPage(webPage)
+{
+    m_useNetworkThreadWithSocketServer = false;
+#if PLATFORM(GTK) || PLATFORM(WPE)
+    m_supportsMDNS = false;
+#else
+    m_supportsMDNS = true;
+#endif
+
+    auto* page = webPage.corePage();
+    if (!page || !page->settings().webRTCUDPPortRange())
+        return;
+
+    setPortAllocatorRange(page->settings().webRTCUDPPortRange());
+}
+
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> LibWebRTCProvider::createPeerConnection(ScriptExecutionContextIdentifier identifier, webrtc::PeerConnectionObserver& observer, rtc::PacketSocketFactory* socketFactory, webrtc::PeerConnectionInterface::RTCConfiguration&& configuration)
 {
 #if ENABLE(GPU_PROCESS) && PLATFORM(COCOA) && !PLATFORM(MACCATALYST)
