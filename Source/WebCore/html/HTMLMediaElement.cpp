@@ -5765,7 +5765,10 @@ void HTMLMediaElement::updatePlayState()
     if (shouldBePlaying) {
         invalidateCachedTime();
 
-        if (playerPaused) {
+	ALWAYS_LOG(LOGIDENTIFIER, "Gowthami-m_seeking = ", m_seeking, ", Gowthami-playerPaused = ", playerPaused);
+
+        if (playerPaused && !m_seeking) {
+                ALWAYS_LOG(LOGIDENTIFIER, "Gowthami-m_seeking condition");
             mediaSession().clientWillBeginPlayback();
 
             // Set rate, muted and volume before calling play in case they were set before the media engine was set up.
