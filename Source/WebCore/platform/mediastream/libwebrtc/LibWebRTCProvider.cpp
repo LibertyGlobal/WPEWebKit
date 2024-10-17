@@ -399,6 +399,10 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> LibWebRTCProvider::createPee
     if (!factory)
         return nullptr;
 
+    auto portRangeFromEnvironment = StringView::fromLatin1(std::getenv("WEBKIT_WEBRTC_PEER_PORT_RANGE"));
+    if (!portRangeFromEnvironment.isEmpty())
+        setPortAllocatorRange(portRangeFromEnvironment);
+
     if (auto portRange = portAllocatorRange())
         portAllocator->SetPortRange(portRange->first, portRange->second);
 
