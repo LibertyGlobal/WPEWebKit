@@ -1115,7 +1115,6 @@ IntRect CoordinatedGraphicsLayer::transformedVisibleRect()
 
 IntRect CoordinatedGraphicsLayer::transformedVisibleRectIncludingFuture()
 {
-	fprintf(stderr,"Gowthami--patch1\n");
     auto visibleRectIncludingFuture = transformedVisibleRect();
     if (m_cachedInverseTransform != m_cachedFutureInverseTransform) {
         FloatRect rect = m_cachedFutureInverseTransform.clampedBoundsOfProjectedQuad(FloatQuad(m_coordinator->visibleContentsRect()));
