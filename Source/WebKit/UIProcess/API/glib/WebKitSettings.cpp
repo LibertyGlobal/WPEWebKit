@@ -4452,7 +4452,7 @@ void webkit_settings_set_enable_ice_candidate_filtering(WebKitSettings* settings
 const gchar*
 webkit_settings_get_webrtc_udp_ports_range(WebKitSettings* settings)
 {
-    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), 0);
 #if ENABLE(WEB_RTC)
     return settings->priv->webrtcUDPPortsRange.data();
 #else
