@@ -564,6 +564,8 @@ bool CachedResourceLoader::updateRequestAfterRedirection(CachedResource::Type ty
     ASSERT(m_documentLoader);
     if (auto* document = m_documentLoader->cachedResourceLoader().document())
         upgradeInsecureResourceRequestIfNeeded(request, *document);
+    else
+        return false;
 
     // FIXME: We might want to align the checks done here with the ones done in CachedResourceLoader::requestResource, content extensions blocking in particular.
 
