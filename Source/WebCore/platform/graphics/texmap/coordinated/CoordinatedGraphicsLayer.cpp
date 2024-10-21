@@ -1121,7 +1121,6 @@ IntRect CoordinatedGraphicsLayer::transformedVisibleRectIncludingFuture()
         clampToContentsRectIfRectIsInfinite(rect, size());
         visibleRectIncludingFuture.unite(enclosingIntRect(rect));
     }
-
     return visibleRectIncludingFuture;
 }
 
