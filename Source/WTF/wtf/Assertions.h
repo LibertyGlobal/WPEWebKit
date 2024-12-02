@@ -25,8 +25,8 @@
 
 #pragma once
 
+#include <TelemetryReport.h>
 #include <wtf/Platform.h>
-#include <wtf/TelemetryReport.h>
 
 /*
    no namespaces because this file has to be includable from C and Objective-C
@@ -46,6 +46,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <TelemetryReport.h>
 #include <wtf/ExportMacros.h>
 
 #if USE(OS_LOG)

@@ -36,7 +36,7 @@ struct wl_egl_window;
 struct wpe_renderer_backend_egl_offscreen_target;
 #endif
 
-#include "wtf/TelemetryReport.h"
+#include <TelemetryReport.h>
 
 typedef intptr_t EGLAttrib;
 typedef unsigned EGLBoolean;
