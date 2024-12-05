@@ -4,7 +4,7 @@
 #include <cstdarg>
 
 #ifdef USE_RDK_TELEMETRY
-#include "odhott/av_pipeline.h"
+#include "av_pipeline.h"
 #include "odhott_wl.h"
 #include "odherr_ctx.h"
 #endif

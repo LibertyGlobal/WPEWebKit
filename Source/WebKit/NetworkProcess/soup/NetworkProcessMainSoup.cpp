@@ -31,7 +31,7 @@
 #include "NetworkProcess.h"
 #include <WebCore/NetworkStorageSession.h>
 
-#include <wtf/TelemetryReport.h>
+#include <TelemetryReport.h>
 
 #if USE(GCRYPT)
 #include <pal/crypto/gcrypt/Initialization.h>

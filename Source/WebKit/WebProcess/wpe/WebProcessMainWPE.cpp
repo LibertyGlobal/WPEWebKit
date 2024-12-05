@@ -30,8 +30,7 @@
 #include "AuxiliaryProcessMain.h"
 #include "WebProcess.h"
 #include <glib.h>
-
-#include <wtf/TelemetryReport.h>
+#include <TelemetryReport.h>
 
 #if USE(GCRYPT)
 #include <pal/crypto/gcrypt/Initialization.h>

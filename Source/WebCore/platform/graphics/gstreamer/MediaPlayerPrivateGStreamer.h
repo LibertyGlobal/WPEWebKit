@@ -47,7 +47,7 @@
 #include <wtf/RunLoop.h>
 #include <wtf/WeakPtr.h>
 #include <wtf/text/AtomStringHash.h>
-#include <wtf/TelemetryReport.h>
+#include <TelemetryReport.h>
 
 typedef struct _GstMpegtsSection GstMpegtsSection;
 

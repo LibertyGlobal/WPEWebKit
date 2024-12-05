@@ -335,7 +335,6 @@ set(WTF_PUBLIC_HEADERS
     WorkQueue.h
     WorkerPool.h
     dtoa.h
-    TelemetryReport.h
 
     dtoa/bignum-dtoa.h
     dtoa/bignum.h
@@ -505,7 +504,6 @@ set(WTF_SOURCES
     WorkQueue.cpp
     WorkerPool.cpp
     dtoa.cpp
-    TelemetryReport.cpp
 
     dtoa/bignum-dtoa.cc
     dtoa/bignum.cc
@@ -557,6 +555,7 @@ set(WTF_SOURCES
 
 set(WTF_PRIVATE_INCLUDE_DIRECTORIES
     "${CMAKE_BINARY_DIR}"
+    "${THIRDPARTY_DIR}/telemetry/src"
     "${WTF_DERIVED_SOURCES_DIR}"
     "${WTF_DIR}"
     "${WTF_DIR}/wtf"
@@ -573,8 +572,7 @@ set(WTF_LIBRARIES
     ICU::data
     ICU::i18n
     ICU::uc
-    OdhErrTelemetry::OdhErrTelemetry
-    OdhOttTelemetry::OdhOttTelemetry
+    telemetry
 )
 
 if (NOT USE_SYSTEM_MALLOC)
@@ -592,7 +590,7 @@ if (COMPILER_IS_GCC_OR_CLANG)
 endif ()
 
 set(WTF_INTERFACE_LIBRARIES WTF)
-set(WTF_INTERFACE_INCLUDE_DIRECTORIES ${WTF_FRAMEWORK_HEADERS_DIR})
+set(WTF_INTERFACE_INCLUDE_DIRECTORIES ${WTF_FRAMEWORK_HEADERS_DIR} "${THIRDPARTY_DIR}/telemetry/src")
 set(WTF_INTERFACE_DEPENDENCIES WTF_CopyHeaders)
 
 WEBKIT_FRAMEWORK_DECLARE(WTF)

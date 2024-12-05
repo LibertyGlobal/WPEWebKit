@@ -6,6 +6,7 @@ if (NOT USE_SYSTEM_MALLOC)
 endif ()
 
 add_subdirectory(WTF)
+add_subdirectory(ThirdParty/telemetry)
 
 if (USE_CAPSTONE)
     add_subdirectory(ThirdParty/capstone)

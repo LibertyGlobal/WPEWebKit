@@ -7,6 +7,32 @@
 namespace Telemetry
 {
 
+/*
+ * Don't include:
+ * #include <EGL/egl.h>
+ * #include <EGL/eglplatform.h>
+ * since there are import order issues.
+ * Defining needed types as void*, like WebKit does.
+*/
+typedef void *EGLConfig;
+typedef void *EGLContext;
+typedef void *EGLDisplay;
+typedef void *EGLSurface;
+
+/*
+ * Helper function to get some telemetry data from Wayland.
+ */
+class WaylandInfoGetter {
+public:
+    virtual EGLDisplay getEGLDisplay() const = 0;
+    virtual EGLConfig getEGLConfig() const = 0;
+    virtual EGLSurface getEGLSurface() const = 0;
+    virtual EGLContext getEGLContext() const = 0;
+    virtual unsigned int getWindowWidth() const = 0;
+    virtual unsigned int getWindowHeight() const = 0;
+};
+
+
 enum class avpipeline_state_t
 {
     CREATE,
@@ -59,27 +85,6 @@ enum class wayland_inputs_state_t
     INPUTS_INITIALIZED
 };
 
-/*
- * Don't include:
- * #include <EGL/egl.h>
- * #include <EGL/eglplatform.h>
- * since there are import order issues.
- * Defining needed types as void*, like WebKit does.
-*/
-typedef void *EGLConfig;
-typedef void *EGLContext;
-typedef void *EGLDisplay;
-typedef void *EGLSurface;
-
-class WaylandInfoGetter {
-public:
-    virtual EGLDisplay getEGLDisplay() const = 0;
-    virtual EGLConfig getEGLConfig() const = 0;
-    virtual EGLSurface getEGLSurface() const = 0;
-    virtual EGLContext getEGLContext() const = 0;
-    virtual unsigned int getWindowWidth() const = 0;
-    virtual unsigned int getWindowHeight() const = 0;
-};
 
 void init(const std::string &name=std::string("WebKitBrowser"));
 void deinit();
