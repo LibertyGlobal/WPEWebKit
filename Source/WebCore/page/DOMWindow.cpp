@@ -1071,13 +1071,16 @@ void DOMWindow::blur()
 
 void DOMWindow::close(Document& document)
 {
+    printf("DEBUGIT: DOMWindow::close(document)\n"); fflush(stdout);
     if (!document.canNavigate(frame()))
         return;
+    printf("DEBUGIT: DOMWindow::close(document) invoke close()\n"); fflush(stdout);
     close();
 }
 
 void DOMWindow::close()
 {
+    printf("DEBUGIT: DOMWindow::close()\n"); fflush(stdout);
     RefPtr frame = this->frame();
     if (!frame)
         return;
@@ -1089,23 +1092,30 @@ void DOMWindow::close()
     if (!frame->isMainFrame())
         return;
 
+    printf("DEBUGIT: DOMWindow::close() %d\n", frame->settings().allowMoveToSuspendOnWindowClose()); fflush(stdout);
     if (!frame->settings().allowMoveToSuspendOnWindowClose()) {
         if (!(page->openedByDOM() || page->backForward().count() <= 1 || frame->settings().allowScriptsToCloseWindows())) {
             console()->addMessage(MessageSource::JS, MessageLevel::Warning, "Can't close the window since it was not opened by JavaScript"_s);
             return;
         }
 
-        if (!frame->loader().shouldClose())
+        if (!frame->loader().shouldClose()) {
+            printf("DEBUGIT: DOMWindow::close() return\n"); fflush(stdout);
             return;
+        }
 
         ResourceLoadObserver::shared().updateCentralStatisticsStore([] { });
 
+        printf("DEBUGIT: DOMWindow::close() markup closing\n"); fflush(stdout);
         page->setIsClosing();
     }
 
+    printf("DEBUGIT: DOMWindow::close() close window\n"); fflush(stdout);
     document()->eventLoop().queueTask(TaskSource::DOMManipulation, [this, protectedThis = Ref { *this }] {
-        if (auto* page = this->page())
+        if (auto* page = this->page()) {
+            printf("DEBUGIT: DOMWindow::close() close window executed\n"); fflush(stdout);
             page->chrome().closeWindow();
+        }
     });
 }
 
