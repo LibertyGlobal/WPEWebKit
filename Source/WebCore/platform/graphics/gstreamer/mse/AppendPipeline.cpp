@@ -149,6 +149,11 @@ AppendPipeline::AppendPipeline(SourceBufferPrivateGStreamer& sourceBufferPrivate
     } else if (type.endsWith("webm"_s)) {
         m_demux = makeGStreamerElement("matroskademux", nullptr);
         m_typefind = makeGStreamerElement("identity", nullptr);
+    } else if (type.endsWith("mp2t"_s) || type.endsWith("mpegts"_s)) {
+        INFO_LOG(LOGIDENTIFIER, "mp2t/mpegts support in MSE is experimental");
+        GST_INFO_OBJECT(m_playerPrivate->pipeline(), "mp2t/mpegts support in MSE is experimental");
+        m_demux = makeGStreamerElement("tsdemux", nullptr);
+        m_typefind = makeGStreamerElement("identity", nullptr);
     } else if (type == "audio/mpeg"_s) {
         m_demux = makeGStreamerElement("identity", nullptr);
         m_typefind = makeGStreamerElement("typefind", nullptr);

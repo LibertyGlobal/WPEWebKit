@@ -60,7 +60,13 @@ namespace WebCore {
 bool SourceBufferPrivateGStreamer::isContentTypeSupported(const ContentType& type)
 {
     const auto& containerType = type.containerType();
-    return containerType == "audio/mpeg"_s || containerType.endsWith("mp4"_s) || containerType.endsWith("aac"_s) || containerType.endsWith("webm"_s);
+#if !RELEASE_LOG_DISABLED || !defined(GST_DISABLE_GST_DEBUG)
+    if (containerType.endsWith("mp2t"_s)) {
+        INFO_LOG(LOGIDENTIFIER, "mp2t/mpegts support in MSE is experimental");
+        GST_INFO("mp2t/mpegts support in MSE is experimental");
+    }
+#endif
+    return containerType == "audio/mpeg"_s || containerType.endsWith("mp4"_s) || containerType.endsWith("aac"_s) || containerType.endsWith("webm"_s) || containerType.endsWith("mp2t"_s);
 }
 
 Ref<SourceBufferPrivateGStreamer> SourceBufferPrivateGStreamer::create(MediaSourcePrivateGStreamer* mediaSource, const ContentType& contentType, MediaPlayerPrivateGStreamerMSE& playerPrivate)
