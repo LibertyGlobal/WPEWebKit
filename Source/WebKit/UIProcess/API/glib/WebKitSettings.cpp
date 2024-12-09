@@ -1485,7 +1485,7 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
             "enable-media-capabilities",
             _("Enable MediaCapabilities"),
             _("Whether MediaCapabilities should be enabled."),
-            FALSE,
+            TRUE,
             readWriteConstructParamFlags);
 
     /**

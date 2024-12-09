@@ -231,6 +231,7 @@ GStreamerRegistryScanner::RegistryLookupResult GStreamerRegistryScanner::Element
         }
     }
 
+    shouldCheckHardwareClassifier = CheckHardwareClassifier::Yes;
     if (shouldCheckHardwareClassifier == CheckHardwareClassifier::Yes) {
         for (GList* factories = candidates; factories; factories = g_list_next(factories)) {
             auto* factory = reinterpret_cast<GstElementFactory*>(factories->data);
@@ -439,7 +440,7 @@ void GStreamerRegistryScanner::initializeDecoders(const GStreamerRegistryScanner
         { ElementFactories::Type::AudioDecoder, "audio/x-eac3", { "audio/x-ac3"_s },  { "x-eac3"_s, "ec3"_s, "ec-3"_s, "eac3"_s } },
         { ElementFactories::Type::AudioDecoder, "audio/x-flac", { "audio/x-flac"_s, "audio/flac"_s }, {"x-flac"_s, "flac"_s } },
         { ElementFactories::Type::VideoDecoder, "video/mpeg", { }, { "mp2v"_s } },
-        { ElementFactories::Type::Demuxer, "video/mpegts", { "video/mp2t"_s }, { } },
+        { ElementFactories::Type::Demuxer, "video/mpegts", { "video/mpegts"_s, "video/mp2t"_s }, { } },
     };
     fillMimeTypeSetFromCapsMapping(factories, mseCompatibleMapping);
 
