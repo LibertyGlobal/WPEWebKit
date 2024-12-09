@@ -257,6 +257,13 @@ void NetworkResourcesData::maybeDecodeDataToContent(const String& requestId)
     size_t dataLength = resourceData->content().sizeInBytes();
     if (dataLength > m_maximumSingleResourceContentSize)
         m_contentSize -= resourceData->evictContent();
+
+    while (m_contentSize > m_maximumResourcesContentSize) {
+        String requestId = m_requestIdsDeque.takeFirst();
+        ResourceData* resourceData = resourceDataForRequestId(requestId);
+        if (resourceData)
+            m_contentSize -= resourceData->evictContent();
+    }
 }
 
 void NetworkResourcesData::addCachedResource(const String& requestId, CachedResource* cachedResource)
@@ -357,6 +364,7 @@ bool NetworkResourcesData::ensureFreeSpace(size_t size)
     if (size > m_maximumResourcesContentSize)
         return false;
 
+    ASSERT(m_maximumResourcesContentSize >= m_contentSize);
     while (size > m_maximumResourcesContentSize - m_contentSize) {
         String requestId = m_requestIdsDeque.takeFirst();
         ResourceData* resourceData = resourceDataForRequestId(requestId);
