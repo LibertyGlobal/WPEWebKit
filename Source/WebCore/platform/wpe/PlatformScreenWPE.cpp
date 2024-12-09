@@ -22,12 +22,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <string>
 #include "config.h"
 #include "PlatformScreen.h"
 
 #include "DestinationColorSpace.h"
 #include "FloatRect.h"
+#include "Logging.h"
 #include "NotImplemented.h"
 #include "Widget.h"
 
@@ -90,6 +91,28 @@ DestinationColorSpace screenColorSpace(Widget*)
 bool screenSupportsExtendedColor(Widget*)
 {
     return false;
+}
+
+bool screenSupportsHighDynamicRange(Widget* widget)
+{
+    std::string hdrCaps("false");
+
+    if(!widget)
+    {
+        return false;
+    }
+
+    // Get HDR capabilities of TV and STB
+    char *hdrCapsEnvValue = std::getenv("WPE_HDR_CAPABILITIES");
+
+    if(hdrCapsEnvValue)
+    {
+        hdrCaps = hdrCapsEnvValue;
+    }
+
+    WTFLogAlways("Supports HDR Caps - %s", hdrCaps.c_str());
+
+    return (hdrCaps == "true");
 }
 
 #if ENABLE(TOUCH_EVENTS)
