@@ -22,7 +22,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <string>
 #include "config.h"
 #include "PlatformScreen.h"
 
@@ -89,6 +89,23 @@ DestinationColorSpace screenColorSpace(Widget*)
 
 bool screenSupportsExtendedColor(Widget*)
 {
+    return false;
+}
+
+bool screenSupportsHighDynamicRange(Widget* widget)
+{
+    if(!widget)
+    {
+        return false;
+    }
+
+    // Get HDR capabilities of TV and STB
+    std::string hdrCaps(std::getenv("WPE_HDR_CAPABILITIES"));
+    if(hdrCaps == "true")
+    {
+        return true;
+    }
+
     return false;
 }
 
