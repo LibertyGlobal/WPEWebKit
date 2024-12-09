@@ -1162,6 +1162,8 @@ private:
     bool m_shouldAudioPlaybackRequireUserGesture : 1;
     bool m_shouldVideoPlaybackRequireUserGesture : 1;
     bool m_volumeLocked : 1;
+    bool m_isResumingPlayback : 1 { false };
+    bool m_seekAfterPlaybackEnded : 1 { false };
 
     AutoplayEventPlaybackState m_autoplayEventPlaybackState { AutoplayEventPlaybackState::None };
 
