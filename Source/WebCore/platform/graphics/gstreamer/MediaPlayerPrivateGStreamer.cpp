@@ -955,7 +955,10 @@ bool MediaPlayerPrivateGStreamer::changePipelineState(GstState newState)
     GstState currentState, pending;
 
     gst_element_get_state(m_pipeline.get(), &currentState, &pending, 0);
-    if (currentState == newState || pending == newState) {
+
+    // the pipeline can be in the process of switching to another state (pending != GST_STATE_VOID_PENDING)
+    // in such case we should apply newState even if at the moment it is equal to currentState (this will soon change)
+    if ( (currentState == newState && pending == GST_STATE_VOID_PENDING) || pending == newState) {
         GST_DEBUG_OBJECT(pipeline(), "Rejected state change to %s from %s with %s pending", gst_element_state_get_name(newState),
             gst_element_state_get_name(currentState), gst_element_state_get_name(pending));
         return true;
