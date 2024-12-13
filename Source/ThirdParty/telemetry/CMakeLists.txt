@@ -2,12 +2,8 @@ set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(TELEMETRY_DIR "${THIRDPARTY_DIR}/telemetry")
 
 set(TELEMETRY_INCLUDE_DIRECTORIES
-    "${TELEMETRY_DIR}/src"
+    "${TELEMETRY_DIR}/include"
     "${CMAKE_BINARY_DIR}"
-)
-
-set(TELEMETRY_SOURCES
-    ${TELEMETRY_DIR}/src/TelemetryReport.cpp
 )
 
 include_directories("${TELEMETRY_INCLUDE_DIRECTORIES}")
@@ -24,15 +20,24 @@ if (USE_RDK_TELEMETRY)
     endif ()
 
     include_directories(
-	${OdhErrTelemetry_INCLUDE_DIR}
-	${OdhOttTelemetry_INCLUDE_DIR}
+        ${OdhErrTelemetry_INCLUDE_DIR}
+        ${OdhOttTelemetry_INCLUDE_DIR}
     )
 
     set(TELEMETRY_LIBRARIES
-	${OdhErrTelemetry_LIBRARIES}
-	${OdhOttTelemetry_LIBRARIES}
+        ${OdhErrTelemetry_LIBRARIES}
+        ${OdhOttTelemetry_LIBRARIES}
     )
-    add_definitions(-DUSE_RDK_TELEMETRY)
+
+    set(TELEMETRY_SOURCES
+        ${TELEMETRY_DIR}/src/RdkTelemetryReport.cpp
+    )
+
+    add_definitions(-DRDK_TELEMETRY)
+else ()
+    set(TELEMETRY_SOURCES
+        ${TELEMETRY_DIR}/src/DummyTelemetryReport.cpp
+    )
 endif ()
 
 add_library(telemetry STATIC ${TELEMETRY_SOURCES})

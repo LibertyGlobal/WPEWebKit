@@ -65,7 +65,7 @@ typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC) (EGLDisplay, EGLImageKHR);
 
 namespace WebCore {
 
-class GLContextEGL final : public GLContext, public Telemetry::WaylandInfoGetter {
+class GLContextEGL final : public GLContext, public Telemetry::IWaylandInfoGetter {
     WTF_MAKE_NONCOPYABLE(GLContextEGL);
 public:
     static std::unique_ptr<GLContextEGL> createContext(GLNativeWindowType, PlatformDisplay&);
@@ -136,6 +136,7 @@ private:
     PFNEGLDESTROYIMAGEPROC m_eglDestroyImage { nullptr };
     PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR { nullptr };
     PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHR { nullptr };
+    TelemetryImpl m_telemetry;
 #if PLATFORM(X11)
     XUniquePixmap m_pixmap;
 #endif

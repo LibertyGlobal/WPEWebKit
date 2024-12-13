@@ -212,7 +212,7 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
 {
     GST_DEBUG_OBJECT(pipeline(), "Disposing player");
     m_isPlayerShuttingDown.store(true);
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::STOP);
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::STOP);
 
 #if USE(GSTREAMER_HOLEPUNCH)
     if (m_gstreamerHolePunchHost)
@@ -282,7 +282,7 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
 
     m_player = nullptr;
     m_notifier->invalidate();
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::DESTROY);
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::DESTROY);
 }
 
 bool MediaPlayerPrivateGStreamer::isAvailable()
@@ -424,7 +424,7 @@ void MediaPlayerPrivateGStreamer::play()
         m_preload = MediaPlayer::Preload::Auto;
         updateDownloadBufferingFlag();
         GST_INFO_OBJECT(pipeline(), "Play");
-        Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::PLAY);
+        m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::PLAY);
     } else
         loadingFailed(MediaPlayer::NetworkState::Empty);
 }
@@ -442,7 +442,7 @@ void MediaPlayerPrivateGStreamer::pause()
 
     if (changePipelineState(GST_STATE_PAUSED)) {
         GST_INFO_OBJECT(pipeline(), "Pause");
-        Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::PAUSE);
+        m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::PAUSE);
     } else
         loadingFailed(MediaPlayer::NetworkState::Empty);
 }
@@ -515,7 +515,7 @@ void MediaPlayerPrivateGStreamer::seek(const MediaTime& mediaTime)
 
     MediaTime time = std::min(mediaTime, durationMediaTime());
     GST_INFO_OBJECT(pipeline(), "[Seek] seeking to %s", toString(time).utf8().data());
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::SEEK_START,
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::SEEK_START,
         "seek_from:"+std::to_string(playbackPosition().toDouble())+", seek_to:"+std::to_string(time.toDouble()));
 
     if (m_isSeeking) {
@@ -1795,7 +1795,7 @@ void MediaPlayerPrivateGStreamer::handleMessage(GstMessage* message)
         m_errorMessage = String::fromLatin1(err->message);
 
         error = MediaPlayer::NetworkState::Empty;
-        Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::PLAYBACK_ERROR, std::string(err->message));
+        m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::PLAYBACK_ERROR, std::string(err->message));
 
         if (g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_CODEC_NOT_FOUND)
             || g_error_matches(err.get(), GST_STREAM_ERROR, GST_STREAM_ERROR_DECRYPT)
@@ -2444,7 +2444,7 @@ void MediaPlayerPrivateGStreamer::purgeOldDownloadFiles(const String& downloadFi
 void MediaPlayerPrivateGStreamer::finishSeek()
 {
     GST_DEBUG_OBJECT(pipeline(), "[Seek] seeked to %s", toString(m_seekTime).utf8().data());
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::SEEK_DONE, "seek_to:"+std::to_string(m_seekTime.toDouble()));
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::SEEK_DONE, "seek_to:"+std::to_string(m_seekTime.toDouble()));
 
     m_isSeeking = false;
     invalidateCachedPosition();
@@ -2797,7 +2797,7 @@ void MediaPlayerPrivateGStreamer::didEnd()
 #endif
     }
     timeChanged();
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::END_OF_STREAM);
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::END_OF_STREAM);
 }
 
 void MediaPlayerPrivateGStreamer::getSupportedTypes(HashSet<String, ASCIICaseInsensitiveHash>& types)
@@ -3064,8 +3064,8 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const URL& url)
     if (m_videoSink)
         configureElementPlatformQuirks(m_videoSink.get());
 #endif
-    Telemetry::reportDrmInfo(getDrm());
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::CREATE);
+    m_telemetry.reportDrmInfo(getDrm());
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::CREATE);
 }
 
 void MediaPlayerPrivateGStreamer::configureVideoDecoder(GstElement* decoder)
@@ -3155,7 +3155,7 @@ void MediaPlayerPrivateGStreamer::pausedTimerFired()
 {
     GST_DEBUG_OBJECT(pipeline(), "In PAUSED for too long. Releasing pipeline resources.");
     changePipelineState(GST_STATE_NULL);
-    Telemetry::reportPlaybackState(Telemetry::avpipeline_state_t::DESTROY);
+    m_telemetry.reportPlaybackState(Telemetry::IReport::AVPipelineState::DESTROY);
 }
 
 void MediaPlayerPrivateGStreamer::acceleratedRenderingStateChanged()
@@ -4594,44 +4594,40 @@ void MediaPlayerPrivateGStreamer::checkPlayingConsistency()
     }
 }
 
-Telemetry::drm_type_t MediaPlayerPrivateGStreamer::getDrm()
+Telemetry::IReport::DrmType MediaPlayerPrivateGStreamer::getDrm() const
 {
-#if USE(RDK_TELEMETRY)
     if (m_pipeline.get()) {
         GstContext* drmCdmInstanceContext = gst_element_get_context(GST_ELEMENT(m_pipeline.get()), "drm-cdm-instance");
         if (!drmCdmInstanceContext) {
-            return {Telemetry::drm_type_t::NONE};
+            return {Telemetry::IReport::DrmType::NONE};
         }
 
         const GstStructure* drmCdmInstanceStructure = gst_context_get_structure(drmCdmInstanceContext);
         if (!drmCdmInstanceStructure) {
-            return {Telemetry::drm_type_t::NONE};
+            return {Telemetry::IReport::DrmType::NONE};
         }
 
         const GValue* drmCdmInstanceVal = gst_structure_get_value(drmCdmInstanceStructure, "cdm-instance");
         if (!drmCdmInstanceVal) {
-            return {Telemetry::drm_type_t::NONE};
+            return {Telemetry::IReport::DrmType::NONE};
         }
 
         const CDMInstance* drmCdmInstance = (const CDMInstance*)g_value_get_pointer(drmCdmInstanceVal);
         if (!drmCdmInstance) {
-            return {Telemetry::drm_type_t::NONE};
+            return {Telemetry::IReport::DrmType::NONE};
         }
 
         const std::string keySystem = drmCdmInstance->keySystem().utf8().data();
         if (keySystem.find("playready") != string::npos) {
-            return {Telemetry::drm_type_t::PLAYREADY};
+            return {Telemetry::IReport::DrmType::PLAYREADY};
         } else if (keySystem.find("widevine") != string::npos) {
-            return {Telemetry::drm_type_t::WIDEVINE};
+            return {Telemetry::IReport::DrmType::WIDEVINE};
         }
         else {
-            return {Telemetry::drm_type_t::UNKNOWN};
+            return {Telemetry::IReport::DrmType::UNKNOWN};
         }
     }
-    return {Telemetry::drm_type_t::NONE};
-#else
-    return {Telemetry::drm_type_t::UNKNOWN};
-#endif // USE(RDK_TELEMETRY)
+    return {Telemetry::IReport::DrmType::NONE};
 }
 }
 
