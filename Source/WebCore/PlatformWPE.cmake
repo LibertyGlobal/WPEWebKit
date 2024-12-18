@@ -163,3 +163,15 @@ if (ENABLE_GAMEPAD)
         platform/gamepad/wpe/WPEGamepadProvider.h
     )
 endif ()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
+find_package(DS REQUIRED)
+find_package(IARMBus REQUIRED)
+list(APPEND WebCore_SYSTEM_INCLUDE_DIRECTORIES
+        ${IARMBUS_INCLUDE_DIRS}
+        ${DS_INCLUDE_DIRS}
+    )
+list(APPEND WebCore_LIBRARIES
+        ${IARMBUS_LIBRARIES}
+        ${DS_LIBRARIES}
+    )

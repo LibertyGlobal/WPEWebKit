@@ -32,6 +32,17 @@
 #include "NotImplemented.h"
 #include "Widget.h"
 
+#include "host.hpp"
+#include "videoDevice.hpp"
+#include "manager.hpp"
+#include "dsUtl.h"
+#include "dsError.h"
+#include "list.hpp"
+#include "libIBus.h"
+#include "videoOutputPort.hpp"
+#include "videoOutputPortType.hpp"
+#include "videoOutputPortConfig.hpp"
+
 namespace WebCore {
 
 int screenDepth(Widget*)
@@ -93,26 +104,67 @@ bool screenSupportsExtendedColor(Widget*)
     return false;
 }
 
+bool GetHDRCapabilities()
+{
+    int stbCaps = 0;
+    int tvCaps = 0;
+    IARM_Result_t err = IARM_RESULT_SUCCESS;
+    bool retValue = false;
+
+    err = IARM_Bus_Init("wayland-egl-WPEWebProcess");
+    if(IARM_RESULT_SUCCESS != err)
+    {
+        WTFLogAlways("Error initializing IARM.. error code : %d\n",err);
+        return retValue;
+    }
+
+    err = IARM_Bus_Connect();
+    if(IARM_RESULT_SUCCESS != err)
+    {
+        WTFLogAlways("Error connecting to IARM.. error code : %d\n",err);
+        IARM_Bus_Term();
+        return retValue;
+    }
+
+    device::Manager::Initialize();
+
+    // Get STB HDR capabilities
+    device::VideoDevice decoder = device::Host::getInstance().getVideoDevices().at(0);
+    decoder.getHDRCapabilities(&stbCaps);
+    WTFLogAlways("STB HDRCapabilities - [%d]", stbCaps);
+
+    // Get TV HDR capabilities
+    std::string strVideoPort = device::Host::getInstance().getDefaultVideoPortName();
+    device::VideoOutputPort vPort = device::VideoOutputPortConfig::getInstance().getPort(strVideoPort.c_str());
+
+    if(vPort.isDisplayConnected())
+    {
+        vPort.getTVHDRCapabilities(&tvCaps);
+    }
+
+    WTFLogAlways("TV HDRCapabilities - [%d]", tvCaps);
+
+    if(stbCaps != 0 && tvCaps != 0)
+    {
+        retValue = true;
+    }
+
+    device::Manager::DeInitialize();
+    IARM_Bus_Disconnect();
+    IARM_Bus_Term();
+    WTFLogAlways("GetHDRCapabilities : returning %s", retValue ? "true" : "false");
+    return retValue;
+}
+
 bool screenSupportsHighDynamicRange(Widget* widget)
 {
-    std::string hdrCaps("false");
-
     if(!widget)
     {
         return false;
     }
 
     // Get HDR capabilities of TV and STB
-    char *hdrCapsEnvValue = std::getenv("WPE_HDR_CAPABILITIES");
-
-    if(hdrCapsEnvValue)
-    {
-        hdrCaps = hdrCapsEnvValue;
-    }
-
-    WTFLogAlways("Supports HDR Caps - %s", hdrCaps.c_str());
-
-    return (hdrCaps == "true");
+    return GetHDRCapabilities();
 }
 
 #if ENABLE(TOUCH_EVENTS)
