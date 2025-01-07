@@ -5,8 +5,12 @@ if (NOT USE_SYSTEM_MALLOC)
     add_subdirectory(bmalloc)
 endif ()
 
-add_subdirectory(WTF)
 add_subdirectory(ThirdParty/telemetry)
+if (USE_RDK_TELEMETRY)
+    add_definitions(-DRDK_TELEMETRY)
+endif ()
+
+add_subdirectory(WTF)
 
 if (USE_CAPSTONE)
     add_subdirectory(ThirdParty/capstone)

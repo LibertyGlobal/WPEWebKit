@@ -382,8 +382,8 @@ GLContextEGL::GLContextEGL(PlatformDisplay& display, EGLContext context, EGLSurf
         RELEASE_ASSERT(!m_eglCreateImageKHR == !m_eglDestroyImageKHR);
     }
     if(m_type == WindowSurface) {
-        Telemetry::reportWaylandInfo(*this, Telemetry::wayland_action_t::INIT_GFX,
-            Telemetry::wayland_graphics_state_t::GFX_INITIALIZED, Telemetry::wayland_inputs_state_t::INPUTS_INITIALIZED);
+        m_telemetry.reportWaylandInfo(*this, Telemetry::IReport::WaylandAction::INIT_GFX,
+            Telemetry::IReport::WaylandGraphicsState::GFX_INITIALIZED, Telemetry::IReport::WaylandInputsState::INPUTS_INITIALIZED);
     }
 }
 
@@ -406,8 +406,8 @@ GLContextEGL::~GLContextEGL()
     destroyWPETarget();
 #endif
     if(m_type == WindowSurface) {
-        Telemetry::reportWaylandInfo(*this, Telemetry::wayland_action_t::DEINIT_GFX,
-            Telemetry::wayland_graphics_state_t::GFX_NOT_INITIALIZED, Telemetry::wayland_inputs_state_t::INPUTS_INITIALIZED);
+        m_telemetry.reportWaylandInfo(*this, Telemetry::IReport::WaylandAction::DEINIT_GFX,
+            Telemetry::IReport::WaylandGraphicsState::GFX_NOT_INITIALIZED, Telemetry::IReport::WaylandInputsState::INPUTS_INITIALIZED);
     }
 }
 
