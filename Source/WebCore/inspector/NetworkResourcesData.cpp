@@ -111,7 +111,7 @@ void NetworkResourcesData::ResourceData::decodeDataToContent()
         m_content = base64EncodeToString(buffer->data(), dataLength);
     }
 
-    ASSERT(m_content.sizeInBytes() >= buffer->size());
+    ASSERT(m_content.sizeInBytes() >= dataLength);
 }
 
 NetworkResourcesData::NetworkResourcesData()
