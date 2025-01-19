@@ -553,6 +553,12 @@ webkit_settings_get_screen_supports_hdr                        (WebKitSettings* 
 WEBKIT_API void
 webkit_settings_set_screen_supports_hdr                        (WebKitSettings* settings,
                                                                 gboolean screenSupportsHDR);
+WEBKIT_API void
+webkit_settings_set_platform_hdr_capabilities                  (WebKitSettings* settings,
+                                                                const gboolean hdrCaps);
+
+WEBKIT_API gboolean
+webkit_settings_get_platform_hdr_capabilities                  (WebKitSettings* settings);
 
 G_END_DECLS
 

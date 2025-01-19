@@ -1804,6 +1804,16 @@ PitchCorrectionAlgorithm:
       "PLATFORM(COCOA)": static_cast<uint32_t>(WebCore::MediaPlayerEnums::PitchCorrectionAlgorithm::BestForSpeech)
       default: static_cast<uint32_t>(WebCore::MediaPlayerEnums::PitchCorrectionAlgorithm::BestAllAround)
 
+PlatformHDRCapabilities:
+  type: bool
+  defaultValue:
+    WebKitLegacy:
+      default: false
+    WebKit:
+      default: false
+    WebCore:
+      default: false
+
 PluginsEnabled:
   type: bool
   webcoreGetter: arePluginsEnabled
