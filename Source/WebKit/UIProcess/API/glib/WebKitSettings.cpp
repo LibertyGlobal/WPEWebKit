@@ -189,6 +189,7 @@ enum {
     PROP_ENABLE_ICE_CANDIDATE_FILTERING,
     PROP_WEBRTC_UDP_PORTS_RANGE,
     PROP_SCREEN_SUPPORTS_HDR,
+    PROP_PLATFORM_HDR_CAPABILITIES,
     N_PROPERTIES,
 };
 
@@ -451,6 +452,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_SCREEN_SUPPORTS_HDR:
         webkit_settings_set_screen_supports_hdr(settings, g_value_get_boolean(value));
+    case PROP_PLATFORM_HDR_CAPABILITIES:
+        webkit_settings_set_platform_hdr_capabilities(settings, g_value_get_boolean(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -685,6 +688,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_SCREEN_SUPPORTS_HDR:
         g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
+    case PROP_PLATFORM_HDR_CAPABILITIES:
+        g_value_set_boolean(value, webkit_settings_get_platform_hdr_capabilities(settings));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -1812,6 +1817,22 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
         "screen-supports-hdr",
         _("Screen supports HDR"),
         _("Does screen support HDR."),
+        FALSE,
+        readWriteConstructParamFlags);
+
+    /**
+     * WebKitSettings:platform-hdr-capabilities:
+     *
+     * Allow customization of platform hdr capabilities.
+     *
+     * This settings can be used to determine the HDR capabilities of the platform.
+     *
+     * Since: 2.38
+     */
+    sObjProperties[PROP_PLATFORM_HDR_CAPABILITIES] = g_param_spec_boolean(
+        "platform-hdr-capabilities",
+        _("Platform HDR Capabilities"),
+        _("Platform HDR Capabilities, boolean value"),
         FALSE,
         readWriteConstructParamFlags);
 
@@ -4591,4 +4612,42 @@ webkit_settings_set_screen_supports_hdr(WebKitSettings* settings, gboolean scree
 
     priv->preferences->setScreenSupportsHDR(screenSupportsHDR);
     g_object_notify_by_pspec(G_OBJECT(settings), sObjProperties[PROP_SCREEN_SUPPORTS_HDR]);
+}
+
+/**
+ * webkit_settings_get_platform_hdr_capabilities:
+ * @settings: a #WebKitSettings
+ *
+ * Get the [property@Settings:platform-hdr-capabilities] property.
+ *
+ * Returns: The Platform HDR Capabilities, or FALSE if un-set.
+ *
+ * Since: 2.38
+ */
+gboolean
+webkit_settings_get_platform_hdr_capabilities(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+    return settings->priv->preferences->platformHDRCapabilities();
+}
+
+/**
+ * webkit_settings_set_platform_hdr_capabilities:
+ * @settings: a #WebKitSettings
+ * @platform_hdr_caps: Value to be set
+ *
+ * Set the [property@Settings:platform-hdr-capabilities] property.
+ *
+ * Since: 2.38
+ */
+void
+webkit_settings_set_platform_hdr_capabilities(WebKitSettings* settings, gboolean hdrCaps)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+    WebKitSettingsPrivate* priv = settings->priv;
+    if (priv->preferences->platformHDRCapabilities() == hdrCaps)
+        return;
+
+    priv->preferences->setPlatformHDRCapabilities(hdrCaps);
+    g_object_notify(G_OBJECT(settings), "platform-hdr-capabilities");
 }
