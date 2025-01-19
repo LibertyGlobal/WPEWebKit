@@ -22,7 +22,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <string>
 #include "config.h"
 #include "PlatformScreen.h"
 
@@ -32,6 +31,7 @@
 #include "FrameView.h"
 #include "Logging.h"
 #include "NotImplemented.h"
+#include "Page.h"
 #include "Widget.h"
 
 namespace WebCore {
@@ -97,24 +97,21 @@ bool screenSupportsExtendedColor(Widget*)
 
 bool screenSupportsHighDynamicRange(Widget* widget)
 {
-    std::string hdrCaps("false");
-
     if(!widget)
     {
         return false;
     }
 
-    // Get HDR capabilities of TV and STB
-    char *hdrCapsEnvValue = std::getenv("WPE_HDR_CAPABILITIES");
-
-    if(hdrCapsEnvValue)
+    if(!widget->root())
     {
-        hdrCaps = hdrCapsEnvValue;
+        return false;
     }
 
-    WTFLogAlways("Supports HDR Caps - %s", hdrCaps.c_str());
+    Frame& frame = widget->root()->frame();
+    bool hdrCaps = frame.settings().platformHDRCapabilities();
 
-    return (hdrCaps == "true");
+    WTFLogAlways("Supports HDR Capabilities - %d", hdrCaps);
+    return hdrCaps;
 }
 
 #if ENABLE(TOUCH_EVENTS)

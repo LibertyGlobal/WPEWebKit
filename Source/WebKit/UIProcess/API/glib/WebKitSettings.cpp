@@ -191,6 +191,7 @@ enum {
     PROP_SCREEN_SUPPORTS_HDR,
     PROP_ENABLE_PAGE_LIFECYCLE,
     PROP_DESTROY_WINDOW_ON_FREEZE,
+    PROP_PLATFORM_HDR_CAPABILITIES,
     N_PROPERTIES,
 };
 
@@ -453,6 +454,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_SCREEN_SUPPORTS_HDR:
         webkit_settings_set_screen_supports_hdr(settings, g_value_get_boolean(value));
+    case PROP_PLATFORM_HDR_CAPABILITIES:
+        webkit_settings_set_platform_hdr_capabilities(settings, g_value_get_boolean(value));
         break;
     case PROP_ENABLE_PAGE_LIFECYCLE:
         webkit_settings_set_enable_page_lifecycle(settings, g_value_get_boolean(value));
@@ -693,6 +696,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_SCREEN_SUPPORTS_HDR:
         g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
+    case PROP_PLATFORM_HDR_CAPABILITIES:
+        g_value_set_boolean(value, webkit_settings_get_platform_hdr_capabilities(settings));
         break;
     case PROP_ENABLE_PAGE_LIFECYCLE:
         g_value_set_boolean(value, webkit_settings_get_enable_page_lifecycle(settings));
@@ -1852,6 +1857,22 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
         "destroy-window-on-freeze",
         _("Destroy window on freeze"),
         _("Whether to destroy the native window on freeze."),
+	FALSE,
+        readWriteConstructParamFlags);
+
+    /**
+     * WebKitSettings:platform-hdr-capabilities:
+     *
+     * Allow customization of platform hdr capabilities.
+     *
+     * This settings can be used to determine the HDR capabilities of the platform.
+     *
+     * Since: 2.38
+     */
+    sObjProperties[PROP_PLATFORM_HDR_CAPABILITIES] = g_param_spec_boolean(
+        "platform-hdr-capabilities",
+        _("Platform HDR Capabilities"),
+        _("Platform HDR Capabilities, boolean value"),
         FALSE,
         readWriteConstructParamFlags);
 
@@ -4701,4 +4722,42 @@ void webkit_settings_set_destroy_window_on_freeze(WebKitSettings* settings, gboo
 
     priv->preferences->setPageLifecycleAPIDestroyWindowOnFreeze(destroy);
     g_object_notify(G_OBJECT(settings), "destroy-window-on-freeze");
+}
+
+/**
+ * webkit_settings_get_platform_hdr_capabilities:
+ * @settings: a #WebKitSettings
+ *
+ * Get the [property@Settings:platform-hdr-capabilities] property.
+ *
+ * Returns: The Platform HDR Capabilities, or FALSE if un-set.
+ *
+ * Since: 2.38
+ */
+gboolean
+webkit_settings_get_platform_hdr_capabilities(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+    return settings->priv->preferences->platformHDRCapabilities();
+}
+
+/**
+ * webkit_settings_set_platform_hdr_capabilities:
+ * @settings: a #WebKitSettings
+ * @platform_hdr_caps: Value to be set
+ *
+ * Set the [property@Settings:platform-hdr-capabilities] property.
+ *
+ * Since: 2.38
+ */
+void
+webkit_settings_set_platform_hdr_capabilities(WebKitSettings* settings, gboolean hdrCaps)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+    WebKitSettingsPrivate* priv = settings->priv;
+    if (priv->preferences->platformHDRCapabilities() == hdrCaps)
+        return;
+
+    priv->preferences->setPlatformHDRCapabilities(hdrCaps);
+    g_object_notify(G_OBJECT(settings), "platform-hdr-capabilities");
 }
