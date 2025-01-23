@@ -31,7 +31,6 @@
 #include "FrameView.h"
 #include "Logging.h"
 #include "NotImplemented.h"
-#include "Page.h"
 #include "Widget.h"
 
 namespace WebCore {
@@ -97,21 +96,12 @@ bool screenSupportsExtendedColor(Widget*)
 
 bool screenSupportsHighDynamicRange(Widget* widget)
 {
-    if(!widget)
+    if(!widget || !widget->root())
     {
         return false;
     }
 
-    if(!widget->root())
-    {
-        return false;
-    }
-
-    Frame& frame = widget->root()->frame();
-    bool hdrCaps = frame.settings().platformHDRCapabilities();
-
-    WTFLogAlways("Supports HDR Capabilities - %d", hdrCaps);
-    return hdrCaps;
+    return widget->root()->frame().settings().screenSupportsHDR();
 }
 
 #if ENABLE(TOUCH_EVENTS)

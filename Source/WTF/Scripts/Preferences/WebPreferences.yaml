@@ -1928,6 +1928,16 @@ SansSerifFontFamily:
     WebCore:
       default: '""'
 
+ScreenSupportsHDR:
+  type: bool
+  defaultValue:
+    WebKitLegacy:
+      default: false
+    WebKit:
+      default: false
+    WebCore:
+      default: false
+
 ScrollAnimatorEnabled:
   type: bool
   defaultValue:

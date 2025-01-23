@@ -554,6 +554,12 @@ webkit_settings_set_platform_hdr_capabilities                  (WebKitSettings* 
 WEBKIT_API gboolean
 webkit_settings_get_platform_hdr_capabilities                  (WebKitSettings* settings);
 
+WEBKIT_API gboolean
+webkit_settings_get_screen_supports_hdr                        (WebKitSettings* settings);
+
+WEBKIT_API void
+webkit_settings_set_screen_supports_hdr                        (WebKitSettings* settings,
+                                                                gboolean screenSupportsHDR);
 G_END_DECLS
 
 #endif /* WebKitSettings_h */
