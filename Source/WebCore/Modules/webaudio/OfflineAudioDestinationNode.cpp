@@ -64,7 +64,7 @@ void OfflineAudioDestinationNode::uninitialize()
     if (!isInitialized())
         return;
 
-    if (m_renderThread) {
+    if (m_renderThread.get()) {
         m_renderThread->waitForCompletion();
         m_renderThread = nullptr;
     }
