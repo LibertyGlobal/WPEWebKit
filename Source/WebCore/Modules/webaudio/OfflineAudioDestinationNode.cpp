@@ -86,10 +86,6 @@ void OfflineAudioDestinationNode::uninitialize()
         return;
 
     if (m_startedRendering) {
-        if (m_renderThread) {
-            m_renderThread->waitForCompletion();
-            m_renderThread = nullptr;
-        }
         if (auto* workletProxy = context().audioWorklet().proxy()) {
             BinarySemaphore semaphore;
             workletProxy->postTaskForModeToWorkletGlobalScope([&semaphore](ScriptExecutionContext&) mutable {
@@ -97,6 +93,11 @@ void OfflineAudioDestinationNode::uninitialize()
             }, WorkerRunLoop::defaultMode());
             semaphore.wait();
         }
+    }
+
+    if (m_renderThread.get()) {
+        m_renderThread->waitForCompletion();
+        m_renderThread = nullptr;
     }
 
     AudioNode::uninitialize();
