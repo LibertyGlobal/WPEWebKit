@@ -450,6 +450,11 @@ void MediaPlayerPrivateGStreamer::play()
         return;
     }
 
+    if ((m_readyState != MediaPlayer::ReadyState::HaveEnoughData)) {
+        GST_DEBUG_OBJECT(pipeline(), "suresh ignore play because of not enough data");
+        return;
+    }
+
     if (changePipelineState(GST_STATE_PLAYING) == ChangePipelineStateResult::Ok) {
         m_isEndReached = false;
         m_isDelayingLoad = false;

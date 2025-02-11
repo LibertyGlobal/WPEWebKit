@@ -2581,8 +2581,10 @@ void HTMLMediaElement::setReadyState(MediaPlayer::ReadyState state)
             scheduleEvent(eventNames().waitingEvent);
 
         // 4.8.10.10 step 14 & 15.
-        if (m_seekRequested && !m_player->seeking() && m_readyState >= HAVE_CURRENT_DATA)
+        if (m_seekRequested && !m_player->seeking() && m_readyState > HAVE_CURRENT_DATA)
             finishSeek();
+	else
+	   ALWAYS_LOG(LOGIDENTIFIER, "sures ignore the early finishSeek call due to ready state is not more than HAVE_CURRENT_DATA and  ", "m_readyState: is ", m_readyState);
     } else {
         if (wasPotentiallyPlaying && m_readyState < HAVE_FUTURE_DATA) {
             // 4.8.10.8
