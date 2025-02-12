@@ -419,18 +419,17 @@ void MediaPlayerPrivateGStreamerMSE::sourceSetup(GstElement* sourceElement)
 
 void MediaPlayerPrivateGStreamerMSE::updateStates()
 {
-    bool isSeeking = isPipelineWaitingPreroll();
     bool shouldBePlaying = (!m_isPaused && readyState() >= MediaPlayer::ReadyState::HaveFutureData && m_playbackRatePausedState != PlaybackRatePausedState::RatePaused)
         || m_playbackRatePausedState == PlaybackRatePausedState::ShouldMoveToPlaying;
-    GST_DEBUG_OBJECT(pipeline(), "shouldBePlaying = %s, m_isPipelinePlaying = %s, is seeking %s", boolForPrinting(shouldBePlaying),
-        boolForPrinting(m_isPipelinePlaying), boolForPrinting(isSeeking));
-    if (!isSeeking && shouldBePlaying && !m_isPipelinePlaying) {
+    GST_DEBUG_OBJECT(pipeline(), "suresh shouldBePlaying = %s, m_isPipelinePlaying = %s ", boolForPrinting(shouldBePlaying),
+        boolForPrinting(m_isPipelinePlaying));
+    if ( shouldBePlaying && !m_isPipelinePlaying) {
         auto result = changePipelineState(GST_STATE_PLAYING);
         if (result == ChangePipelineStateResult::Failed)
             GST_ERROR_OBJECT(pipeline(), "Setting the pipeline to PLAYING failed");
         else if (result == ChangePipelineStateResult::Ok)
             m_playbackRatePausedState = PlaybackRatePausedState::Playing;
-    } else if (!isSeeking && !shouldBePlaying && m_isPipelinePlaying) {
+    } else if (!shouldBePlaying && m_isPipelinePlaying) {
         if (changePipelineState(GST_STATE_PAUSED) == ChangePipelineStateResult::Failed)
             GST_ERROR_OBJECT(pipeline(), "Setting the pipeline to PAUSED failed");
     } else if (m_isEosWithNoBuffers) {
