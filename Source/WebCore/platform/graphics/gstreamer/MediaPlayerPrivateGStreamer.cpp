@@ -2689,8 +2689,9 @@ void MediaPlayerPrivateGStreamer::updateStates()
 
             shouldPauseForBuffering = (!m_wasBuffering && m_isBuffering && !m_isLiveStream.value_or(false));
             if (shouldPauseForBuffering || !m_playbackRate) {
-                GST_INFO_OBJECT(pipeline(), "[Buffering] Pausing stream for buffering or because of zero playback rate.");
-                changePipelineState(GST_STATE_PAUSED);
+                GST_INFO_OBJECT(pipeline(), "[Buffering] suresh Pausing stream for buffering or because of zero playback rate.");
+                m_playbackRatePausedState = PlaybackRatePausedState::RatePaused;
+		changePipelineState(GST_STATE_PAUSED);
             }
         } else
             m_isPaused = true;
