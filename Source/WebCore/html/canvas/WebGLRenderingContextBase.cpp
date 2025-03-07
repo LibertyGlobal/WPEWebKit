@@ -1205,6 +1205,7 @@ void WebGLRenderingContextBase::restoreUnpackParameters()
 
 void WebGLRenderingContextBase::addActivityStateChangeObserverIfNecessary()
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     auto* canvas = htmlCanvas();
     if (!canvas)
         return;
@@ -1212,13 +1213,13 @@ void WebGLRenderingContextBase::addActivityStateChangeObserverIfNecessary()
     // We are only interested in visibility changes for contexts
     // that are using the high-performance GPU.
     m_nonCompositedWebGLEnabled = canvas->document().frame()->settings().nonCompositedWebGLEnabled();
-    if (!isHighPerformanceContext(m_context) && !m_nonCompositedWebGLEnabled)
-        return;
+    // if (!isHighPerformanceContext(m_context) && !m_nonCompositedWebGLEnabled)
+    //     return;
 
     auto* page = canvas->document().page();
     if (!page)
         return;
-
+        fprintf(stderr, "xaxa addActivityStateChangeObserver %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     page->addActivityStateChangeObserver(*this);
 
     // We won't get a state change right away, so
@@ -8384,10 +8385,26 @@ void WebGLRenderingContextBase::loseExtensions(LostContextMode mode)
 
 void WebGLRenderingContextBase::activityStateDidChange(OptionSet<ActivityState::Flag> oldActivityState, OptionSet<ActivityState::Flag> newActivityState)
 {
+    fprintf(stderr, "xaxa %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
     if (!m_context)
         return;
 
     auto changed = oldActivityState ^ newActivityState;
+    fprintf(stderr, "xaxa changed: %x %s:%d\n", changed.toRaw(), __PRETTY_FUNCTION__, __LINE__);
+
+    #define DEBUG_ACTIVITYSTATE_CHANGE(X) fprintf(stderr, "xaxa oldActivityState & %s : %u | newActivityState & %s : %u | changed & %s : %u\n", #X, (oldActivityState & ActivityState::X).toRaw(), #X, (newActivityState & ActivityState::X).toRaw(), #X, (changed & ActivityState::X).toRaw());
+    DEBUG_ACTIVITYSTATE_CHANGE(WindowIsActive)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsFocused)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsVisible)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsVisibleOrOccluded)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsInWindow)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsVisuallyIdle)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsAudible)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsLoading)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsCapturingMedia)
+    DEBUG_ACTIVITYSTATE_CHANGE(IsConnectedToHardwareConsole)
+    #undef DEBUG_ACTIVITYSTATE_CHANGE
+
     if (changed & ActivityState::IsVisible)
         m_context->setContextVisibility(newActivityState.contains(ActivityState::IsVisible));
 
@@ -8401,6 +8418,22 @@ void WebGLRenderingContextBase::activityStateDidChange(OptionSet<ActivityState::
             downcast<Nicosia::ContentLayerTextureMapperImpl>(downcast<Nicosia::ContentLayer>(m_context->platformLayer())->impl()).swapBuffersIfNeeded();
             if (m_scissorEnabled)
                 m_context->enable(GraphicsContextGL::SCISSOR_TEST);
+        }
+    }
+
+    static int oldw, oldh;
+    if (changed & ActivityState::IsInWindow) {
+        if (!(newActivityState & ActivityState::IsInWindow)) {
+            oldw = drawingBufferWidth();
+            oldh = drawingBufferHeight();
+            fprintf(stderr, "xaxa RESIZE(16,16) FBO HERE %s:%d\n", __PRETTY_FUNCTION__, __LINE__);
+            if (m_context) m_context->reshape(16,16);
+            else fprintf(stderr, "!xaxx NO CONTEXT");
+
+        } else {
+            fprintf(stderr, "xaxa RESIZE(%u,%u) FBO HERE %s:%d\n", oldw, oldh, __PRETTY_FUNCTION__, __LINE__);
+            if (m_context) m_context->reshape(oldw, oldh);
+            else fprintf(stderr, "!xaxx NO CONTEXT");
         }
     }
 }
