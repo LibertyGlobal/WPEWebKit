@@ -30,7 +30,6 @@
 #include "AuxiliaryProcessMain.h"
 #include "WebProcess.h"
 #include <glib.h>
-#include <TelemetryReport.h>
 
 #if USE(GCRYPT)
 #include <pal/crypto/gcrypt/Initialization.h>
@@ -60,7 +59,6 @@ public:
         // FIXME: This should be probably called in other processes as well.
         g_set_prgname("WPEWebProcess");
 
-        Telemetry::init();
         return true;
     }
 
@@ -69,7 +67,6 @@ public:
 #if USE(GSTREAMER)
         deinitializeGStreamer();
 #endif
-        Telemetry::deinit();
     }
 };
 

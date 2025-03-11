@@ -381,10 +381,6 @@ GLContextEGL::GLContextEGL(PlatformDisplay& display, EGLContext context, EGLSurf
         }
         RELEASE_ASSERT(!m_eglCreateImageKHR == !m_eglDestroyImageKHR);
     }
-    if(m_type == WindowSurface) {
-        m_telemetry.reportWaylandInfo(*this, Telemetry::IReport::WaylandAction::INIT_GFX,
-            Telemetry::IReport::WaylandGraphicsState::GFX_INITIALIZED, Telemetry::IReport::WaylandInputsState::INPUTS_INITIALIZED);
-    }
 }
 
 GLContextEGL::~GLContextEGL()
@@ -405,10 +401,6 @@ GLContextEGL::~GLContextEGL()
 #if USE(WPE_RENDERER)
     destroyWPETarget();
 #endif
-    if(m_type == WindowSurface) {
-        m_telemetry.reportWaylandInfo(*this, Telemetry::IReport::WaylandAction::DEINIT_GFX,
-            Telemetry::IReport::WaylandGraphicsState::GFX_NOT_INITIALIZED, Telemetry::IReport::WaylandInputsState::INPUTS_INITIALIZED);
-    }
 }
 
 EGLImage GLContextEGL::createImage(EGLenum target, EGLClientBuffer clientBuffer, const Vector<EGLAttrib>& attribList) const
@@ -549,51 +541,6 @@ void GLContextEGL::swapInterval(int interval)
 GCGLContext GLContextEGL::platformContext()
 {
     return m_context;
-}
-
-EGLDisplay GLContextEGL::getEGLDisplay() const
-{
-    return m_display.eglDisplay();
-}
-
-EGLConfig GLContextEGL::getEGLConfig() const
-{
-    EGLConfig config = nullptr;
-    if (!getEGLConfig(m_display.eglDisplay(), &config, WindowSurface)) {
-        WTFLogAlways("Cannot obtain EGL window context configuration: %s\n", lastErrorString());
-        config = nullptr;
-    }
-    return config;
-}
-
-EGLSurface GLContextEGL::getEGLSurface() const
-{
-    return m_surface;
-}
-
-EGLContext GLContextEGL::getEGLContext() const
-{
-    return m_context;
-}
-
-unsigned int GLContextEGL::getWindowWidth() const
-{
-    const unsigned int WIDTH = 1920;
-    unsigned int ret_val = WIDTH;
-    char *tmp;
-    if ( (tmp = std::getenv("WPE_INIT_VIEW_WIDTH")) )
-        ret_val = atoi(tmp);
-    return ret_val;
-}
-
-unsigned int GLContextEGL::getWindowHeight() const
-{
-    const unsigned int HEIGHT = 1080;
-    unsigned int ret_val = HEIGHT;
-    char *tmp;
-    if ( (tmp = std::getenv("WPE_INIT_VIEW_HEIGHT")) )
-        ret_val = atoi(tmp);
-    return ret_val;
 }
 } // namespace WebCore
 

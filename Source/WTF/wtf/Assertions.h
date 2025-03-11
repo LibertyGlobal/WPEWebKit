@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include <TelemetryReport.h>
 #include <wtf/Platform.h>
 
 /*
@@ -46,7 +45,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <TelemetryReport.h>
 #include <wtf/ExportMacros.h>
 
 #if USE(OS_LOG)
@@ -518,7 +516,6 @@ constexpr bool assertionFailureDueToUnreachableCode = false;
 #define LOG_ERROR(...) do { \
     RDK_LOG_VERBOSE(RDK_LOG_ERROR, RDK_LOG_DEFAULT_CHANNEL); \
     RDK_LOG(RDK_LOG_ERROR, RDK_LOG_DEFAULT_CHANNEL, __VA_ARGS__); \
-    Telemetry::reportError(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, __VA_ARGS__); \
 } while (0)
 #define LOG_ERROR_NO_ODH(...) do { \
     RDK_LOG_VERBOSE(RDK_LOG_ERROR, RDK_LOG_DEFAULT_CHANNEL); \

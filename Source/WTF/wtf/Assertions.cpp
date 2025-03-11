@@ -378,7 +378,6 @@ void WTFReportError(const char* file, int line, const char* function, const char
     va_list args;
     va_start(args, format);
     vprintf_stderr_with_prefix("ERROR: ", format, args);
-    Telemetry::reportErrorV(file, line, function, format, args);
     va_end(args);
     printf_stderr_common("\n");
     printCallSite(file, line, function);

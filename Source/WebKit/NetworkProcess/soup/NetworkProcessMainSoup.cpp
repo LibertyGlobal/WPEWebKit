@@ -31,8 +31,6 @@
 #include "NetworkProcess.h"
 #include <WebCore/NetworkStorageSession.h>
 
-#include <TelemetryReport.h>
-
 #if USE(GCRYPT)
 #include <pal/crypto/gcrypt/Initialization.h>
 #endif
@@ -43,7 +41,6 @@ class NetworkProcessMainSoup final: public AuxiliaryProcessMainBaseNoSingleton<N
 public:
     bool platformInitialize() override
     {
-        Telemetry::init();
 #if USE(GCRYPT)
         PAL::GCrypt::initialize();
 #endif
@@ -60,8 +57,6 @@ public:
         });
         for (auto& sessionID : sessionIDs)
             process().destroySession(sessionID);
-        
-	Telemetry::deinit();
     }
 };
 
