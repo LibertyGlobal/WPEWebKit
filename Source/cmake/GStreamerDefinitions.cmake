@@ -12,3 +12,4 @@ WEBKIT_OPTION_DEFINE(USE_GSTREAMER_NATIVE_AUDIO "Toggle native audio support in 
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_TEXT_SINK "Toggle text sink support in GStreamer media player" PRIVATE ON)
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_TRANSCODER "Whether to enable support for GStreamer MediaRecorder backend" PRIVATE ON)
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_WEBRTC "Whether to enable support for WebRTC" PRIVATE ON)
+WEBKIT_OPTION_DEFINE(ENABLE_MEDIA_TELEMETRY "Whether to enable support for media telemetry" PRIVATE OFF)

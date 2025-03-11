@@ -46,6 +46,7 @@
 #endif
 
 #include <wtf/Vector.h>
+#include <wtf/text/StringToIntegerConversion.h>
 
 namespace WebCore {
 
@@ -381,6 +382,13 @@ GLContextEGL::GLContextEGL(PlatformDisplay& display, EGLContext context, EGLSurf
         }
         RELEASE_ASSERT(!m_eglCreateImageKHR == !m_eglDestroyImageKHR);
     }
+
+#if ENABLE(MEDIA_TELEMETRY)
+    if (m_type == WindowSurface) {
+        MediaTelemetryReport::singleton().reportWaylandInfo(*this, MediaTelemetryReport::WaylandAction::InitGfx,
+            MediaTelemetryReport::WaylandGraphicsState::GfxInitialized, MediaTelemetryReport::WaylandInputsState::InputsInitialized);
+    }
+#endif
 }
 
 GLContextEGL::~GLContextEGL()
@@ -400,6 +408,12 @@ GLContextEGL::~GLContextEGL()
 #endif
 #if USE(WPE_RENDERER)
     destroyWPETarget();
+#endif
+#if ENABLE(MEDIA_TELEMETRY)
+    if (m_type == WindowSurface) {
+        MediaTelemetryReport::singleton().reportWaylandInfo(*this, MediaTelemetryReport::WaylandAction::DeinitGfx,
+            MediaTelemetryReport::WaylandGraphicsState::GfxNotInitialized, MediaTelemetryReport::WaylandInputsState::InputsInitialized);
+    }
 #endif
 }
 
@@ -542,6 +556,47 @@ GCGLContext GLContextEGL::platformContext()
 {
     return m_context;
 }
+
+#if ENABLE(MEDIA_TELEMETRY)
+EGLDisplay GLContextEGL::eglDisplay() const
+{
+    return m_display.eglDisplay();
+}
+
+EGLConfig GLContextEGL::eglConfig() const
+{
+    EGLConfig config = nullptr;
+
+    if (!getEGLConfig(m_display.eglDisplay(), &config, WindowSurface)) {
+        WTFLogAlways("Cannot obtain EGL window context configuration: %s\n", lastErrorString());
+        config = nullptr;
+        ASSERT_NOT_REACHED();
+    }
+
+    return config;
+}
+
+EGLSurface GLContextEGL::eglSurface() const
+{
+    return m_surface;
+}
+
+EGLContext GLContextEGL::eglContext() const
+{
+    return m_context;
+}
+
+unsigned GLContextEGL::windowWidth() const
+{
+    return parseInteger<unsigned>(StringView::fromLatin1(std::getenv("WPE_INIT_VIEW_WIDTH"))).value_or(1920);
+}
+
+unsigned GLContextEGL::windowHeight() const
+{
+    return parseInteger<unsigned>(StringView::fromLatin1(std::getenv("WPE_INIT_VIEW_HEIGHT"))).value_or(1080);
+}
+#endif
+
 } // namespace WebCore
 
 #endif // USE(EGL)

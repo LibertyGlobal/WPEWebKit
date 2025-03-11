@@ -75,6 +75,10 @@ typedef struct _GstMpegtsSection GstMpegtsSection;
 #include "CDMProxy.h"
 #endif
 
+#if ENABLE(MEDIA_TELEMETRY)
+#include "MediaTelemetry.h"
+#endif
+
 typedef struct _GstStreamVolume GstStreamVolume;
 typedef struct _GstVideoInfo GstVideoInfo;
 
@@ -583,6 +587,10 @@ private:
     void initializationDataEncountered(InitData&&);
     InitData parseInitDataFromProtectionMessage(GstMessage*);
     bool waitForCDMAttachment();
+#endif
+
+#if ENABLE(MEDIA_TELEMETRY)
+    MediaTelemetryReport::DrmType getDrm() const;
 #endif
 
     void configureMediaStreamAudioTracks();
