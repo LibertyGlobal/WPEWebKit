@@ -31,9 +31,60 @@
 
 #if ENABLE(MEDIA_TELEMETRY)
 
+#include <map>
 #include "NotImplemented.h"
 
+#include "av_pipeline.h"
+#include "odhott_wl.h"
+#include "odherr_ctx.h"
+
+namespace AVP = OttReports::AvPipeline;
+
 namespace WebCore {
+
+static AVP::AvPipeline avPipelineReport{OttReports::Owner::type::Wpe};
+
+static std::map<MediaTelemetryReport::AVPipelineState, AVP::State::type> pipelineStateMap {
+    {MediaTelemetryReport::AVPipelineState::Create, AVP::State::type::Create},
+    {MediaTelemetryReport::AVPipelineState::Play, AVP::State::type::Play},
+    {MediaTelemetryReport::AVPipelineState::Pause, AVP::State::type::Pause},
+    {MediaTelemetryReport::AVPipelineState::Stop, AVP::State::type::Stop},
+    {MediaTelemetryReport::AVPipelineState::Destroy, AVP::State::type::Destroy},
+    {MediaTelemetryReport::AVPipelineState::FirstFrameDecoded, AVP::State::type::FirstFrameDecoded},
+    {MediaTelemetryReport::AVPipelineState::EndOfStream, AVP::State::type::EndOfStream},
+    {MediaTelemetryReport::AVPipelineState::DecryptError, AVP::State::type::DecryptError},
+    {MediaTelemetryReport::AVPipelineState::PlaybackError, AVP::State::type::PlaybackError},
+    {MediaTelemetryReport::AVPipelineState::DrmError, AVP::State::type::DrmError},
+    {MediaTelemetryReport::AVPipelineState::Error, AVP::State::type::Error},
+    {MediaTelemetryReport::AVPipelineState::SeekStart, AVP::State::type::SeekStart},
+    {MediaTelemetryReport::AVPipelineState::SeekDone, AVP::State::type::SeekDone},
+    {MediaTelemetryReport::AVPipelineState::VideoResolutionChanged, AVP::State::type::VideoResolutionChanged},
+    {MediaTelemetryReport::AVPipelineState::Unknown, AVP::State::type::Unknown}
+};
+
+static std::map<MediaTelemetryReport::DrmType, AVP::Drm::type> drmTypeMap {
+    {MediaTelemetryReport::DrmType::PlayReady, AVP::Drm::type::Playready},
+    {MediaTelemetryReport::DrmType::Widevine, AVP::Drm::type::Widevine},
+    {MediaTelemetryReport::DrmType::None, AVP::Drm::type::None},
+    {MediaTelemetryReport::DrmType::Unknown, AVP::Drm::type::Unknown},
+};
+
+static std::map<MediaTelemetryReport::WaylandAction, odh_report_wayland_action_t> waylandActionMap {
+    {MediaTelemetryReport::WaylandAction::InitGfx , odh_report_wayland_action_t::ODH_REPORT_WAYLAND_ACTION_INIT_GFX},
+    {MediaTelemetryReport::WaylandAction::DeinitGfx, odh_report_wayland_action_t::ODH_REPORT_WAYLAND_ACTION_DEINIT_GFX},
+    {MediaTelemetryReport::WaylandAction::InitInputs, odh_report_wayland_action_t::ODH_REPORT_WAYLAND_ACTION_INIT_INPUTS},
+    {MediaTelemetryReport::WaylandAction::DeinitInputs, odh_report_wayland_action_t::ODH_REPORT_WAYLAND_ACTION_DEINIT_INPUTS}
+};
+
+static std::map<MediaTelemetryReport::WaylandGraphicsState, bool> waylandGraphicsStateMap {
+    {MediaTelemetryReport::WaylandGraphicsState::GfxNotInitialized, false},
+    {MediaTelemetryReport::WaylandGraphicsState::GfxInitialized, true}
+};
+
+static std::map<MediaTelemetryReport::WaylandInputsState, bool> waylandInputsStateMap {
+    {MediaTelemetryReport::WaylandInputsState::InputsNotInitialized, false},
+    {MediaTelemetryReport::WaylandInputsState::InputsInitialized, true}
+};
 
 MediaTelemetryReport& MediaTelemetryReport::singleton()
 {
@@ -55,27 +106,28 @@ MediaTelemetryReport::~MediaTelemetryReport()
 
 void MediaTelemetryReport::reportPlaybackState(AVPipelineState state, const String& additionalInfo, MediaType mediaType)
 {
-    UNUSED_PARAM(state);
-    UNUSED_PARAM(additionalInfo);
-    UNUSED_PARAM(mediaType);
-    notImplemented();
+    avPipelineReport.setSource(AVP::Source::type::Unknown);
+    avPipelineReport.setAdditionalInfo(additionalInfo.isEmpty() ? "" : additionalInfo.utf8().data());
+    avPipelineReport.send(pipelineStateMap[state]);
 }
 
 void MediaTelemetryReport::reportDrmInfo(DrmType drmType, const String& additionalInfo)
 {
-    UNUSED_PARAM(drmType);
-    UNUSED_PARAM(additionalInfo);
-    notImplemented();
+    avPipelineReport.setDrm(drmTypeMap[drmType]);
+    avPipelineReport.setSource(AVP::Source::type::Unknown);
+    avPipelineReport.setAdditionalInfo(additionalInfo.isEmpty() ? "" : additionalInfo.utf8().data());
+    avPipelineReport.send(AVP::State::type::Unknown);
 }
 
 void MediaTelemetryReport::reportWaylandInfo(const MediaTelemetryWaylandInfoGetter& getter, WaylandAction action,
     WaylandGraphicsState gfxState, WaylandInputsState inputsState)
 {
-    UNUSED_PARAM(getter);
-    UNUSED_PARAM(action);
-    UNUSED_PARAM(gfxState);
-    UNUSED_PARAM(inputsState);
-    notImplemented();
+    odh_ott_wayland_report(
+        reinterpret_cast<const WaylandContextInfoGetter&>(getter),
+        ODH_REPORT_WAYLAND_OWNER_WPE,
+        waylandActionMap[action],
+        waylandGraphicsStateMap[gfxState],
+        waylandInputsStateMap[inputsState]);
 }
 
 } // namespace WebCore
