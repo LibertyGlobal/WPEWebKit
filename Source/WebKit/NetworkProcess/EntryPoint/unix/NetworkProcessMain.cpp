@@ -28,5 +28,7 @@
 
 int main(int argc, char** argv)
 {
-    return WebKit::NetworkProcessMain(argc, argv);
+    _Exit(WebKit::NetworkProcessMain(argc, argv));
+    //non-reachable line:
+    return 1;
 }
