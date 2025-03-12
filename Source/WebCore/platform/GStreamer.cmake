@@ -130,6 +130,24 @@ if (ENABLE_VIDEO OR ENABLE_WEB_AUDIO)
     )
 
     if (ENABLE_MEDIA_TELEMETRY)
+      find_package(OdhErrTelemetry)
+      if (NOT OdhErrTelemetry_FOUND)
+          message(FATAL_ERROR "OdhErrTelemetry is needed for ENABLE_MEDIA_TELEMETRY")
+      endif ()
+
+      find_package(OdhOttTelemetry)
+      if (NOT OdhOttTelemetry_FOUND)
+          message(FATAL_ERROR "OdhOttTelemetry is needed for ENABLE_MEDIA_TELEMETRY")
+      endif ()
+
+      list(APPEND WebCore_SYSTEM_INCLUDE_DIRECTORIES
+          ${OdhErrTelemetry_INCLUDE_DIR}
+          ${OdhOttTelemetry_INCLUDE_DIR}
+      )
+      list(APPEND WebCore_LIBRARIES
+          ${OdhErrTelemetry_LIBRARIES}
+          ${OdhOttTelemetry_LIBRARIES}
+      )
       list(APPEND WebCore_SOURCES
         platform/graphics/gstreamer/telemetry/MediaTelemetry.cpp
       )
