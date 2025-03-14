@@ -132,7 +132,19 @@ StackBounds StackBounds::currentThreadStackBoundsInternal()
         // account for a guard page
         size -= static_cast<rlim_t>(sysconf(_SC_PAGESIZE));
         void* bound = static_cast<char*>(origin) - size;
-        return StackBounds { origin, bound };
+
+        static char** oldestEnviron = environ;
+
+        // In 32bit architecture, it is possible that environment variables are having a characters which looks like a pointer,
+        // and conservative GC will find it as a live pointer. We would like to avoid that to precisely exclude non user stack
+        // data region from this stack bounds. As the article (https://lwn.net/Articles/631631/) and the elf loader implementation
+        // explain how Linux main thread stack is organized, environment variables vector is placed on the stack, so we can exclude
+        // environment variables if we use `environ` global variable as a origin of the stack.
+        // But `setenv` / `putenv` may alter `environ` variable's content. So we record the oldest `environ` variable content, and use it.
+        StackBounds stackBounds { origin, bound };
+        if (stackBounds.contains(oldestEnviron))
+            stackBounds = { oldestEnviron, bound };
+        return stackBounds;
     }
 #endif
     return ret;
