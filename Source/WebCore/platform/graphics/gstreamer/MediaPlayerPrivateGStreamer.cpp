@@ -1752,6 +1752,10 @@ void MediaPlayerPrivateGStreamer::setVolume(float volume)
 
     GST_DEBUG_OBJECT(pipeline(), "Setting volume: %f", volume);
     gst_stream_volume_set_volume(m_volumeElement.get(), GST_STREAM_VOLUME_FORMAT_LINEAR, static_cast<double>(volume));
+    
+    bool audioMuted = (volume == 0) ? true : false;
+    g_object_set(m_volumeElement.get(), "mute", static_cast<gboolean>(audioMuted), nullptr);
+
     configureMediaStreamAudioTracks();
 }
 
