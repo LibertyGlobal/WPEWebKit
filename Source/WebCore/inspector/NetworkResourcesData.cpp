@@ -40,8 +40,27 @@ namespace WebCore {
 
 using namespace Inspector;
 
-static const size_t maximumResourcesContentSize = 200 * 1000 * 1000; // 200MB
-static const size_t maximumSingleResourceContentSize = 50 * 1000 * 1000; // 50MB
+static const int maximumResourcesContentSizeMB = 100; // 200MB
+static const int maximumSingleResourceContentSizeMB = 50; // 50MB
+
+static size_t getMaximumResourcesContentSizeMB()
+{
+    fprintf(stderr,"Hridhya-getMaximumResourcesContentSizeMB()\n");
+    static size_t maximumResourcesContentSize = maximumResourcesContentSizeMB;
+    static std::once_flag onceFlag;
+    std::call_once(onceFlag, [] {
+        const char* env = getenv("WEBINSPECTOR_MAXIMUM_RESOURCES_CONTENT_SIZE_MB");
+        if (env && env[strnlen(env, 3)] == '\0') {
+	    fprintf(stderr,"Hridhya-WEBINSPECTOR_MAXIMUM_RESOURCES_CONTENT_SIZE_MB found\n");
+            int value;
+            if (sscanf(env, "%d", &value) == 1)
+                maximumResourcesContentSize = std::min(maximumResourcesContentSizeMB, std::max(maximumSingleResourceContentSizeMB, value));
+        }
+    });
+
+    fprintf(stderr,"Hridhya-maximumResourcesContentSize:%zuMB\n",maximumResourcesContentSize);
+    return maximumResourcesContentSize;
+}
 
 NetworkResourcesData::ResourceData::ResourceData(const String& requestId, const String& loaderId)
     : m_requestId(requestId)
@@ -76,7 +95,9 @@ unsigned NetworkResourcesData::ResourceData::removeContent()
 
 unsigned NetworkResourcesData::ResourceData::evictContent()
 {
+    fprintf(stderr,"Hridhya-evitContent() called\n");
     m_isContentEvicted = true;
+    setDecoder(nullptr);
     return removeContent();
 }
 
@@ -115,8 +136,8 @@ void NetworkResourcesData::ResourceData::decodeDataToContent()
 }
 
 NetworkResourcesData::NetworkResourcesData()
-    : m_maximumResourcesContentSize(maximumResourcesContentSize)
-    , m_maximumSingleResourceContentSize(maximumSingleResourceContentSize)
+    : m_maximumResourcesContentSize(getMaximumResourcesContentSizeMB() * MB)
+    , m_maximumSingleResourceContentSize(maximumSingleResourceContentSizeMB * MB)
 {
 }
 
