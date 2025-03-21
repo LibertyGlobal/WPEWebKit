@@ -283,7 +283,7 @@ void AuxiliaryProcessProxy::didFinishLaunching(ProcessLauncher*, IPC::Connection
 
     auto launchTime = MonotonicTime::now() - m_processStart;
     if (launchTime > 1_s)
-        RELEASE_LOG_FAULT(Process, "%s process (%p) took %f seconds to launch", processName().characters(), this, launchTime.value());
+        RELEASE_LOG_ERROR(Process, "%s process (%p) took %f seconds to launch", processName().characters(), this, launchTime.value());
     
     if (!IPC::Connection::identifierIsValid(connectionIdentifier))
         return;
