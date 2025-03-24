@@ -40,7 +40,7 @@ namespace WebCore {
 
 using namespace Inspector;
 
-static const int maximumResourcesContentSizeMB = 100; // 200MB
+static const int maximumResourcesContentSizeMB = 50; // 200MB
 static const int maximumSingleResourceContentSizeMB = 50; // 50MB
 
 static size_t getMaximumResourcesContentSizeMB()
