@@ -95,7 +95,6 @@ unsigned NetworkResourcesData::ResourceData::removeContent()
 
 unsigned NetworkResourcesData::ResourceData::evictContent()
 {
-    fprintf(stderr,"Hridhya-evitContent() called\n");
     m_isContentEvicted = true;
     setDecoder(nullptr);
     return removeContent();
@@ -182,8 +181,11 @@ void NetworkResourcesData::responseReceived(const String& requestId, const Strin
     if (InspectorNetworkAgent::shouldTreatAsText(response.mimeType()))
         resourceData->setDecoder(InspectorNetworkAgent::createTextDecoder(response.mimeType(), response.textEncodingName()));
 
+#if PLATFORM(COCOA)
+    fprintf(stderr,"Hridhya-inside PLATFORM_COCOA\n");
     if (auto& certificateInfo = response.certificateInfo())
         resourceData->setCertificateInfo(certificateInfo);
+#endif
 }
 
 void NetworkResourcesData::setResourceType(const String& requestId, InspectorPageAgent::ResourceType type)
