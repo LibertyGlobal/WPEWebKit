@@ -236,7 +236,7 @@ function pipeToDoReadWrite(pipeState)
             if (!canWrite)
                 return;
 
-            pipeState.pendingWritePromise = @writableStreamDefaultWriterWrite(pipeState.writer, result.value);
+            pipeState.pendingWritePromise = @writableStreamDefaultWriterWrite(pipeState.writer, result.value).@then(@undefined, () => { });
         }, (e) => {
             pipeState.pendingReadPromiseCapability.@resolve.@call(@undefined, false);
         });
@@ -298,7 +298,7 @@ function pipeToClosingMustBePropagatedForward(pipeState)
         action();
         return;
     }
-    @getByIdDirectPrivate(pipeState.reader, "closedPromiseCapability").@promise.@then(action, @undefined);
+    @getByIdDirectPrivate(pipeState.reader, "closedPromiseCapability").@promise.@then(action, () => { });
 }
 
 function pipeToClosingMustBePropagatedBackward(pipeState)
