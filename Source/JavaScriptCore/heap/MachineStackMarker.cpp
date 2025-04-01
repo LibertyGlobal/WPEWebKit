@@ -27,7 +27,6 @@
 #include <wtf/BitVector.h>
 #include <wtf/PageBlock.h>
 #include <wtf/StdLibExtras.h>
-#include <wtf/ConservativeScanStackGuards.h>
 
 namespace JSC {
 
@@ -45,7 +44,7 @@ void MachineThreads::gatherFromCurrentThread(ConservativeRoots& conservativeRoot
         conservativeRoots.add(registersBegin, registersEnd, jitStubRoutines, codeBlocks);
     }
 
-    conservativeRoots.add(currentThreadState.stackTop, WTF::ConservativeScanStackGuards::updatedStackOrigin(currentThreadState.stackTop, currentThreadState.stackOrigin), jitStubRoutines, codeBlocks);
+    conservativeRoots.add(currentThreadState.stackTop, currentThreadState.stackOrigin, jitStubRoutines, codeBlocks);
 }
 
 static inline int osRedZoneAdjustment()
