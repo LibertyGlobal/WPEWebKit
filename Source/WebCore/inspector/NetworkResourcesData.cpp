@@ -396,8 +396,10 @@ bool NetworkResourcesData::ensureFreeSpace(size_t size)
     while (size > m_maximumResourcesContentSize - m_contentSize) {
         String requestId = m_requestIdsDeque.takeFirst();
         ResourceData* resourceData = resourceDataForRequestId(requestId);
-        if (resourceData)
+        if (resourceData) {
             m_contentSize -= resourceData->evictContent();
+            m_requestIdToResourceDataMap.remove(requestId);
+        }    
     }
     return true;
 }
