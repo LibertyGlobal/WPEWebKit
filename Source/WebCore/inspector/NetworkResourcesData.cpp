@@ -397,6 +397,7 @@ bool NetworkResourcesData::ensureFreeSpace(size_t size)
         String requestId = m_requestIdsDeque.takeFirst();
         ResourceData* resourceData = resourceDataForRequestId(requestId);
         if (resourceData) {
+            fprintf(stderr,"Hridhya resourceData-true \n");
             m_contentSize -= resourceData->evictContent();
             m_requestIdToResourceDataMap.remove(requestId);
         }    
