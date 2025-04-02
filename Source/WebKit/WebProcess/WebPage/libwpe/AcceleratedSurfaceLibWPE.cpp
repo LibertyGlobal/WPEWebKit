@@ -97,6 +97,7 @@ uint64_t AcceleratedSurfaceLibWPE::surfaceID() const
 void AcceleratedSurfaceLibWPE::clientResize(const IntSize& size)
 {
     ASSERT(m_backend);
+    m_size = size;
     wpe_renderer_backend_egl_target_resize(m_backend, std::max(1, m_size.width()), std::max(1, m_size.height()));
 }
 
