@@ -73,8 +73,11 @@ public:
     }
 };
 
+void *ARGV_0_POINTER = nullptr;
+
 int WebProcessMain(int argc, char** argv)
 {
+    ARGV_0_POINTER = &(argv[0]);
     return AuxiliaryProcessMain<WebProcessMainWPE>(argc, argv);
 }
 
