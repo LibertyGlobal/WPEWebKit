@@ -28,6 +28,8 @@
 
 #include <wtf/AutomaticThread.h>
 
+#include "wtf/ConservativeScanStackGuards.h"
+
 namespace WTF {
 
 ParallelHelperClient::ParallelHelperClient(RefPtr<ParallelHelperPool>&& pool)
@@ -106,7 +108,7 @@ void ParallelHelperClient::runTask(const RefPtr<SharedTask<void ()>>& task)
 {
     RELEASE_ASSERT(m_numActive);
     RELEASE_ASSERT(task);
-
+    WTF::ConservativeScanStackGuards::ConservativeScanStackGuard guard;
     task->run();
 
     {

@@ -31,6 +31,8 @@
 #include "WorkerOrWorkletGlobalScope.h"
 #include "WorkerOrWorkletScriptController.h"
 
+#include "wtf/ConservativeScanStackGuards.h"
+
 #if PLATFORM(IOS_FAMILY)
 #include "FloatingPointEnvironment.h"
 #endif
@@ -110,6 +112,7 @@ void WorkerOrWorkletThread::runEventLoop()
 
 void WorkerOrWorkletThread::workerOrWorkletThread()
 {
+    WTF::ConservativeScanStackGuards::ConservativeScanStackGuard guard;
     Ref protectedThis { *this };
 
     if (isMainThread()) {

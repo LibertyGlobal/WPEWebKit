@@ -29,6 +29,8 @@
 #include "Microtasks.h"
 #include "ScriptExecutionContext.h"
 
+#include "wtf/ConservativeScanStackGuards.h"
+
 namespace WebCore {
 
 void EventLoop::queueTask(std::unique_ptr<EventLoopTask>&& task)
@@ -103,6 +105,7 @@ void EventLoop::scheduleToRunIfNeeded()
 
 void EventLoop::run()
 {
+    WTF::ConservativeScanStackGuards::ConservativeScanStackGuard guard;
     m_isScheduledToRun = false;
     bool didPerformMicrotaskCheckpoint = false;
 
