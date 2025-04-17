@@ -42,7 +42,7 @@ namespace WebCore {
 using namespace Inspector;
 
 PageNetworkAgent::PageNetworkAgent(PageAgentContext& context, InspectorClient* client)
-    : InspectorNetworkAgent(context, context.inspectedPage.settings().inspectorMaximumResourcesContentSize())
+    : InspectorNetworkAgent(context, { context.inspectedPage.settings().inspectorMaximumResourcesContentSize(), context.inspectedPage.settings().inspectorSupportsShowingCertificate() })
     , m_inspectedPage(context.inspectedPage)
     , m_client(client)
 {

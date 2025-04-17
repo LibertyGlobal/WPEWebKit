@@ -31,6 +31,7 @@
 
 #include "InspectorPageAgent.h"
 #include "SharedBuffer.h"
+#include "TextResourceDecoder.h"
 #include <wtf/ListHashSet.h>
 #include <wtf/RobinHoodHashMap.h>
 #include <wtf/WallTime.h>
@@ -40,7 +41,6 @@ namespace WebCore {
 
 class CachedResource;
 class ResourceResponse;
-class TextResourceDecoder;
 
 class NetworkResourcesData {
     WTF_MAKE_FAST_ALLOCATED;
@@ -132,7 +132,17 @@ public:
         WallTime m_responseTimestamp;
     };
 
-    NetworkResourcesData(uint32_t maximumResourcesContentSize);
+    struct Settings {
+        Settings(size_t maxResourcesContentSize, bool showingCertificate)
+            : maximumResourcesContentSize(maxResourcesContentSize * MB)
+            , supportsShowingCertificate(showingCertificate)
+        { }
+        size_t maximumResourcesContentSize;
+        size_t maximumSingleResourceContentSize { 50 * MB };
+        bool supportsShowingCertificate;
+    };
+
+    NetworkResourcesData(const Settings&);
     ~NetworkResourcesData();
 
     void resourceCreated(const String& requestId, const String& loaderId, InspectorPageAgent::ResourceType);
@@ -159,8 +169,7 @@ private:
     ListHashSet<String> m_requestIdsDeque;
     MemoryCompactRobinHoodHashMap<String, std::unique_ptr<ResourceData>> m_requestIdToResourceDataMap;
     size_t m_contentSize { 0 };
-    size_t m_maximumResourcesContentSize;
-    size_t m_maximumSingleResourceContentSize;
+    Settings m_settings;
 };
 
 } // namespace WebCore
