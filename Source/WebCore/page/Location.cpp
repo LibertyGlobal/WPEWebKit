@@ -192,6 +192,10 @@ ExceptionOr<void> Location::setSearch(DOMWindow& incumbentWindow, DOMWindow& fir
 
 ExceptionOr<void> Location::setHash(DOMWindow& incumbentWindow, DOMWindow& firstWindow, const String& hash)
 {
+    if (hash == ASCIILiteral::fromLiteralUnsafe("#boot")) {
+        printf("DEMOBLOCK: ignore boot hash setup\n"); fflush(stdout);
+        return {};
+    }
     auto* frame = this->frame();
     if (!frame)
         return { };
