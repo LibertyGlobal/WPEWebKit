@@ -126,11 +126,4 @@ bool screenIsTouchPrimaryInputDevice()
 }
 #endif
 
-bool screenSupportsHighDynamicRange(Widget* widget)
-{
-    if(!widget || !widget->root())
-        return false;
-
-    return widget->root()->frame().settings().screenSupportsHDR();
-}
 } // namespace WebCore

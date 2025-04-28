@@ -452,8 +452,6 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     case PROP_WEBRTC_UDP_PORTS_RANGE:
         webkit_settings_set_webrtc_udp_ports_range(settings, g_value_get_string(value));
         break;
-    case PROP_SCREEN_SUPPORTS_HDR:
-        webkit_settings_set_screen_supports_hdr(settings, g_value_get_boolean(value));
     case PROP_PLATFORM_HDR_CAPABILITIES:
         webkit_settings_set_platform_hdr_capabilities(settings, g_value_get_boolean(value));
         break;
@@ -462,6 +460,9 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_DESTROY_WINDOW_ON_FREEZE:
         webkit_settings_set_destroy_window_on_freeze(settings, g_value_get_boolean(value));
+        break;
+    case PROP_SCREEN_SUPPORTS_HDR:
+        g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -694,8 +695,6 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     case PROP_WEBRTC_UDP_PORTS_RANGE:
         g_value_set_string(value, webkit_settings_get_webrtc_udp_ports_range(settings));
         break;
-    case PROP_SCREEN_SUPPORTS_HDR:
-        g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
     case PROP_PLATFORM_HDR_CAPABILITIES:
         g_value_set_boolean(value, webkit_settings_get_platform_hdr_capabilities(settings));
         break;
@@ -704,6 +703,9 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         break;
     case PROP_DESTROY_WINDOW_ON_FREEZE:
         g_value_set_boolean(value, webkit_settings_get_destroy_window_on_freeze(settings));
+        break;
+    case PROP_SCREEN_SUPPORTS_HDR:
+        g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
