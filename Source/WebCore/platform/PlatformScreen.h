@@ -95,7 +95,7 @@ WEBCORE_EXPORT DynamicRangeMode preferredDynamicRangeMode(Widget* = nullptr);
 constexpr DynamicRangeMode preferredDynamicRangeMode(Widget* = nullptr) { return DynamicRangeMode::Standard; }
 #endif
 
-#if PLATFORM(MAC) || PLATFORM(IOS_FAMILY) || PLATFORM(WPE)
+#if PLATFORM(MAC) || PLATFORM(IOS_FAMILY)
 WEBCORE_EXPORT bool screenSupportsHighDynamicRange(Widget* = nullptr);
 #else
 bool screenSupportsHighDynamicRange(Widget* = nullptr);
