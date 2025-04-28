@@ -634,11 +634,7 @@ void InspectorFrontendHost::setAllowsInspectingInspector(bool allow)
 
 bool InspectorFrontendHost::supportsShowCertificate() const
 {
-#if PLATFORM(COCOA)
-    return true;
-#else
-    return false;
-#endif
+    return m_frontendPage->settings().inspectorSupportsShowingCertificate();
 }
 
 bool InspectorFrontendHost::showCertificate(const String& serializedCertificate)

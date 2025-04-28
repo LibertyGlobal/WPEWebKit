@@ -36,7 +36,7 @@ namespace WebCore {
 using namespace Inspector;
 
 WorkerNetworkAgent::WorkerNetworkAgent(WorkerAgentContext& context)
-    : InspectorNetworkAgent(context, context.globalScope.settingsValues().inspectorMaximumResourcesContentSize)
+    : InspectorNetworkAgent(context, { context.globalScope.settingsValues().inspectorMaximumResourcesContentSize, context.globalScope.settingsValues().inspectorSupportsShowingCertificate })
     , m_globalScope(context.globalScope)
 {
     ASSERT(context.globalScope.isContextThread());
