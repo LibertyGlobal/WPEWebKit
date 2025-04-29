@@ -438,6 +438,7 @@ bool MediaPlayerPrivateGStreamer::isPipelineWaitingPreroll() const
 
 void MediaPlayerPrivateGStreamer::play()
 {
+    fprintf(stderr,"Gowthami-play()\n");	
     if (isMediaStreamPlayer()) {
         m_pausedTime = MediaTime::invalidTime();
         if (m_startTime.isInvalid())
@@ -473,6 +474,7 @@ void MediaPlayerPrivateGStreamer::play()
 
 void MediaPlayerPrivateGStreamer::pause()
 {
+	fprintf(stderr,"Gowthami-pause()\n");
     if (isMediaStreamPlayer())
         m_pausedTime = currentMediaTime();
 
@@ -577,6 +579,7 @@ bool MediaPlayerPrivateGStreamer::doSeek(const MediaTime& position, float rate, 
 
 void MediaPlayerPrivateGStreamer::seek(const MediaTime& mediaTime)
 {
+	fprintf(stderr,"Gowthami-seek start\n");
     if (!m_pipeline || m_didErrorOccur || isMediaStreamPlayer())
         return;
 
@@ -2598,6 +2601,7 @@ void MediaPlayerPrivateGStreamer::purgeOldDownloadFiles(const String& downloadFi
 
 void MediaPlayerPrivateGStreamer::finishSeek()
 {
+	fprintf(stderr,"Gowthami-finishseek\n");
     GST_DEBUG_OBJECT(pipeline(), "[Seek] seeked to %s", toString(m_seekTime).utf8().data());
 #if ENABLE(MEDIA_TELEMETRY)
     MediaTelemetryReport::singleton().reportPlaybackState(MediaTelemetryReport::AVPipelineState::SeekDone,
