@@ -575,6 +575,7 @@ set(WTF_LIBRARIES
     ICU::data
     ICU::i18n
     ICU::uc
+    gpumem
 )
 
 if (NOT USE_SYSTEM_MALLOC)
