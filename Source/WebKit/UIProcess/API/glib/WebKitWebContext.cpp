@@ -424,7 +424,7 @@ static void webkitWebContextConstructed(GObject* object)
     configuration.setInjectedBundlePath(FileSystem::stringFromFileSystemRepresentation(bundleFilename.get()));
     configuration.setUsesWebProcessCache(true);
 #if PLATFORM(WPE)
-    configuration.setProcessSwapsOnNavigation(false);
+    configuration.setProcessSwapsOnNavigation(true);
 #endif
 #if PLATFORM(GTK)
     configuration.setProcessSwapsOnNavigation(priv->psonEnabled);
