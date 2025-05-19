@@ -263,6 +263,7 @@ void drawPatternToCairoContext(cairo_t* cr, cairo_surface_t* image, const IntSiz
         cairo_rectangle(scaledImageContext.get(), 0, 0, scaledImageSurfaceSize.width(), scaledImageSurfaceSize.height());
         cairo_fill(scaledImageContext.get());
         image = scaledImageSurface.get();
+        cairo_pattern_destroy(pattern.get());
     }
 
     // Due to a limitation in pixman, cairo cannot handle transformation matrices with values bigger than 32768. If the value is
