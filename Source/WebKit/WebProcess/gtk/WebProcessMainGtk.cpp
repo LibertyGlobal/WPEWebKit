@@ -31,6 +31,7 @@
 #include "WebProcess.h"
 #include <WebCore/GtkVersioning.h>
 #include <libintl.h>
+#include <wtf/StackBounds.h>
 
 #if PLATFORM(X11)
 #include <X11/Xlib.h>
@@ -51,6 +52,7 @@ class WebProcessMainGtk final: public AuxiliaryProcessMainBase<WebProcess> {
 public:
     bool platformInitialize() override
     {
+        WTF::StackBounds::setBottomOfMainThreadMain(__builtin_frame_address(0));
 #if USE(GCRYPT)
         PAL::GCrypt::initialize();
 #endif

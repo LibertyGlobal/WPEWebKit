@@ -3869,6 +3869,7 @@ int jscmain(int argc, char** argv)
     // Need to override and enable restricted options before we start parsing options below.
     Config::enableRestrictedOptions();
 
+    WTF::StackBounds::setBottomOfMainThreadMain(__builtin_frame_address(0));
     WTF::initializeMainThread();
 
     // Note that the options parsing can affect VM creation, and thus

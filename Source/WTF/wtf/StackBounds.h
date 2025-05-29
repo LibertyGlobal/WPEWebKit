@@ -63,6 +63,7 @@ public:
         result.checkConsistency();
         return result;
     }
+    WTF_EXPORT_PRIVATE static void setBottomOfMainThreadMain(void*);
 
     void* origin() const
     {
