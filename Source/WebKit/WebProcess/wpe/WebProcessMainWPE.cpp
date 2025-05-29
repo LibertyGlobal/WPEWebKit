@@ -31,6 +31,7 @@
 #include "WebProcess.h"
 #include <glib.h>
 #include <TelemetryReport.h>
+#include <wtf/StackBounds.h>
 
 #if USE(GCRYPT)
 #include <pal/crypto/gcrypt/Initialization.h>
@@ -47,6 +48,7 @@ class WebProcessMainWPE final : public AuxiliaryProcessMainBase<WebProcess> {
 public:
     bool platformInitialize() override
     {
+        WTF::StackBounds::setBottomOfMainThreadMain(__builtin_frame_address(0));
 #if USE(GCRYPT)
         PAL::GCrypt::initialize();
 #endif

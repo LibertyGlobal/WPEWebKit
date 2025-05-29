@@ -21,6 +21,8 @@
 #include "config.h"
 #include <wtf/StackBounds.h>
 
+#include "MainThread.h"
+
 #if OS(DARWIN)
 
 #include <pthread.h>
@@ -45,6 +47,19 @@
 #endif
 
 namespace WTF {
+
+#if !CPU(ADDRESS64)
+static std::atomic<void*> bottomOfMainThreadMain = nullptr;
+#endif
+
+void StackBounds::setBottomOfMainThreadMain([[maybe_unused]] void* stack)
+{
+#if !CPU(ADDRESS64)
+    RELEASE_ASSERT(bottomOfMainThreadMain == nullptr);
+    printf("Setting bottomOfMainThreadMain to %p\n", stack);
+    bottomOfMainThreadMain = stack;
+#endif
+}
 
 #if OS(DARWIN)
 
@@ -133,17 +148,18 @@ StackBounds StackBounds::currentThreadStackBoundsInternal()
         size -= static_cast<rlim_t>(sysconf(_SC_PAGESIZE));
         void* bound = static_cast<char*>(origin) - size;
 
-        static char** oldestEnviron = environ;
+    StackBounds stackBounds { origin, bound };
 
-        // In 32bit architecture, it is possible that environment variables are having a characters which looks like a pointer,
-        // and conservative GC will find it as a live pointer. We would like to avoid that to precisely exclude non user stack
-        // data region from this stack bounds. As the article (https://lwn.net/Articles/631631/) and the elf loader implementation
-        // explain how Linux main thread stack is organized, environment variables vector is placed on the stack, so we can exclude
-        // environment variables if we use `environ` global variable as a origin of the stack.
-        // But `setenv` / `putenv` may alter `environ` variable's content. So we record the oldest `environ` variable content, and use it.
-        StackBounds stackBounds { origin, bound };
-        if (stackBounds.contains(oldestEnviron))
-            stackBounds = { oldestEnviron, bound };
+    // In 32bit architecture, it is possible that environment variables and other random data in libc have bytes which look like a pointer,
+    // and conservative GC will find it as a live pointer. We would like to avoid that to precisely exclude non user stack
+    // data region from this stack bounds. This article explains how the main thread looks (https://lwn.net/Articles/631631/).
+#if !CPU(ADDRESS64)
+    if (stackBounds.contains(bottomOfMainThreadMain))
+        stackBounds = { bottomOfMainThreadMain, bound };
+    //OOPS
+    printf("Stackbounds: %p %p bottom of main thread: %p contained?: %d is main thread?: %d\n", stackBounds.origin(), stackBounds.end(), bottomOfMainThreadMain.load(), stackBounds.contains(bottomOfMainThreadMain), isMainThread());
+#endif
+
         return stackBounds;
     }
 #endif
