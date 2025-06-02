@@ -47,6 +47,7 @@ class WebProcessMainWPE final : public AuxiliaryProcessMainBase<WebProcess> {
 public:
     bool platformInitialize() override
     {
+	fprintf(stderr, "xaxa WebProcessMainWPE::platformInitialize\n");
         WTF::StackBounds::setBottomOfMainThreadMain(__builtin_frame_address(0));
 #if USE(GCRYPT)
         PAL::GCrypt::initialize();

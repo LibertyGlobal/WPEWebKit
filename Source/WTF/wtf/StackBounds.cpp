@@ -55,8 +55,9 @@ static std::atomic<void*> bottomOfMainThreadMain = nullptr;
 void StackBounds::setBottomOfMainThreadMain([[maybe_unused]] void* stack)
 {
 #if !CPU(ADDRESS64)
+    fprintf(stderr, "xaxa setBottomOfMainThreadMainsetBottomOfMainThreadMain\n");
     RELEASE_ASSERT(bottomOfMainThreadMain == nullptr);
-    printf("Setting bottomOfMainThreadMain to %p\n", stack);
+    fprintf(stderr, "xaxa Setting bottomOfMainThreadMain to %p\n", stack);
     bottomOfMainThreadMain = stack;
 #endif
 }
@@ -157,7 +158,7 @@ StackBounds StackBounds::currentThreadStackBoundsInternal()
     if (stackBounds.contains(bottomOfMainThreadMain))
         stackBounds = { bottomOfMainThreadMain, bound };
     //OOPS
-    printf("Stackbounds: %p %p bottom of main thread: %p contained?: %d is main thread?: %d\n", stackBounds.origin(), stackBounds.end(), bottomOfMainThreadMain.load(), stackBounds.contains(bottomOfMainThreadMain), isMainThread());
+    fprintf(stderr, "xaxa Stackbounds: %p %p bottom of main thread: %p contained?: %d is main thread?: %d\n", stackBounds.origin(), stackBounds.end(), bottomOfMainThreadMain.load(), stackBounds.contains(bottomOfMainThreadMain), isMainThread());
 #endif
 
         return stackBounds;
