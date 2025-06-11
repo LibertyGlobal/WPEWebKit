@@ -84,6 +84,8 @@ LayerTreeHost::LayerTreeHost(WebPage& webPage)
     m_layerTreeContext.contextID = m_surface->surfaceID();
 
     didChangeViewport();
+
+    initialized.store(true);
 }
 
 LayerTreeHost::~LayerTreeHost()
@@ -394,7 +396,9 @@ void LayerTreeHost::updateScene()
 
 void LayerTreeHost::frameComplete()
 {
-    m_compositor->frameComplete();
+    if (initialized.load()) {
+        m_compositor->frameComplete();
+    }
 }
 
 uint64_t LayerTreeHost::nativeSurfaceHandleForCompositing()

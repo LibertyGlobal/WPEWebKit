@@ -37,6 +37,7 @@
 #include <wtf/Forward.h>
 #include <wtf/OptionSet.h>
 #include <wtf/RunLoop.h>
+#include <atomic>
 
 #if USE(GRAPHICS_LAYER_TEXTURE_MAPPER)
 
@@ -219,6 +220,7 @@ private:
     bool m_transientZoom { false };
     double m_transientZoomScale { 1 };
     WebCore::FloatPoint m_transientZoomOrigin;
+    std::atomic_bool initialized { false };
 #endif
 };
 
