@@ -239,7 +239,7 @@ void drawPatternToCairoContext(cairo_t* cr, cairo_surface_t* image, const IntSiz
         scaledImageSurface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, scaledImageSurfaceSize.width(), scaledImageSurfaceSize.height()));
         RefPtr<cairo_t> scaledImageContext = adoptRef(cairo_create(scaledImageSurface.get()));
 
-        RefPtr<cairo_pattern_t> pattern = cairo_pattern_create_for_surface(image);
+        RefPtr<cairo_pattern_t> pattern = adoptRef(cairo_pattern_create_for_surface(image));
         switch (imageInterpolationQuality) {
         case InterpolationQuality::DoNotInterpolate:
         case InterpolationQuality::Low:
@@ -263,7 +263,6 @@ void drawPatternToCairoContext(cairo_t* cr, cairo_surface_t* image, const IntSiz
         cairo_rectangle(scaledImageContext.get(), 0, 0, scaledImageSurfaceSize.width(), scaledImageSurfaceSize.height());
         cairo_fill(scaledImageContext.get());
         image = scaledImageSurface.get();
-        cairo_pattern_destroy(pattern.get());
     }
 
     // Due to a limitation in pixman, cairo cannot handle transformation matrices with values bigger than 32768. If the value is
