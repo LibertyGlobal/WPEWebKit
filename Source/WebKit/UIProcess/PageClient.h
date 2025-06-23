@@ -238,6 +238,10 @@ public:
     // Return whether the view is in a window.
     virtual bool isViewInWindow() = 0;
 
+#if PLATFORM(WPE)
+    virtual bool isViewFrozen() = 0;
+#endif
+
     // Return whether the view is visually idle.
     virtual bool isVisuallyIdle() { return !isViewVisible(); }
 

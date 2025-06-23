@@ -130,6 +130,7 @@ namespace WebCore {
     macro(focusin) \
     macro(focusout) \
     macro(formdata) \
+    macro(freeze) \
     macro(gamepadconnected) \
     macro(gamepaddisconnected) \
     macro(gatheringstatechange) \

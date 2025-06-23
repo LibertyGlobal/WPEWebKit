@@ -53,6 +53,7 @@ TextStream& operator<<(TextStream& ts, OptionSet<ActivityState::Flag> flags)
     appendIf(ActivityState::IsLoading, "loading");
     appendIf(ActivityState::IsCapturingMedia, "capturing media");
     appendIf(ActivityState::IsConnectedToHardwareConsole, "attached to hardware console");
+    appendIf(ActivityState::IsFrozen, "frozen");
 
     return ts;
 }

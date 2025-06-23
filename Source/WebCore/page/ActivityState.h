@@ -45,9 +45,10 @@ struct ActivityState {
         IsLoading = 1 << 7,
         IsCapturingMedia = 1 << 8,
         IsConnectedToHardwareConsole = 1 << 9,
+        IsFrozen = 1 << 10,
     };
 
-    static constexpr OptionSet<Flag> allFlags() { return { WindowIsActive, IsFocused, IsVisible, IsVisibleOrOccluded, IsInWindow, IsVisuallyIdle, IsAudible, IsLoading, IsCapturingMedia, IsConnectedToHardwareConsole }; }
+    static constexpr OptionSet<Flag> allFlags() { return { WindowIsActive, IsFocused, IsVisible, IsVisibleOrOccluded, IsInWindow, IsVisuallyIdle, IsAudible, IsLoading, IsCapturingMedia, IsConnectedToHardwareConsole, IsFrozen }; }
 };
 
 enum class ActivityStateForCPUSampling {
@@ -74,7 +75,8 @@ template<> struct EnumTraits<WebCore::ActivityState::Flag> {
         WebCore::ActivityState::Flag::IsAudible,
         WebCore::ActivityState::Flag::IsLoading,
         WebCore::ActivityState::Flag::IsCapturingMedia,
-        WebCore::ActivityState::Flag::IsConnectedToHardwareConsole
+        WebCore::ActivityState::Flag::IsConnectedToHardwareConsole,
+        WebCore::ActivityState::Flag::IsFrozen
     >;
 };
 

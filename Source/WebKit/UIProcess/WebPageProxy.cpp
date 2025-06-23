@@ -2232,6 +2232,8 @@ void WebPageProxy::updateActivityState(OptionSet<ActivityState::Flag> flagsToUpd
         m_activityState.add(ActivityState::IsLoading);
     if (flagsToUpdate & ActivityState::IsCapturingMedia && m_mediaState.containsAny({ MediaProducerMediaState::HasActiveAudioCaptureDevice,  MediaProducerMediaState::HasActiveVideoCaptureDevice }))
         m_activityState.add(ActivityState::IsCapturingMedia);
+    if (flagsToUpdate & ActivityState::IsFrozen && pageClient().isViewFrozen())
+        m_activityState.add(ActivityState::IsFrozen);
 }
 
 void WebPageProxy::activityStateDidChange(OptionSet<ActivityState::Flag> mayHaveChanged, ActivityStateChangeDispatchMode dispatchMode, ActivityStateChangeReplyMode replyMode)

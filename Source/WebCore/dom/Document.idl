@@ -94,6 +94,9 @@ typedef (HTMLScriptElement or SVGScriptElement) HTMLOrSVGScriptElement;
 
     // Non standard: It has been dropped from Blink already.
     RenderingContext? getCSSCanvasContext(DOMString contextId, DOMString name, long width, long height);
+
+    [EnabledBySetting=PageLifecycleAPIEnabled] attribute EventHandler onfreeze;
+    [EnabledBySetting=PageLifecycleAPIEnabled] attribute EventHandler onresume;
 };
 
 enum DocumentReadyState { "loading", "interactive", "complete" };

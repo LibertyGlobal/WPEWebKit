@@ -1698,6 +1698,20 @@ PDFPluginEnabled:
     WebKit:
       default: true
 
+PageLifecycleAPIEnabled:
+  type: bool
+  status: testable
+  category: dom
+  humanReadableName: "Page Lifecycle API"
+  humanReadableDescription: "Enable the Page Lifecycle API"
+  defaultValue:
+    WebKitLegacy:
+      default: false
+    WebKit:
+      default: true
+    WebCore:
+      default: true
+
 PageVisibilityBasedProcessSuppressionEnabled:
   type: bool
   webcoreBinding: none

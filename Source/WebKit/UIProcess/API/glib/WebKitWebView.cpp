@@ -5446,12 +5446,13 @@ webkit_web_view_get_default_content_security_policy(WebKitWebView* webView)
     return webView->priv->defaultContentSecurityPolicy.data();
 }
 
-void webkit_web_view_suspend(WebKitWebView *webView)
+void webkit_web_view_freeze(WebKitWebView *webView)
 {
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
 
     auto viewStateFlags = webView->priv->view->viewState();
     viewStateFlags.remove(WebCore::ActivityState::IsInWindow);
+    viewStateFlags.add(WebCore::ActivityState::IsFrozen);
     webView->priv->view->setViewState(viewStateFlags);
 }
 
@@ -5461,6 +5462,7 @@ void webkit_web_view_resume(WebKitWebView *webView)
 
     auto viewStateFlags = webView->priv->view->viewState();
     viewStateFlags.add(WebCore::ActivityState::IsInWindow);
+    viewStateFlags.remove(WebCore::ActivityState::IsFrozen);
     webView->priv->view->setViewState(viewStateFlags);
 }
 

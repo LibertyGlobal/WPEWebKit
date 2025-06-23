@@ -661,7 +661,7 @@ WEBKIT_API const gchar*
 webkit_web_view_get_default_content_security_policy  (WebKitWebView             *web_view);
 
 WEBKIT_API void
-webkit_web_view_suspend                              (WebKitWebView               *web_view);
+webkit_web_view_freeze                              (WebKitWebView               *web_view);
 
 WEBKIT_API void
 webkit_web_view_resume                               (WebKitWebView               *web_view);

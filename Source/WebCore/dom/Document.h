@@ -1695,6 +1695,8 @@ public:
 
     // This should be used over the settings lazy loading image flag due to a quirk, which may occur causing website images to fail to load properly.
     bool lazyImageLoadingEnabled() const;
+    void freeze();
+    void resume();
 
 protected:
     enum ConstructionFlags { Synthesized = 1, NonRenderedPlaceholder = 1 << 1 };
@@ -2227,6 +2229,8 @@ private:
     OrientationNotifier m_orientationNotifier;
     mutable RefPtr<Logger> m_logger;
     RefPtr<StringCallback> m_consoleMessageListener;
+
+    bool m_frozen { false };
 
     static bool hasEverCreatedAnAXObjectCache;
 

@@ -3624,6 +3624,18 @@ void WebPage::visibilityDidChange()
     }
 }
 
+void WebPage::frozenDidChange()
+{
+    if (auto* frame = m_mainFrame->coreFrame()) {
+        const auto isFrozen = m_activityState.contains(ActivityState::IsFrozen);
+
+        if (isFrozen)
+            frame->document()->freeze();
+        else
+            frame->document()->resume();
+    }
+}
+
 void WebPage::setActivityState(OptionSet<ActivityState::Flag> activityState, ActivityStateChangeID activityStateChangeID, CompletionHandler<void()>&& callback)
 {
     LOG_WITH_STREAM(ActivityState, stream << "WebPage " << identifier().toUInt64() << " setActivityState to " << activityState);
@@ -3648,6 +3660,9 @@ void WebPage::setActivityState(OptionSet<ActivityState::Flag> activityState, Act
 
     if (changed & ActivityState::IsVisible)
         visibilityDidChange();
+
+    if (changed & ActivityState::IsFrozen)
+        frozenDidChange();
 }
 
 void WebPage::setLayerHostingMode(LayerHostingMode layerHostingMode)

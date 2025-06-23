@@ -76,6 +76,7 @@ private:
     bool isViewFocused() override;
     bool isViewVisible() override;
     bool isViewInWindow() override;
+    bool isViewFrozen() override;
 
     void processDidExit() override;
     void didRelaunchProcess() override;
