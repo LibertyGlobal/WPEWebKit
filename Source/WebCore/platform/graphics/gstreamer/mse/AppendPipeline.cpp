@@ -468,15 +468,20 @@ void AppendPipeline::appsinkNewSample(const Track& track, GRefPtr<GstSample>&& s
     GstSegment* segment = gst_sample_get_segment(sample.get());
     auto mediaSample = MediaSampleGStreamer::create(WTFMove(sample), track.presentationSize, track.trackId);
 
+    /* this logic does not work when we insert piece of stream with different segment start
+       and then return back to original offset. It causes the inserted segment is shifted/overlapped.
+
     if (segment && (segment->time || segment->start)) {
         // MP4 has the concept of edit lists, where some buffer time needs to be offsetted, often very slightly,
         // to get exact timestamps.
+
         MediaTime pts = bufferTimeToStreamTime(segment, GST_BUFFER_PTS(buffer));
         MediaTime dts = bufferTimeToStreamTime(segment, GST_BUFFER_DTS(buffer));
         GST_TRACE_OBJECT(track.appsinkPad.get(), "Mapped buffer to segment, PTS %" GST_TIME_FORMAT " -> %s DTS %" GST_TIME_FORMAT " -> %s",
             GST_TIME_ARGS(GST_BUFFER_PTS(buffer)), pts.toString().utf8().data(), GST_TIME_ARGS(GST_BUFFER_DTS(buffer)), dts.toString().utf8().data());
         mediaSample->setTimestamps(pts, dts);
-    } else if (!GST_BUFFER_DTS(buffer) && GST_BUFFER_PTS(buffer) > 0 && GST_BUFFER_PTS(buffer) <= 100'000'000) {
+        
+    } else */ if (!GST_BUFFER_DTS(buffer) && GST_BUFFER_PTS(buffer) > 0 && GST_BUFFER_PTS(buffer) <= 100'000'000) {
         // Because a track presentation time starting at some close to zero, but not exactly zero time can cause unexpected
         // results for applications, we extend the duration of this first sample to the left so that it starts at zero.
         // This is relevant for files that should have an edit list but don't, or when using GStreamer < 1.16, where
