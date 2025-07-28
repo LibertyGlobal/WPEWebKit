@@ -29,9 +29,7 @@
 #include "FloatRect.h"
 #include "Frame.h"
 #include "FrameView.h"
-#include "Logging.h"
 #include "NotImplemented.h"
-#include "Page.h"
 #include "Widget.h"
 
 namespace WebCore {
@@ -95,25 +93,6 @@ bool screenSupportsExtendedColor(Widget*)
     return false;
 }
 
-bool screenSupportsHighDynamicRange(Widget* widget)
-{
-    if(!widget)
-    {
-        return false;
-    }
-
-    if(!widget->root())
-    {
-        return false;
-    }
-
-    Frame& frame = widget->root()->frame();
-    bool hdrCaps = frame.settings().platformHDRCapabilities();
-
-    WTFLogAlways("Supports HDR Capabilities - %d", hdrCaps);
-    return hdrCaps;
-}
-
 #if ENABLE(TOUCH_EVENTS)
 bool screenHasTouchDevice()
 {
@@ -126,4 +105,11 @@ bool screenIsTouchPrimaryInputDevice()
 }
 #endif
 
+bool screenSupportsHighDynamicRange(Widget* widget)
+{
+    if(!widget || !widget->root())
+        return false;
+
+    return widget->root()->frame().settings().screenSupportsHDR();
+}
 } // namespace WebCore
