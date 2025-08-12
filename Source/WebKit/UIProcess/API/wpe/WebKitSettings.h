@@ -547,6 +547,13 @@ WEBKIT_API void
 webkit_settings_set_webrtc_udp_ports_range                     (WebKitSettings *settings,
                                                                 const gchar    *udp_port_range);
 
+WEBKIT_API gboolean
+webkit_settings_get_screen_supports_hdr                        (WebKitSettings* settings);
+
+WEBKIT_API void
+webkit_settings_set_screen_supports_hdr                        (WebKitSettings* settings,
+                                                                gboolean screenSupportsHDR);
+
 G_END_DECLS
 
 #endif /* WebKitSettings_h */
