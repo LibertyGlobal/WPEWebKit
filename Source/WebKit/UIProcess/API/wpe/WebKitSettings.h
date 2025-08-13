@@ -560,6 +560,11 @@ webkit_settings_get_destroy_window_on_freeze                   (WebKitSettings* 
 WEBKIT_API void
 webkit_settings_set_destroy_window_on_freeze                   (WebKitSettings* settings,
                                                                 gboolean destroy_window);
+webkit_settings_get_screen_supports_hdr                        (WebKitSettings* settings);
+
+WEBKIT_API void
+webkit_settings_set_screen_supports_hdr                        (WebKitSettings* settings,
+                                                                gboolean screenSupportsHDR);
 
 G_END_DECLS
 

@@ -458,7 +458,7 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         webkit_settings_set_destroy_window_on_freeze(settings, g_value_get_boolean(value));
         break;
     case PROP_SCREEN_SUPPORTS_HDR:
-        g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
+        webkit_settings_set_screen_supports_hdr(settings, g_value_get_boolean(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -4702,4 +4702,3 @@ void webkit_settings_set_destroy_window_on_freeze(WebKitSettings* settings, gboo
     priv->preferences->setPageLifecycleAPIDestroyWindowOnFreeze(destroy);
     g_object_notify(G_OBJECT(settings), "destroy-window-on-freeze");
 }
-
