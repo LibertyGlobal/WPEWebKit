@@ -188,7 +188,7 @@ enum {
     PROP_ENABLE_SERVICE_WORKER,
     PROP_ENABLE_ICE_CANDIDATE_FILTERING,
     PROP_WEBRTC_UDP_PORTS_RANGE,
-    PROP_PLATFORM_HDR_CAPABILITIES,
+    PROP_SCREEN_SUPPORTS_HDR,
     N_PROPERTIES,
 };
 
@@ -449,8 +449,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     case PROP_WEBRTC_UDP_PORTS_RANGE:
         webkit_settings_set_webrtc_udp_ports_range(settings, g_value_get_string(value));
         break;
-    case PROP_PLATFORM_HDR_CAPABILITIES:
-        webkit_settings_set_platform_hdr_capabilities(settings, g_value_get_boolean(value));
+    case PROP_SCREEN_SUPPORTS_HDR:
+        webkit_settings_set_screen_supports_hdr(settings, g_value_get_boolean(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -683,8 +683,8 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     case PROP_WEBRTC_UDP_PORTS_RANGE:
         g_value_set_string(value, webkit_settings_get_webrtc_udp_ports_range(settings));
         break;
-    case PROP_PLATFORM_HDR_CAPABILITIES:
-        g_value_set_boolean(value, webkit_settings_get_platform_hdr_capabilities(settings));
+    case PROP_SCREEN_SUPPORTS_HDR:
+        g_value_set_boolean(value, webkit_settings_get_screen_supports_hdr(settings));
         break;
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
         break;
@@ -1801,19 +1801,16 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
         nullptr, // A null string forces the default value.
         readWriteConstructParamFlags);
 
-    /**
-     * WebKitSettings:platform-hdr-capabilities:
+     /**
+     * WebKitSettings:screen-supports-hdr:
      *
-     * Allow customization of platform hdr capabilities.
+     * Screen supports HDR.
      *
-     * This settings can be used to determine the HDR capabilities of the platform.
-     *
-     * Since: 2.38
      */
-    sObjProperties[PROP_PLATFORM_HDR_CAPABILITIES] = g_param_spec_boolean(
-        "platform-hdr-capabilities",
-        _("Platform HDR Capabilities"),
-        _("Platform HDR Capabilities, boolean value"),
+    sObjProperties[PROP_SCREEN_SUPPORTS_HDR] = g_param_spec_boolean(
+        "screen-supports-hdr",
+        _("Screen supports HDR"),
+        _("Does screen support HDR."),
         FALSE,
         readWriteConstructParamFlags);
 
@@ -4559,39 +4556,38 @@ webkit_settings_set_webrtc_udp_ports_range(WebKitSettings* settings, const gchar
 }
 
 /**
- * webkit_settings_get_platform_hdr_capabilities:
+ * webkit_settings_get_screen_supports_hdr:
  * @settings: a #WebKitSettings
  *
- * Get the [property@Settings:platform-hdr-capabilities] property.
+ * Get the [property@Settings:screen-supports-hdr] property.
  *
- * Returns: The Platform HDR Capabilities, or FALSE if un-set.
+ * Returns: Screen supports HDR, or FALSE if un-set.
  *
- * Since: 2.38
  */
 gboolean
-webkit_settings_get_platform_hdr_capabilities(WebKitSettings* settings)
+webkit_settings_get_screen_supports_hdr(WebKitSettings* settings)
 {
     g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
-    return settings->priv->preferences->platformHDRCapabilities();
+    return settings->priv->preferences->screenSupportsHDR();
 }
 
 /**
- * webkit_settings_set_platform_hdr_capabilities:
+ * webkit_settings_set_screen_supports_hdr:
  * @settings: a #WebKitSettings
- * @platform_hdr_caps: Value to be set
+ * @screenSupportsHDR: Value to be set
  *
- * Set the [property@Settings:platform-hdr-capabilities] property.
+ * Set the [property@Settings:screen-supports-hdr] property.
  *
- * Since: 2.38
  */
 void
-webkit_settings_set_platform_hdr_capabilities(WebKitSettings* settings, gboolean hdrCaps)
+webkit_settings_set_screen_supports_hdr(WebKitSettings* settings, gboolean screenSupportsHDR)
 {
     g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
     WebKitSettingsPrivate* priv = settings->priv;
-    if (priv->preferences->platformHDRCapabilities() == hdrCaps)
+    bool currentValue = priv->preferences->screenSupportsHDR();
+    if (currentValue == screenSupportsHDR)
         return;
 
-    priv->preferences->setPlatformHDRCapabilities(hdrCaps);
-    g_object_notify(G_OBJECT(settings), "platform-hdr-capabilities");
+    priv->preferences->setScreenSupportsHDR(screenSupportsHDR);
+    g_object_notify_by_pspec(G_OBJECT(settings), sObjProperties[PROP_SCREEN_SUPPORTS_HDR]);
 }
