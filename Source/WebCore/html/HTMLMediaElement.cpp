@@ -6097,6 +6097,12 @@ void HTMLMediaElement::stop()
 
     if (m_mediaSession)
         m_mediaSession->stopSession();
+
+    if (m_mediaKeys) {
+        m_mediaKeys->detachCDMClient(*this);
+        if (m_player)
+            m_player->cdmInstanceDetached(m_mediaKeys->cdmInstance());
+    }
 }
 
 void HTMLMediaElement::suspend(ReasonForSuspension reason)
