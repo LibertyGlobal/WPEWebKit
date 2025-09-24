@@ -143,6 +143,7 @@ private:
     void setStorageDirectory(const String&) final;
     const String& keySystem() const final;
     RefPtr<CDMInstanceSession> createSession() final;
+    void destroyCDM() final;
 
     WeakPtr<MockCDM> m_cdm;
     bool m_distinctiveIdentifiersAllowed { true };

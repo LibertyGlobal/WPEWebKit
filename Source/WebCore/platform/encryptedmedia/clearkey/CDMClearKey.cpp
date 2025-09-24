@@ -434,6 +434,10 @@ void CDMInstanceClearKey::setStorageDirectory(const String&)
 {
 }
 
+void CDMInstanceClearKey::destroyCDM()
+{
+}
+
 const String& CDMInstanceClearKey::keySystem() const
 {
     static const NeverDestroyed<String> s_keySystem { MAKE_STATIC_STRING_IMPL("org.w3.clearkey") };

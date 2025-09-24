@@ -103,6 +103,7 @@ public:
     void setStorageDirectory(const String&) final;
     const String& keySystem() const final;
     RefPtr<CDMInstanceSession> createSession() final;
+    void destroyCDM() final;
 };
 
 class CDMInstanceSessionClearKey final : public CDMInstanceSessionProxy {

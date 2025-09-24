@@ -291,6 +291,10 @@ void MockCDMInstance::setStorageDirectory(const String&)
 {
 }
 
+void MockCDMInstance::destroyCDM()
+{
+}
+
 const String& MockCDMInstance::keySystem() const
 {
     static const NeverDestroyed<String> s_keySystem = MAKE_STATIC_STRING_IMPL("org.webkit.mock");
