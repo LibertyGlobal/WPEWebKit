@@ -99,7 +99,6 @@ public:
 
 private:
     String m_keySystem;
-    Thunder::UniqueThunderSystem m_thunderSystem;
 };
 
 class CDMInstanceThunder final : public CDMInstanceProxy {
@@ -114,6 +113,7 @@ public:
     void setStorageDirectory(const String&) final;
     const String& keySystem() const final { return m_keySystem; }
     RefPtr<CDMInstanceSession> createSession() final;
+    void releaseCDM() final;
 
     OpenCDMSystem& thunderSystem() const { return *m_thunderSystem.get(); };
 
