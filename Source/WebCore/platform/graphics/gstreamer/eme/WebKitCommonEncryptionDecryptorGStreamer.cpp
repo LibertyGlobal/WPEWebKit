@@ -225,6 +225,10 @@ static GstFlowReturn transformInPlace(GstBaseTransform* base, GstBuffer* buffer)
     WebKitMediaCommonEncryptionDecrypt* self = WEBKIT_MEDIA_CENC_DECRYPT(base);
     WebKitMediaCommonEncryptionDecryptPrivate* priv = WEBKIT_MEDIA_CENC_DECRYPT_GET_PRIVATE(self);
 
+    GST_DEBUG_OBJECT(self, "VV: transformInPlace, PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT "",
+            GST_TIME_ARGS(GST_BUFFER_PTS(buffer)), GST_TIME_ARGS(GST_BUFFER_DTS(buffer)));
+
+
     GstProtectionMeta* protectionMeta = reinterpret_cast<GstProtectionMeta*>(gst_buffer_get_protection_meta(buffer));
     if (!protectionMeta) {
         GST_TRACE_OBJECT(self, "Buffer %p does not contain protection meta, not decrypting", buffer);
