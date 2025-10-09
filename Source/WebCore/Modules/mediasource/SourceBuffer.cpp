@@ -159,6 +159,7 @@ ExceptionOr<void> SourceBuffer::setTimestampOffset(double offset)
     if (m_mode == AppendMode::Sequence)
         m_private->setGroupStartTimestamp(newTimestampOffset);
 
+    ERROR_LOG(LOGIDENTIFIER, "VV:setTimestampOffset=", newTimestampOffset);
     // 7. Update the attribute to the new value.
     m_private->setTimestampOffset(newTimestampOffset);
 

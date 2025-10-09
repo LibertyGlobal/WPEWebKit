@@ -243,10 +243,36 @@ void WebResourceLoader::didReceiveData(IPC::SharedBufferReference&& data, int64_
     m_coreLoader->didReceiveData(data.isNull() ? SharedBuffer::create() : data.unsafeBuffer().releaseNonNull(), encodedDataLength, DataPayloadBytes);
 }
 
+static bool writeData(const FragmentedSharedBuffer* data, String& fullPath)
+{
+    LOG(Network, "VV:  writeData(data=%p, size=%d", data, data?data->size():0);
+    int64_t writtenBytes = 0;
+    if (data && data->size()) {
+       FileSystem::PlatformFileHandle handle = FileSystem::openFile(fullPath, FileSystem::FileOpenMode::Write);
+       if (!handle)
+           return false;
+
+         data->forEachSegment([&](auto& segment) {
+             LOG(Network, "VV:  writeData(segment.data=%p, segment.size=%d", segment.data(), segment.size());
+             writtenBytes += FileSystem::writeToFile(handle, segment.data(), segment.size());
+         });
+       FileSystem::closeFile(handle);
+
+       if (writtenBytes != static_cast<int64_t>(data->size())) {
+           FileSystem::deleteFile(fullPath);
+          return false;
+       }
+       return true;
+    }
+  return false;
+}
+
 void WebResourceLoader::didFinishResourceLoad(NetworkLoadMetrics&& networkLoadMetrics)
 {
     LOG(Network, "(WebProcess) WebResourceLoader::didFinishResourceLoad for '%s'", m_coreLoader->url().string().latin1().data());
     WEBRESOURCELOADER_RELEASE_LOG("didFinishResourceLoad: (length=%zd)", m_numBytesReceived);
+    static int res_counter=0;
+    String path = "/tmp/wpe/wpe/saved/WEB" + String::number(res_counter++) + ".bin";
 
     if (UNLIKELY(m_interceptController.isIntercepting(m_coreLoader->identifier()))) {
         m_interceptController.defer(m_coreLoader->identifier(), [this, protectedThis = Ref { *this }, networkLoadMetrics = WTFMove(networkLoadMetrics)]() mutable {
@@ -254,6 +280,15 @@ void WebResourceLoader::didFinishResourceLoad(NetworkLoadMetrics&& networkLoadMe
                 didFinishResourceLoad(WTFMove(networkLoadMetrics));
         });
         return;
+    }
+    if (m_numBytesReceived) {
+      if (writeData(m_coreLoader->resourceData(), path) )  {
+          LOG(Network, "VV:  WebResourceLoader::didFinishResourceLoad: '%s' saved as '%s' ", m_coreLoader->url().string().latin1().data(), path.utf8().data());
+      }
+      else
+      {
+          LOG(Network, "VV: WebResourceLoader::didFinishResourceLoad: '%s' failed to save as '%s' ", m_coreLoader->url().string().latin1().data(), path.utf8().data());
+      }
     }
 
     networkLoadMetrics.workerStart = m_workerStart;

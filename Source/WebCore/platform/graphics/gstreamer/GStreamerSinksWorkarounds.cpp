@@ -264,6 +264,11 @@ private:
         }
         padLocker.unlockEarly();
 
+        if  (info->type & GST_PAD_PROBE_TYPE_BUFFER) 
+        {
+           GST_DEBUG_OBJECT(pad, "VV: Returning from the probe so that the buffer is sent: %" GST_PTR_FORMAT, info->data);
+        }
+
         if (willResendCaps) {
             GRefPtr<GstCaps> caps = adoptGRef(gst_pad_get_current_caps(pad));
             GST_DEBUG_OBJECT(pad, "Sending stored pad caps to appsink: %" GST_PTR_FORMAT, caps.get());
