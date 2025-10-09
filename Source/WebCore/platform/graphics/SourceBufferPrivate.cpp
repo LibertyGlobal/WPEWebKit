@@ -698,6 +698,8 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
         MediaTime presentationTimestamp;
         MediaTime decodeTimestamp;
 
+        DEBUG_LOG(LOGIDENTIFIER, "ORIGINAL SAMPLE: ", sample.get());
+
         // NOTE: this is out-of-order, but we need the timescale from the
         // sample's duration for timestamp generation.
         // 1.2 Let frame duration be a double precision floating point representation of the coded frame's
@@ -723,7 +725,7 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             // decode timestamp in seconds.
             decodeTimestamp = sample->decodeTime();
         }
-
+         DEBUG_LOG(LOGIDENTIFIER, "VV:CALCULATED TIMES: m_shouldGenerateTimestamps=", m_shouldGenerateTimestamps," presentationTimestamp: ", presentationTimestamp, " decodeTimestamp: ",decodeTimestamp);
         // 1.3 If mode equals "sequence" and group start timestamp is set, then run the following steps:
         if (m_appendMode == SourceBufferAppendMode::Sequence && m_groupStartTimestamp.isValid()) {
             // 1.3.1 Set timestampOffset equal to group start timestamp - presentation timestamp.
@@ -770,6 +772,12 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             // 1.4.2 Add timestampOffset to the decode timestamp.
             decodeTimestamp += trackBuffer.roundedTimestampOffset();
         }
+
+        DEBUG_LOG(LOGIDENTIFIER, "VV:CALCULATED TIMES2: m_appendMode=",m_appendMode," m_timestampOffset=", m_timestampOffset ," presentationTimestamp: ", presentationTimestamp, " decodeTimestamp: ",decodeTimestamp);
+        if (trackBuffer.lastDecodeTimestamp().isValid()) {DEBUG_LOG(LOGIDENTIFIER, "VV:trackBuffer: lastDecodeTimestamp=",trackBuffer.lastDecodeTimestamp());}
+        if (trackBuffer.greatestFrameDuration().isValid())  {DEBUG_LOG(LOGIDENTIFIER, "VV:trackBuffer: greatestFrameDuration=",trackBuffer.greatestFrameDuration());}
+
+
 
         // 1.6 ↳ If last decode timestamp for track buffer is set and decode timestamp is less than last
         // decode timestamp:
@@ -856,6 +864,8 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             return;
         }
 
+        DEBUG_LOG(LOGIDENTIFIER, "VV:Total samples in track buffer: ", trackBuffer.samples().size());
+
         // If the decode timestamp is less than the presentation start time, then run the end of stream
         // algorithm with the error parameter set to "decode", and abort these steps.
         // NOTE: Until <https://www.w3.org/Bugs/Public/show_bug.cgi?id=27487> is resolved, we will only check
@@ -879,7 +889,6 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             // 1.11.2 Set the need random access point flag on track buffer to false.
             trackBuffer.setNeedRandomAccessFlag(false);
         }
-
         // 1.11 Let spliced audio frame be an unset variable for holding audio splice information
         // 1.12 Let spliced timed text frame be an unset variable for holding timed text splice information
         // FIXME: Add support for sample splicing.
@@ -912,8 +921,11 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
 
                     // 1.13.2.3 If the presentation timestamp is less than the remove window timestamp,
                     // then remove overlapped frame and any coded frames that depend on it from track buffer.
-                    if (presentationTimestamp < removeWindowTimestamp)
+                    if (presentationTimestamp < removeWindowTimestamp) {
                         erasedSamples.addSample(*iter->second);
+                        DEBUG_LOG(LOGIDENTIFIER, "VV:found overlapped sample(", presentationTimestamp, "<", removeWindowTimestamp,"):", *overlappedFrame.get());
+                    }
+
                 }
 
                 // If track buffer contains timed text coded frames:
@@ -921,6 +933,7 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
                 // FIXME: Add support for sample splicing.
             }
         }
+        DEBUG_LOG(LOGIDENTIFIER, "VV:check 4");
 
         // 1.14 Remove existing coded frames in track buffer:
         // If highest presentation timestamp for track buffer is not set:
@@ -928,8 +941,10 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             // Remove all coded frames from track buffer that have a presentation timestamp greater than or
             // equal to presentation timestamp and less than frame end timestamp.
             auto iterPair = trackBuffer.samples().presentationOrder().findSamplesBetweenPresentationTimes(presentationTimestamp, frameEndTimestamp);
-            if (iterPair.first != trackBuffer.samples().presentationOrder().end())
+            if (iterPair.first != trackBuffer.samples().presentationOrder().end()) {
                 erasedSamples.addRange(iterPair.first, iterPair.second);
+                DEBUG_LOG(LOGIDENTIFIER, "VV:found same presentation samples");
+            }
         }
 
         // When appending media containing B-frames (media whose samples' presentation timestamps
@@ -969,6 +984,11 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
                     ", but fixed the ordering by changing sample DTS from ", sample->decodeTime(), " to ", safeDecodeTime);
                     sample->setTimestamps(sample->presentationTime(), safeDecodeTime);
                     break;
+                } else {
+                    INFO_LOG(LOGIDENTIFIER, "Failed to fix out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
+                    ", because ", sample->decodeTime(), " > ", safeDecodeTime);
+                    sample->setTimestamps(sample->presentationTime(), safeDecodeTime);
+
                 }
             }
 
@@ -1019,11 +1039,14 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             } while (false);
         }
 
+        DEBUG_LOG(LOGIDENTIFIER, "VV:check 6");
+
         // 1.15 Remove decoding dependencies of the coded frames removed in the previous step:
         DecodeOrderSampleMap::MapType dependentSamples;
         if (!erasedSamples.empty()) {
             // If detailed information about decoding dependencies is available:
             // FIXME: Add support for detailed dependency information
+            DEBUG_LOG(LOGIDENTIFIER, "VV:check 6a");
 
             // Otherwise: Remove all coded frames between the coded frames removed in the previous step
             // and the next random access point after those removed frames.
@@ -1083,6 +1106,8 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
 
             if (trackBuffer.minimumEnqueuedPresentationTime().isValid() && sample->presentationTime() < trackBuffer.minimumEnqueuedPresentationTime())
                 trackBuffer.setNeedsMinimumUpcomingPresentationTimeUpdating(true);
+        } else {
+            DEBUG_LOG(LOGIDENTIFIER, "VV:skip unordered sample, lastEnqueuedDecodeKey: dts:", trackBuffer.lastEnqueuedDecodeKey().first, " pts:", trackBuffer.lastEnqueuedDecodeKey().second);
         }
 
         // NOTE: the spec considers the need to check the last frame duration but doesn't specify if that last frame

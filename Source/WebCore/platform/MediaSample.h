@@ -122,6 +122,7 @@ public:
     {
         auto object = JSON::Object::create();
 
+        object->setInteger("size"_s, sizeInBytes());
         object->setObject("pts"_s, presentationTime().toJSONObject());
         object->setObject("dts"_s, decodeTime().toJSONObject());
         object->setObject("duration"_s, duration().toJSONObject());

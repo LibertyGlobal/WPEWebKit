@@ -752,7 +752,7 @@ static void webKitMediaSrcLoop(void* userData)
         streamingMembers.unlockEarly();
 
         ASSERT(GST_BUFFER_PTS_IS_VALID(buffer.get()));
-        GST_TRACE_OBJECT(pad, "Pushing buffer downstream: %" GST_PTR_FORMAT, buffer.get());
+        GST_DEBUG_OBJECT(pad, "Pushing buffer downstream: %" GST_PTR_FORMAT, buffer.get());
         GstFlowReturn result = gst_pad_push(pad, buffer.leakRef());
         if (result != GST_FLOW_OK && result != GST_FLOW_FLUSHING) {
             GST_ERROR_OBJECT(pad, "Pushing buffer returned %s", gst_flow_get_name(result));

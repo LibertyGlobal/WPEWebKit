@@ -162,8 +162,8 @@ void SourceBufferPrivateGStreamer::enqueueSample(Ref<MediaSample>&& sample, cons
     ASSERT(gstSample);
     ASSERT(gst_sample_get_buffer(gstSample.get()));
 
-    GST_TRACE_OBJECT(m_playerPrivate.pipeline(), "enqueing sample trackId=%s presentationSize=%.0fx%.0f at PTS %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT,
-        trackId.string().utf8().data(), sample->presentationSize().width(), sample->presentationSize().height(),
+    GST_DEBUG_OBJECT(m_playerPrivate.pipeline(), "enqueing sample %d bytes trackId=%s presentationSize=%.0fx%.0f at PTS %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT,
+        sample->sizeInBytes(), trackId.string().utf8().data(), sample->presentationSize().width(), sample->presentationSize().height(),
         GST_TIME_ARGS(WebCore::toGstClockTime(sample->presentationTime())),
         GST_TIME_ARGS(WebCore::toGstClockTime(sample->duration())));
 
