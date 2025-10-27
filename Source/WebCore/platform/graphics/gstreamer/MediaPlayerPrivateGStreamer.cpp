@@ -2743,6 +2743,13 @@ void MediaPlayerPrivateGStreamer::updateStates()
         GST_DEBUG_OBJECT(pipeline(), "Async: State: %s, pending: %s", gst_element_state_get_name(m_currentState), gst_element_state_get_name(pending));
         // Change in progress.
 
+        if (m_currentState == GST_STATE_PAUSED && m_isBuffering) {
+            // If we are buffering, we could miss HaveCurrentData state if buffering finished before the transition completes.
+            GST_DEBUG_OBJECT(pipeline(), "Async: [Buffering] still buffering, so force HaveCurrentData.");
+            m_readyState = MediaPlayer::ReadyState::HaveCurrentData;
+            m_networkState = MediaPlayer::NetworkState::Loading;
+        }
+
         // Delay the m_isBuffering change by returning it to its previous value. Without this, the false --> true change
         // would go unnoticed by the code that should trigger a pause.
         if (m_wasBuffering != m_isBuffering && !m_isPaused && m_playbackRate) {
