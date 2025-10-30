@@ -151,6 +151,7 @@ private:
     void errorCallback(RefPtr<SharedBuffer>&&);
     CDMInstanceSession::KeyStatus status(const KeyIDType&) const;
     void sessionFailure();
+    void sessionSuccess();
 
     // FIXME: Check all original uses of these attributes.
     String m_sessionID;
