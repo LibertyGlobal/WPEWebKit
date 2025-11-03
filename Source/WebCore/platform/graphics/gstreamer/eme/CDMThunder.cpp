@@ -604,10 +604,29 @@ void CDMInstanceSessionThunder::updateLicense(const String& sessionID, LicenseTy
         sessionFailure();
 }
 
-void CDMInstanceSessionThunder::loadSession(LicenseType, const String& sessionID, const String&, LoadSessionCallback&& callback)
+void CDMInstanceSessionThunder::loadSession(LicenseType licenseType, const String& sessionID, const String&, LoadSessionCallback&& callback)
 {
-    ASSERT_UNUSED(sessionID, sessionID == m_sessionID);
+    ASSERT(isMainThread());
 
+    // persistent session can be created here by OCDM backend based by previously used sessionID
+    if (!m_session && m_sessionID.isEmpty() &&
+        licenseType == WebCore::CDMInstanceSession::LicenseType::PersistentLicense) {
+        auto instance = cdmInstanceThunder();
+        ASSERT(instance);
+
+        GST_TRACE("Going to request a new session for id: %s", sessionID.utf8().data());
+
+        OpenCDMSession* session = nullptr;
+        // sessionId passed as customData when no initData is given
+        opencdm_construct_session(&instance->thunderSystem(), thunderLicenseType(licenseType), "",
+            nullptr, 0, sessionID.utf8().dataAsUInt8Ptr(), sessionID.utf8().length(), &m_thunderSessionCallbacks, this, &session);
+        if (!session) {
+            GST_ERROR("Could not create session");
+        } else {
+            m_session = adoptInBoxPtr(session);
+            m_sessionID = sessionID;
+        }
+    }
     m_sessionChangedCallbacks.append([this, callback = WTFMove(callback)](bool success, RefPtr<SharedBuffer>&& responseMessage) mutable {
         ASSERT(isMainThread());
         if (success) {
