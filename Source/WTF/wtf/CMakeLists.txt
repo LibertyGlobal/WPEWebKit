@@ -577,6 +577,7 @@ set(WTF_LIBRARIES
     ICU::uc
     OdhErrTelemetry::OdhErrTelemetry
     OdhOttTelemetry::OdhOttTelemetry
+    gpumem
 )
 
 if (NOT USE_SYSTEM_MALLOC)
