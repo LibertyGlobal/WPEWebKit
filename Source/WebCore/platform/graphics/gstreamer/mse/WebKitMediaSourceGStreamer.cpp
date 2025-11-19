@@ -897,6 +897,11 @@ void webKitMediaSrcFlush(WebKitMediaSrc* source, const AtomString& streamName, G
     GST_DEBUG_OBJECT(source, "Received non-seek flush request for stream '%s'.", streamName.string().utf8().data());
     Stream* stream = source->priv->streamByName(streamName);
 
+    if (!stream) {
+        GST_INFO_OBJECT(source, "Ignoring flush on track not present in this WebKitMediaSrc");
+        return;
+    }
+
     webKitMediaSrcStreamFlush(stream, false, time);
 }
 
