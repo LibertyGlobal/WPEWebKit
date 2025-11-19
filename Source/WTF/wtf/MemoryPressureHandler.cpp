@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include <wtf/MemoryPressureHandler.h>
+#include <gpumem.h>
 
 #if OS(LINUX)
 #include <unistd.h>
@@ -91,21 +92,12 @@ static bool isWebProcess()
 
 static size_t memoryFootprintVideo()
 {
-    if (!isWebProcess() || s_GPUMemoryFile.isEmpty())
-        return 0;
-
-    FILE* file = fopen(s_GPUMemoryFile.utf8().data(), "r");
-    if (!file)
-        return 0;
-
-    char* buffer = nullptr;
-    size_t size = 0;
+    uint32_t totalMemory = 0, availableMemory = 0;
     size_t footprint = 0;
-    if (getline(&buffer, &size, file) != -1)
-        sscanf(buffer, "%u", &footprint);
 
-    free(buffer);
-    fclose(file);
+    if (gpumem_video_memory_total(&totalMemory) == 0 && gpumem_video_memory_available(0, &availableMemory) == 0) {
+        footprint = (totalMemory - availableMemory);
+    }
 
     return footprint;
 }
@@ -322,7 +314,10 @@ void MemoryPressureHandler::measurementTimerFired()
     static size_t footprintPeak = 0;
     if (footprintPeak < footprint)
         footprintPeak = footprint;
-    RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB, video footprint: %zu MB", footprint / MB, footprintPeak / MB, footprintVideo / MB);
+    if (isWebProcess())
+        RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB, video footprint: %zu MB", footprint / MB, footprintPeak / MB, footprintVideo / MB);
+    else
+        RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB, peak: %zu MB", footprint / MB, footprintPeak / MB);
     auto killThreshold = thresholdForMemoryKill(MemoryType::Normal);
     auto killThresholdVideo = thresholdForMemoryKill(MemoryType::Video);
     if ((killThreshold && footprint >= *killThreshold) || (killThresholdVideo && footprintVideo >= *killThresholdVideo)) {
