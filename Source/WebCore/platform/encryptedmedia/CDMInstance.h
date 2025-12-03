@@ -107,7 +107,6 @@ public:
     virtual void setStorageDirectory(const String&) = 0;
     virtual const String& keySystem() const = 0;
     virtual RefPtr<CDMInstanceSession> createSession() = 0;
-    virtual void releaseCDM() { };
 
     enum class HDCPStatus : uint8_t {
         Unknown,

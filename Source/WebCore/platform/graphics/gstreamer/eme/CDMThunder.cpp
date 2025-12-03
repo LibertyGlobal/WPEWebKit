@@ -141,6 +141,7 @@ bool CDMFactoryThunder::supportsKeySystem(const String& keySystem)
 
 CDMPrivateThunder::CDMPrivateThunder(const String& keySystem)
     : m_keySystem(keySystem)
+    , m_thunderSystem(opencdm_create_system(keySystem.utf8().data()))
 {
 };
 
@@ -203,9 +204,7 @@ void CDMPrivateThunder::loadAndInitialize()
 
 bool CDMPrivateThunder::supportsServerCertificates() const
 {
-    OpenCDMSystem *ocdmSystem = opencdm_create_system(m_keySystem.utf8().data());
-    bool isSupported = opencdm_system_supports_server_certificate(ocdmSystem);
-    opencdm_destruct_system(ocdmSystem);
+    bool isSupported = opencdm_system_supports_server_certificate(m_thunderSystem.get());
     GST_DEBUG("server certificate supported %s", boolForPrinting(isSupported));
     return isSupported;
 }
@@ -259,9 +258,6 @@ void CDMInstanceThunder::initializeWithConfiguration(const CDMKeySystemConfigura
 void CDMInstanceThunder::setServerCertificate(Ref<SharedBuffer>&& certificate,  SuccessCallback&& callback)
 {
     auto data = certificate->extractData();
-    if (m_thunderSystem.get() == nullptr) {
-        m_thunderSystem.reset(opencdm_create_system(m_keySystem.utf8().data()));
-    }
     OpenCDMError error = opencdm_system_set_server_certificate(m_thunderSystem.get(), const_cast<uint8_t*>(data.data()), data.size());
     callback(!error ? Succeeded : Failed);
 }
@@ -269,12 +265,6 @@ void CDMInstanceThunder::setServerCertificate(Ref<SharedBuffer>&& certificate,  
 void CDMInstanceThunder::setStorageDirectory(const String& storageDirectory)
 {
     FileSystem::makeAllDirectories(storageDirectory);
-}
-
-void CDMInstanceThunder::releaseCDM()
-{
-    GST_DEBUG("release CDM resources");
-    m_thunderSystem.reset();
 }
 
 CDMInstanceSessionThunder::CDMInstanceSessionThunder(CDMInstanceThunder& instance)
