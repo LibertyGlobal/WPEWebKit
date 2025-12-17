@@ -88,6 +88,25 @@ void SourceBufferPrivateGStreamer::append(Vector<unsigned char>&& data)
     ASSERT(m_client);
 
     GST_DEBUG_OBJECT(m_playerPrivate.pipeline(), "Appending %zu bytes", data.size());
+
+    if (data.size() > 8 && !memcmp(data.data(), "<!DOCTYPE", 9)) {
+        WTFLogAlways("[ARRISEOS-48366] HTML detected!");
+    }
+
+    // Hex dump
+    size_t dumpLen = std::min<size_t>(64, data.size());
+    fprintf(stderr, "%s:%d HEX dump (%zu bytes): ", __func__, __LINE__, dumpLen);
+    for (size_t i = 0; i < dumpLen; ++i)
+        fprintf(stderr, "%02x ", data[i]);
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "%s:%d ASCII dump (%zu bytes): ", __func__, __LINE__, dumpLen);
+    for (size_t i = 0; i < dumpLen; ++i) {
+        unsigned char c = data[i];
+        fprintf(stderr, "%c", (c >= 32 && c <= 126) ? c : '.');
+    }
+    fprintf(stderr, "\n");
+
     // Wrap the whole Vector object in case the data is stored in the inlined buffer.
     auto* bufferData = data.data();
     auto bufferLength = data.size();
