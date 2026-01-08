@@ -979,16 +979,16 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
                 ? trackBuffer.samples().decodeOrder().rbegin()++
                 : trackBuffer.samples().decodeOrder().reverseFindSampleWithDecodeKey(nextSyncSample->first)++;
             if (lastSampleToErase != trackBuffer.samples().decodeOrder().rend()) {
-                const MediaTime epsilon = MediaTime(1, 1000000000);
-                auto safeDecodeTime = lastSampleToErase->second->decodeTime() + epsilon;
-                if (safeDecodeTime < sample->decodeTime()) {
+                const MediaTime epsilon = MediaTime(1, 1000); //same as contiguousFrameTolerance below
+                auto safeDecodeTime = sample->decodeTime() + epsilon;
+                if (lastSampleToErase->second->decodeTime() < safeDecodeTime) {
                     INFO_LOG(LOGIDENTIFIER, "Discovered out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
                     ", but fixed the ordering by changing sample DTS from ", sample->decodeTime(), " to ", safeDecodeTime);
                     sample->setTimestamps(sample->presentationTime(), safeDecodeTime);
                     break;
                 } else {
                     INFO_LOG(LOGIDENTIFIER, "Failed to fix out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
-                    ", because ", sample->decodeTime(), " > ", safeDecodeTime);
+                    ", because ", lastSampleToErase->second->decodeTime(), " still > ", safeDecodeTime);
 
                 }
             }
