@@ -161,9 +161,6 @@ void MediaKeys::detachCDMClient(CDMClient& client)
 {
     ASSERT(m_cdmClients.contains(client));
     m_cdmClients.remove(client);
-    if (m_cdmClients.computesEmpty()) {
-        m_instance->releaseCDM();
-    }
 }
 
 void MediaKeys::attemptToResumePlaybackOnClients()
