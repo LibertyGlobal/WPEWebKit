@@ -173,7 +173,7 @@ bool CDMPrivateThunder::supportsConfiguration(const CDMKeySystemConfiguration& c
 
 Vector<AtomString> CDMPrivateThunder::supportedRobustnesses() const
 {
-    return { emptyAtom(), "SW_SECURE_DECODE"_s, "SW_SECURE_CRYPTO"_s };
+    return { emptyAtom(), "HW_SECURE_ALL"_s, "3000"_s };
 }
 
 CDMRequirement CDMPrivateThunder::distinctiveIdentifiersRequirement(const CDMKeySystemConfiguration&, const CDMRestrictions&) const
