@@ -947,6 +947,14 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
             }
         }
 
+        // There are many files out there where the frame times are not perfectly contiguous and may have small overlaps
+        // between the beginning of a frame and the end of the previous one; therefore a tolerance is needed whenever
+        // durations are considered.
+        // For instance, most WebM files are muxed rounded to the millisecond (the default TimecodeScale of the format)
+        // but their durations use a finer timescale (causing a sub-millisecond overlap). More rarely, there are also
+        // MP4 files with slightly off tfdt boxes, presenting a similar problem at the beginning of each fragment.
+        const MediaTime contiguousFrameTolerance = MediaTime(1, 1000);
+
         // When appending media containing B-frames (media whose samples' presentation timestamps
         // do not increase monotonically, the prior erase steps could leave samples in the trackBuffer
         // which will be disconnected from its previous I-frame. If the incoming frame is an I-frame,
@@ -970,42 +978,33 @@ void SourceBufferPrivate::didReceiveSample(Ref<MediaSample>&& originalSample)
                 nextSyncSample = trackBuffer.samples().decodeOrder().findSyncSampleAfterDecodeIterator(nextSyncSample);
 
             INFO_LOG(LOGIDENTIFIER, "VV: out-of-order sample (DTS:", sample->decodeTime(), "PTS:", sample->presentationTime(),") should be decoded before: ", *nextSampleInDecodeOrder->second.get());
+            if (nextSampleInDecodeOrder->second->presentationTime() < sample->presentationTime()) {
+                // Try to fix the out-of-ordering by placing the decoding timestamp of sample after the decoding timestamp
+                // of the last pre-existing sample before the next sync sample whis has a presentationTime lower than sample.
+                auto lastSampleToErase = trackBuffer.samples().decodeOrder().rbegin();
+                if (nextSyncSample != trackBuffer.samples().decodeOrder().end()) {
+                    lastSampleToErase = trackBuffer.samples().decodeOrder().reverseFindSampleWithDecodeKey(nextSyncSample->first);
+                    lastSampleToErase++;
+                }
 
-            // Try to fix the out-of-ordering by placing the decoding timestamp of sample after the decoding timestamp
-            // of the last pre-existing sample, but only if that means that the new decoding timestamp won't be beyond
-            // the decoding timestamp of the next sample (estimated as sample decoding timestamp + sample duration
-            // - 2 * contiguousFrameTolerance).
-            auto lastSampleToErase = (nextSyncSample == trackBuffer.samples().decodeOrder().end())
-                ? trackBuffer.samples().decodeOrder().rbegin()++
-                : trackBuffer.samples().decodeOrder().reverseFindSampleWithDecodeKey(nextSyncSample->first)++;
-            if (lastSampleToErase != trackBuffer.samples().decodeOrder().rend()) {
-                const MediaTime epsilon = MediaTime(1, 1000000000);
-                auto safeDecodeTime = lastSampleToErase->second->decodeTime() + epsilon;
-                if (safeDecodeTime < sample->decodeTime()) {
-                    INFO_LOG(LOGIDENTIFIER, "Discovered out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
-                    ", but fixed the ordering by changing sample DTS from ", sample->decodeTime(), " to ", safeDecodeTime);
-                    sample->setTimestamps(sample->presentationTime(), safeDecodeTime);
-                    break;
-                } else {
-                    INFO_LOG(LOGIDENTIFIER, "Failed to fix out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
-                    ", because ", sample->decodeTime(), " > ", safeDecodeTime);
-
+                if (lastSampleToErase != trackBuffer.samples().decodeOrder().rend()) {
+                    if (lastSampleToErase->second->presentationTime() < sample->presentationTime()) {
+                        const MediaTime epsilon = MediaTime(100, 1000000); // 100 µs.
+                        auto safeDecodeTime = lastSampleToErase->second->decodeTime() + epsilon;
+                        if (safeDecodeTime > sample->decodeTime()
+                            && safeDecodeTime < (sample->decodeTime() + sample->duration() - contiguousFrameTolerance - contiguousFrameTolerance)) {
+                            INFO_LOG(LOGIDENTIFIER, "Discovered out-of-order frames, from: ", *nextSampleInDecodeOrder->second, " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
+                            ", but fixed the ordering by changing sample DTS from ", sample->decodeTime(), " to ", safeDecodeTime);
+                            sample->setTimestamps(sample->presentationTime(), safeDecodeTime);
+                            break;
+                        }
+                    }
                 }
             }
 
-            INFO_LOG(LOGIDENTIFIER, "Discovered out-of-order frames, from: ", *nextSampleInDecodeOrder->second.get(), " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())),
-            "erasing them");
+            INFO_LOG(LOGIDENTIFIER, "Discovered out-of-order frames, from: ", *nextSampleInDecodeOrder->second, " to: ", (nextSyncSample == trackBuffer.samples().decodeOrder().end() ? "[end]"_s : toString(*nextSyncSample->second.get())));
             erasedSamples.addRange(nextSampleInDecodeOrder, nextSyncSample);
         } while (false);
-
-        // There are many files out there where the frame times are not perfectly contiguous and may have small overlaps
-        // between the beginning of a frame and the end of the previous one; therefore a tolerance is needed whenever
-        // durations are considered.
-        // For instance, most WebM files are muxed rounded to the millisecond (the default TimecodeScale of the format)
-        // but their durations use a finer timescale (causing a sub-millisecond overlap). More rarely, there are also
-        // MP4 files with slightly off tfdt boxes, presenting a similar problem at the beginning of each fragment.
-        // Same as tolerance in SourceBuffer::canPlayThroughRange().
-        const MediaTime contiguousFrameTolerance = MediaTime(1, 1000);
 
         // If highest presentation timestamp for track buffer is set and less than or equal to presentation timestamp
         if (trackBuffer.highestPresentationTimestamp().isValid() && trackBuffer.highestPresentationTimestamp() - contiguousFrameTolerance <= presentationTimestamp) {
