@@ -608,6 +608,7 @@ HTMLMediaElement::~HTMLMediaElement()
 #if ENABLE(ENCRYPTED_MEDIA)
     if (m_mediaKeys) {
         m_mediaKeys->detachCDMClient(*this);
+        m_mediaKeys->releaseCDM();
         if (m_player)
             m_player->cdmInstanceDetached(m_mediaKeys->cdmInstance());
     }
@@ -2813,6 +2814,7 @@ void HTMLMediaElement::setMediaKeys(MediaKeys* mediaKeys, Ref<DeferredPromise>&&
 {
     // https://w3c.github.io/encrypted-media/#dom-htmlmediaelement-setmediakeys
     // W3C Editor's Draft 23 June 2017
+    INFO_LOG(LOGIDENTIFIER);
 
     // 1. If this object's attaching media keys value is true, return a promise rejected with an InvalidStateError.
     if (m_attachingMediaKeys) {
@@ -6100,6 +6102,7 @@ void HTMLMediaElement::stop()
 
     if (m_mediaKeys) {
         m_mediaKeys->detachCDMClient(*this);
+        m_mediaKeys->releaseCDM();
         if (m_player)
             m_player->cdmInstanceDetached(m_mediaKeys->cdmInstance());
     }

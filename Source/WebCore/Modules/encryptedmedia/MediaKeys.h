@@ -70,6 +70,7 @@ public:
 
     void attachCDMClient(CDMClient&);
     void detachCDMClient(CDMClient&);
+    void releaseCDM();
     void attemptToResumePlaybackOnClients();
 
     bool hasOpenSessions() const;

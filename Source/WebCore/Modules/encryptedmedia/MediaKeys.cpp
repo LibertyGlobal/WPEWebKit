@@ -161,6 +161,10 @@ void MediaKeys::detachCDMClient(CDMClient& client)
 {
     ASSERT(m_cdmClients.contains(client));
     m_cdmClients.remove(client);
+}
+
+void MediaKeys::releaseCDM()
+{
     if (m_cdmClients.computesEmpty()) {
         m_instance->releaseCDM();
     }
