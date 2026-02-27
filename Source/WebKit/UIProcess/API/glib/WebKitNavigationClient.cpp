@@ -76,6 +76,12 @@ private:
         webkitWebViewLoadChanged(m_webView, WEBKIT_LOAD_FINISHED);
     }
 
+    void didFinishProcessSwapped(WebKit::WebPageProxy&)
+    {
+       fprintf(stderr,"---Hridhya---Inside didFinishProcessSwapped()\n");
+       webkitWebViewProcessSwapped(m_webView);
+    }
+
     void didFailNavigationWithError(WebPageProxy&, const FrameInfoData& frameInfo, API::Navigation*, const ResourceError& resourceError, API::Object* /* userData */) override
     {
         if (!frameInfo.isMainFrame)
