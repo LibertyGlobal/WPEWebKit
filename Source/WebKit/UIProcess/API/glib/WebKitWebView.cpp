@@ -2555,7 +2555,6 @@ void webkitWebViewDocumentLoaded(WebKitWebView* webView)
 
 void webkitWebViewProcessSwapped(WebKitWebView* webView)
 {
-    fprintf(stderr,"---Hridhya---Inside webkitWebViewProcessSwapped\n");
     g_signal_emit(webView, signals[PROCESS_SWAPPED], 0);
 }
 

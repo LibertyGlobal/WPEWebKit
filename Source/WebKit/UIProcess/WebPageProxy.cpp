@@ -3738,8 +3738,7 @@ void WebPageProxy::commitProvisionalPage(FrameIdentifier frameID, FrameInfoData&
     auto newPID = m_provisionalPage->process().processIdentifier();
 
     if (oldPID != newPID) {
-       LOG(ProcessSwapping, "(ProcessSwapping) ---Hridhya----ProcessSwap detected oldPID=%i newPID=%i", oldPID, newPID);
-       fprintf(stderr,"---Hridhya---- Process swapped  %llu → %llu", static_cast<unsigned long long>(oldPID), static_cast<unsigned long long>(newPID));
+        fprintf(stderr,"ProcessSwapped - Process swapped  %llu -> %llu", static_cast<unsigned long long>(oldPID), static_cast<unsigned long long>(newPID));
         m_navigationClient->didFinishProcessSwapped(*this);
     }
 

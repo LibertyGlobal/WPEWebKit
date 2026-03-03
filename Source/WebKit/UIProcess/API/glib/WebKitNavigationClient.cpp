@@ -78,7 +78,6 @@ private:
 
     void didFinishProcessSwapped(WebKit::WebPageProxy&)
     {
-       fprintf(stderr,"---Hridhya---Inside didFinishProcessSwapped()\n");
        webkitWebViewProcessSwapped(m_webView);
     }
 
