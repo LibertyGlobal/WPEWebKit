@@ -4379,8 +4379,8 @@ String CSSComputedStyleDeclaration::item(unsigned i) const
     // searching for keys.
 
     if (i < exposedComputedCSSPropertyIDs().size() + inheritedCustomProperties.size())
-        return inheritedCustomProperties.findKeyAtIndex(i - exposedComputedCSSPropertyIDs().size());
-
+        return inheritedCustomProperties.findKeyAtIndex(i - exposedComputedCSSPropertyIDs().size());    
+    
     const auto& nonInheritedCustomProperties = style->nonInheritedCustomProperties();
     return nonInheritedCustomProperties.findKeyAtIndex(i - inheritedCustomProperties.size() - exposedComputedCSSPropertyIDs().size());
 }
