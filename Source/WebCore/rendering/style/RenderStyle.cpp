@@ -2631,18 +2631,18 @@ void RenderStyle::deduplicateInheritedCustomProperties(const RenderStyle& other)
 
 void RenderStyle::setInheritedCustomPropertyValue(const AtomString& name, Ref<CSSCustomPropertyValue>&& value)
 {
-    auto* existingValue = m_rareInheritedData->customProperties->values.get(name);
+    auto* existingValue = m_rareInheritedData->customProperties->get(name);
     if (existingValue && existingValue->equals(value.get()))
         return;
-    m_rareInheritedData.access().customProperties.access().setCustomPropertyValue(name, WTFMove(value));
+    m_rareInheritedData.access().customProperties.access().set(name, WTFMove(value));
 }
 
 void RenderStyle::setNonInheritedCustomPropertyValue(const AtomString& name, Ref<CSSCustomPropertyValue>&& value)
 {
-    auto* existingValue = m_rareNonInheritedData->customProperties->values.get(name);
+    auto* existingValue = m_rareNonInheritedData->customProperties->get(name);
     if (existingValue && existingValue->equals(value.get()))
         return;
-    m_rareNonInheritedData.access().customProperties.access().setCustomPropertyValue(name, WTFMove(value));
+    m_rareNonInheritedData.access().customProperties.access().set(name, WTFMove(value));
 }
 
 const LengthBox& RenderStyle::scrollMargin() const

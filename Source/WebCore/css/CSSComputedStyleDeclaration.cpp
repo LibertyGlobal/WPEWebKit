@@ -4374,15 +4374,15 @@ String CSSComputedStyleDeclaration::item(unsigned i) const
         return String();
 
     const auto& inheritedCustomProperties = style->inheritedCustomProperties();
+    // FIXME: findKeyAtIndex does a linear search for the property name, so if
+    // we are called in a loop over all item indexes, we'll spend quadratic time
+    // searching for keys.
 
-    if (i < exposedComputedCSSPropertyIDs().size() + inheritedCustomProperties.size()) {
-        auto results = copyToVector(inheritedCustomProperties.keys());
-        return results.at(i - exposedComputedCSSPropertyIDs().size());
-    }
-
+    if (i < exposedComputedCSSPropertyIDs().size() + inheritedCustomProperties.size())
+        return inheritedCustomProperties.findKeyAtIndex(i - exposedComputedCSSPropertyIDs().size());    
+    
     const auto& nonInheritedCustomProperties = style->nonInheritedCustomProperties();
-    auto results = copyToVector(nonInheritedCustomProperties.keys());
-    return results.at(i - inheritedCustomProperties.size() - exposedComputedCSSPropertyIDs().size());
+    return nonInheritedCustomProperties.findKeyAtIndex(i - inheritedCustomProperties.size() - exposedComputedCSSPropertyIDs().size());
 }
 
 bool ComputedStyleExtractor::propertyMatches(CSSPropertyID propertyID, const CSSValue* value)
