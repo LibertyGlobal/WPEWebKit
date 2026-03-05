@@ -2557,7 +2557,7 @@ void webkitWebViewProcessSwapped(WebKitWebView* webView)
 {
     g_signal_emit(webView, signals[PROCESS_SWAPPED], 0);
 }
-b
+
 void webkitWebViewLoadFailed(WebKitWebView* webView, WebKitLoadEvent loadEvent, const char* failingURI, GError *error)
 {
     webkitWebViewCompleteAuthenticationRequest(webView);
