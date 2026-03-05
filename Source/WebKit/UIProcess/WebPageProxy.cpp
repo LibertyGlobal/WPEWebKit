@@ -3734,6 +3734,14 @@ void WebPageProxy::commitProvisionalPage(FrameIdentifier frameID, FrameInfoData&
 
     ASSERT(m_process.ptr() != &m_provisionalPage->process());
 
+    auto oldPID = m_process->processIdentifier();
+    auto newPID = m_provisionalPage->process().processIdentifier();
+
+    if (oldPID != newPID) {
+       fprintf(stderr,"ProcessSwapped - Process swapped  %llu -> %llu\n", static_cast<unsigned long long>(oldPID), static_cast<unsigned long long>(newPID));
+       m_navigationClient->didFinishProcessSwapped(*this);
+    }
+
     auto shouldDelayClosingUntilFirstLayerFlush = ShouldDelayClosingUntilFirstLayerFlush::No;
 #if PLATFORM(MAC)
     // On macOS, when not using UI-side compositing, we need to make sure we do not close the page in the previous process until we've

@@ -175,6 +175,8 @@ enum {
 
     DOCUMENT_LOADED,
 
+    PROCESS_SWAPPED,
+
     LAST_SIGNAL
 };
 
@@ -2437,6 +2439,16 @@ static void webkit_web_view_class_init(WebKitWebViewClass* webViewClass)
         nullptr, nullptr,
         nullptr,
         G_TYPE_NONE, 0);
+
+    signals[PROCESS_SWAPPED] =
+        g_signal_new("process-swapped",
+                     G_TYPE_FROM_CLASS(webViewClass),
+                     G_SIGNAL_RUN_LAST,
+                     0,
+                     nullptr, nullptr,
+                     nullptr,
+                     G_TYPE_NONE, 0);
+
 }
 
 static void webkitWebViewCompleteAuthenticationRequest(WebKitWebView* webView)
@@ -2541,6 +2553,11 @@ void webkitWebViewDocumentLoaded(WebKitWebView* webView)
     g_signal_emit(webView, signals[DOCUMENT_LOADED], 0);
 }
 
+void webkitWebViewProcessSwapped(WebKitWebView* webView)
+{
+    g_signal_emit(webView, signals[PROCESS_SWAPPED], 0);
+}
+b
 void webkitWebViewLoadFailed(WebKitWebView* webView, WebKitLoadEvent loadEvent, const char* failingURI, GError *error)
 {
     webkitWebViewCompleteAuthenticationRequest(webView);

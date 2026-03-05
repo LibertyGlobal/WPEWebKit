@@ -127,3 +127,4 @@ void webkitWebViewSetIsWebProcessResponsive(WebKitWebView*, bool);
 guint createShowOptionMenuSignal(WebKitWebViewClass*);
 
 void webkitWebViewDocumentLoaded(WebKitWebView* webView);
+void webkitWebViewProcessSwapped(WebKitWebView* webView);
