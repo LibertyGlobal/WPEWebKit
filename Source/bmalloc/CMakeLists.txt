@@ -659,6 +659,12 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     )
 endif ()
 
+if (ENABLE_MALLOC_HEAP_BREAKDOWN)
+    list(APPEND bmalloc_PRIVATE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/Source/WTF/wtf/malloc_heap_breakdown")
+    list(APPEND bmalloc_DEFINITIONS BENABLE_MALLOC_HEAP_BREAKDOWN=1)
+    list(APPEND bmalloc_LIBRARIES ${MALLOC_HEAP_BREAKDOWN_LIBRARIES})
+endif ()
+
 set(bmalloc_LIBRARIES
     ${CMAKE_DL_LIBS}
 )
