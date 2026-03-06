@@ -1,3 +1,7 @@
+if (ENABLE_MALLOC_HEAP_BREAKDOWN AND NOT APPLE)
+    include(MallocHeapBreakdown.cmake)
+endif ()
+
 set(WTF_PUBLIC_HEADERS
     ASCIICType.h
     AggregateLogger.h
@@ -570,6 +574,10 @@ set(WTF_PRIVATE_INCLUDE_DIRECTORIES
     "${WTF_DIR}/wtf/unicode"
 )
 
+if (ENABLE_MALLOC_HEAP_BREAKDOWN AND NOT APPLE)
+    list(APPEND WTF_PRIVATE_INCLUDE_DIRECTORIES "${WTF_DIR}/wtf/malloc_heap_breakdown")
+endif ()
+
 set(WTF_LIBRARIES
     ${CMAKE_DL_LIBS}
     ICU::data
@@ -579,6 +587,10 @@ set(WTF_LIBRARIES
     OdhOttTelemetry::OdhOttTelemetry
     gpumem
 )
+
+if (ENABLE_MALLOC_HEAP_BREAKDOWN AND NOT APPLE)
+    list(APPEND WTF_LIBRARIES MallocHeapBreakdown)
+endif ()
 
 if (NOT USE_SYSTEM_MALLOC)
     set(WTF_FRAMEWORKS bmalloc)
@@ -597,6 +609,10 @@ endif ()
 set(WTF_INTERFACE_LIBRARIES WTF)
 set(WTF_INTERFACE_INCLUDE_DIRECTORIES ${WTF_FRAMEWORK_HEADERS_DIR})
 set(WTF_INTERFACE_DEPENDENCIES WTF_CopyHeaders)
+
+if (ENABLE_MALLOC_HEAP_BREAKDOWN AND NOT APPLE)
+    list(APPEND WTF_INTERFACE_INCLUDE_DIRECTORIES "${WTF_DIR}/wtf/malloc_heap_breakdown")
+endif ()
 
 WEBKIT_FRAMEWORK_DECLARE(WTF)
 WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
