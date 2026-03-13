@@ -42,6 +42,11 @@ Ref<CSSCustomPropertyValue> CSSCustomPropertyValue::createWithID(const AtomStrin
     return adoptRef(*new CSSCustomPropertyValue(name, { id }));
 }
 
+bool CSSCustomPropertyValue::isAnimatable() const
+{
+    return std::holds_alternative<Length>(m_value) || std::holds_alternative<Ref<StyleImage>>(m_value);
+}
+
 bool CSSCustomPropertyValue::equals(const CSSCustomPropertyValue& other) const
 {
     if (m_name != other.m_name || m_value.index() != other.m_value.index())

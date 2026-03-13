@@ -87,6 +87,7 @@ public:
 
     Vector<CSSParserToken> tokens() const;
     bool equals(const CSSCustomPropertyValue&) const;
+    bool isAnimatable() const;
 
 private:
     CSSCustomPropertyValue(const AtomString& name, VariantValue&& value)

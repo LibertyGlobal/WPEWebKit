@@ -124,8 +124,10 @@ Vector<StylePropertyMapReadOnly::StylePropertyMapEntry> ComputedStylePropertyMap
     }
 
     for (auto* map : { &nonInheritedCustomProperties, &inheritedCustomProperties }) {
-        for (const auto& it : *map)
+        map->forEach([&](auto& it) {
             values.uncheckedAppend(makeKeyValuePair(it.key, StylePropertyMapReadOnly::reifyValueToVector(it.value.get(), m_element->document(), m_element.ptr())));
+            return IterationStatus::Continue;
+        });
     }
 
     std::sort(values.begin(), values.end(), [](const auto& a, const auto& b) {
