@@ -123,8 +123,20 @@ static void releaseCriticalMemory(Synchronous synchronous, MaintainBackForwardCa
 #endif
 
     if (synchronous == Synchronous::Yes) {
-        GCController::singleton().deleteAllCode(JSC::DeleteAllCodeIfNotCollecting);
-        GCController::singleton().garbageCollectNow();
+        {
+            auto t0 = std::chrono::steady_clock::now();
+            GCController::singleton().deleteAllCode(JSC::DeleteAllCodeIfNotCollecting);
+            auto t1 = std::chrono::steady_clock::now();
+            WTFLogAlways("[MemoryRelease] deleteAllCode: %lld ms",
+                std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count());
+        }
+        {
+            auto t0 = std::chrono::steady_clock::now();
+            GCController::singleton().garbageCollectNow();
+            auto t1 = std::chrono::steady_clock::now();
+            WTFLogAlways("[MemoryRelease] garbageCollectNow: %lld ms",
+                std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count());
+        }
     } else {
 #if PLATFORM(IOS_FAMILY) || PLATFORM(BROADCOM)
         GCController::singleton().garbageCollectNowIfNotDoneRecently();
@@ -245,11 +257,21 @@ void jettisonExpensiveObjectsOnTopLevelNavigation()
     const bool shouldJettison = (timeOfLastNavigation == now) || (std::chrono::duration_cast<std::chrono::seconds>(now - timeOfLastNavigation) >= minimumTimeSinceNavigation);
     timeOfLastNavigation = now;
 
-    if (!shouldJettison)
+    if (!shouldJettison) {
+        WTFLogAlways("[MemoryRelease] jettisonExpensiveObjectsOnTopLevelNavigation: skipped");
         return;
+    }
 
-    RunLoop::main().dispatch([]{
+    WTFLogAlways("[MemoryRelease] jettisonExpensiveObjectsOnTopLevelNavigation: dispatching releaseMemory");
+    auto dispatchTime = std::chrono::steady_clock::now();
+    RunLoop::main().dispatch([dispatchTime]{
+        auto t0 = std::chrono::steady_clock::now();
+        WTFLogAlways("[MemoryRelease] releaseMemory started (queued for %lld ms)",
+            std::chrono::duration_cast<std::chrono::milliseconds>(t0 - dispatchTime).count());
         releaseMemory(Critical::Yes, Synchronous::Yes);
+        auto t1 = std::chrono::steady_clock::now();
+        WTFLogAlways("[MemoryRelease] releaseMemory finished (total %lld ms)",
+            std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count());
     });
 }
 void registerMemoryReleaseNotifyCallbacks() { }
