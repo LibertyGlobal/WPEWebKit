@@ -2500,10 +2500,12 @@ Expected<void, MediaPlaybackDenialReason> HTMLMediaElement::canTransitionFromAut
         ALWAYS_LOG(LOGIDENTIFIER, "!paused");
         return makeUnexpected(MediaPlaybackDenialReason::PageConsentRequired);
     }
+#if 0
     if (!autoplay()) {
         ALWAYS_LOG(LOGIDENTIFIER, "!autoplay");
         return makeUnexpected(MediaPlaybackDenialReason::PageConsentRequired);
     }
+#endif
     if (pausedForUserInteraction()) {
         ALWAYS_LOG(LOGIDENTIFIER, "pausedForUserInteraction");
         return makeUnexpected(MediaPlaybackDenialReason::PageConsentRequired);
