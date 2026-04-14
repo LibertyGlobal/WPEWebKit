@@ -284,7 +284,8 @@ CDMInstanceSessionThunder::CDMInstanceSessionThunder(CDMInstanceThunder& instanc
     m_thunderSessionCallbacks.process_challenge_callback = [](OpenCDMSession*, void* userData, const char[], const uint8_t challenge[],
         const uint16_t challengeLength) {
         GST_DEBUG("Got 'challenge' OCDM notification with length %hu", challengeLength);
-        ASSERT(challengeLength > 0);
+
+        // Persistent license loading can generate a challenge with length 0.	
         callOnMainThread([session = WeakPtr { static_cast<CDMInstanceSessionThunder*>(userData) }, buffer = WebCore::SharedBuffer::create(challenge,
             challengeLength)]() mutable {
             if (!session)
@@ -370,6 +371,11 @@ private:
 
 void CDMInstanceSessionThunder::challengeGeneratedCallback(RefPtr<SharedBuffer>&& buffer)
 {
+    if (!buffer->size()) {
+        GST_DEBUG("empty response");
+        return;
+    }	
+
     ParsedResponseMessage parsedResponseMessage(buffer);
     if (!parsedResponseMessage) {
         GST_ERROR("response message parsing failed");
@@ -604,36 +610,65 @@ void CDMInstanceSessionThunder::updateLicense(const String& sessionID, LicenseTy
         sessionFailure();
 }
 
-void CDMInstanceSessionThunder::loadSession(LicenseType licenseType, const String& sessionID, const String&, LoadSessionCallback&& callback)
+void CDMInstanceSessionThunder::loadSession(LicenseType licenseType, const String& sessionID, const String& /* origin */, LoadSessionCallback&& callback)
 {
     ASSERT(isMainThread());
 
-    // persistent session can be created here by OCDM backend based by previously used sessionID
-    if (!m_session && m_sessionID.isEmpty() &&
-        licenseType == WebCore::CDMInstanceSession::LicenseType::PersistentLicense) {
-        auto instance = cdmInstanceThunder();
-        ASSERT(instance);
+    // MediaKeySession::load() is guaranteeing this (so we don't have to double-check):
+    // - MediaKeySession is not uninitialized (is initialized) and is not closed.
+    // - sessionID is sanitized.
+    // - LicenseType sessionType is not temporary (it's either PersistentUsageRecord or PersistentLicense).
+    // TODO: MediaKeySession::load() isn't checking if there are other open session with the same sessionId
+    //       because it lacks a global MediaKeySession tracker.
 
-        GST_TRACE("Going to request a new session for id: %s", sessionID.utf8().data());
+    auto instance = cdmInstanceThunder();
+    ASSERT(instance);
 
-        OpenCDMSession* session = nullptr;
-        // sessionId passed as customData when no initData is given
-        opencdm_construct_session(&instance->thunderSystem(), thunderLicenseType(licenseType), "",
-            nullptr, 0, sessionID.utf8().dataAsUInt8Ptr(), sessionID.utf8().length(), &m_thunderSessionCallbacks, this, &session);
-        if (!session) {
-            GST_ERROR("Could not create session");
-        } else {
-            m_session = adoptInBoxPtr(session);
-            m_sessionID = sessionID;
+    GST_TRACE("Going to load session for session id %s", sessionID.utf8().data());
+
+    OpenCDMSession* session = nullptr;
+    OpenCDMError result = opencdm_construct_session(&instance->thunderSystem(), thunderLicenseType(licenseType), "",
+        nullptr, 0, sessionID.utf8().dataAsUInt8Ptr(), sessionID.length(), &m_thunderSessionCallbacks, this, &session);
+
+    if (!session) {
+        SessionLoadFailure failureReason { SessionLoadFailure::Other };
+        switch (result) {
+            case ERROR_NONE:
+                failureReason = SessionLoadFailure::None;
+                break;
+            case ERROR_KEYSYSTEM_NOT_SUPPORTED:
+            case ERROR_OUT_OF_MEMORY:
+            case ERROR_BUSY_CANNOT_INITIALIZE:
+            case ERROR_BUFFER_TOO_SMALL:
+                failureReason = SessionLoadFailure::QuotaExceeded;
+                break;
+            case ERROR_INVALID_SESSION:
+                failureReason = SessionLoadFailure::NoSessionData;
+            default:
+                break;
         }
+
+        GST_ERROR("Could not create session. OpenCDMError: %" PRIu32, static_cast<uint32_t>(result));
+
+        callback(std::nullopt, std::nullopt, std::nullopt, SuccessValue::Failed, failureReason);
+        return;
     }
+
+    m_session = adoptInBoxPtr(session);
+    m_sessionID = String::fromUTF8(opencdm_session_id(m_session->get()));
+
+    GST_TRACE("Session created with id %s", m_sessionID.utf8().data());
+
+    ASSERT(sessionId == m_sessionID);
+
+    // FIXME: Is this callback for the response actually needed, since we're not doing generateRequest()?	
     m_sessionChangedCallbacks.append([this, callback = WTFMove(callback)](bool success, RefPtr<SharedBuffer>&& responseMessage) mutable {
         ASSERT(isMainThread());
         if (success) {
             if (!responseMessage)
                 callback(m_keyStore.convertToJSKeyStatusVector(), std::nullopt, std::nullopt, SuccessValue::Succeeded, SessionLoadFailure::None);
             else {
-                // FIXME: Using JSON reponse messages is much cleaner than using string prefixes, I believe there
+                // FIXME: Using JSON response messages is much cleaner than using string prefixes, I believe there	    
                 // will even be other parts of the spec where not having structured data will be bad.
                 ParsedResponseMessage parsedResponseMessage(responseMessage);
                 ASSERT(parsedResponseMessage);
@@ -663,10 +698,15 @@ void CDMInstanceSessionThunder::loadSession(LicenseType licenseType, const Strin
             }
         }
     });
-    if (!m_session || m_sessionID.isEmpty() || opencdm_session_load(m_session->get())) {
-        GST_DEBUG("loading failed");
+
+    result = OpenCDMError::ERROR_NONE;
+    if (!m_session || m_sessionID.isEmpty() || (result = opencdm_session_load(m_session->get()))) {
+        GST_DEBUG("loading failed. OpenCDMError: %" PRIu32, static_cast<uint32_t>(result));    
         sessionFailure();
+        return;	
     }
+
+    GST_TRACE("session %s loaded. OpenCDMError: %" PRIu32, m_sessionID.utf8().data(), static_cast<uint32_t>(result));    
 }
 
 void CDMInstanceSessionThunder::closeSession(const String& sessionID, CloseSessionCallback&& callback)
