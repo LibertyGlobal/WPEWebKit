@@ -3219,8 +3219,8 @@ void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri, const gb
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
     g_return_if_fail(uri);
 
-    getPage(webView).loadRequest(URL({ }, String::fromUTF8(uri)));
     webView->priv->view->setFbcMapping(isFbc);
+    getPage(webView).loadRequest(URL({ }, String::fromUTF8(uri)));
 
 }
 
@@ -3242,8 +3242,8 @@ void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri,
     g_return_if_fail(cert_contents);
 
     auto userCertConf = API::String::create(String::fromUTF8(cert_contents));
-    getPage(webView).loadRequestAndCert(URL({ }, String::fromUTF8(uri)) , userCertConf.ptr());
     webView->priv->view->setFbcMapping(isFbc);
+    getPage(webView).loadRequestAndCert(URL({ }, String::fromUTF8(uri)) , userCertConf.ptr());
 
 }
 
