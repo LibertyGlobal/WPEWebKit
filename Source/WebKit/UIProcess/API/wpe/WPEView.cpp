@@ -505,4 +505,9 @@ WebKit::WebPageProxy* View::platformWebPageProxyForGamepadInput()
 }
 #endif
 
+void View::setFbcMapping(bool fbc)
+{
+    wpe_view_backend_set_fbc_mapping(m_backend, fbc);
+}
+
 } // namespace WKWPE

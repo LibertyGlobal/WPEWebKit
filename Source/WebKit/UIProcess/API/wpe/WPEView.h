@@ -98,6 +98,8 @@ public:
 
     void close();
 
+    void setFbcMapping(bool);
+
 #if ENABLE(FULLSCREEN_API)
     bool isFullScreen() { return m_fullScreenModeActive; };
     bool setFullScreen(bool);

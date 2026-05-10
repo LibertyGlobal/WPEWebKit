@@ -3214,12 +3214,14 @@ void webkit_web_view_try_close(WebKitWebView *webView)
  * You can monitor the load operation by connecting to
  * #WebKitWebView::load-changed signal.
  */
-void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri)
+void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri, const gboolean isFbc)
 {
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
     g_return_if_fail(uri);
 
     getPage(webView).loadRequest(URL({ }, String::fromUTF8(uri)));
+    webView->priv->view->setFbcMapping(isFbc);
+
 }
 
 /**
@@ -3233,7 +3235,7 @@ void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri)
  * You can monitor the load operation by connecting to
  * #WebKitWebView::load-changed signal.
  */
-void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri, const gchar* cert_contents)
+void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri, const gchar* cert_contents, const gboolean isFbc)
 {
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
     g_return_if_fail(uri);
@@ -3241,6 +3243,8 @@ void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri,
 
     auto userCertConf = API::String::create(String::fromUTF8(cert_contents));
     getPage(webView).loadRequestAndCert(URL({ }, String::fromUTF8(uri)) , userCertConf.ptr());
+    webView->priv->view->setFbcMapping(isFbc);
+
 }
 
 /**
