@@ -3153,8 +3153,9 @@ bool WebPageProxy::handleKeyboardEvent(const NativeWebKeyboardEvent& event)
 {
     if (!hasRunningProcess())
         return false;
-    
+
     LOG(KeyHandling, "WebPageProxy::handleKeyboardEvent: %s", webKeyboardEventTypeString(event.type()));
+    LOG(Media,"keycode=%d key=%s code=%s", event.windowsVirtualKeyCode(), event.key().utf8().data(), event.code().utf8().data());
 
     if (event.type() == WebEvent::KeyDown && !m_keyEventQueue.isEmpty() && m_keyEventQueue.last() == event) {
         // Throtthe key repetition if we still have previous keypress pending

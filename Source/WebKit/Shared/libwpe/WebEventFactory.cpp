@@ -113,14 +113,14 @@ WallTime wallTimeForEventTime(uint64_t msTimeStamp)
     return firstEventWallTime + Seconds(delta / 1000.);
 }
 
-WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(struct wpe_input_keyboard_event* event, const String& text, bool handledByInputMethod, std::optional<Vector<WebCore::CompositionUnderline>>&& preeditUnderlines, std::optional<EditingRange>&& preeditSelectionRange)
+WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(struct wpe_input_keyboard_event* event, const String& text, bool handledByInputMethod, std::optional<Vector<WebCore::CompositionUnderline>>&& preeditUnderlines, std::optional<EditingRange>&& preeditSelectionRange, bool keyMappingRequired)
 {
     return WebKeyboardEvent(event->pressed ? WebEvent::KeyDown : WebEvent::KeyUp,
         text.isNull() ? WebCore::PlatformKeyboardEvent::singleCharacterString(event->key_code) : text,
         WebCore::PlatformKeyboardEvent::keyValueForWPEKeyCode(event->key_code),
         WebCore::PlatformKeyboardEvent::keyCodeForHardwareKeyCode(event->hardware_key_code),
         WebCore::PlatformKeyboardEvent::keyIdentifierForWPEKeyCode(event->key_code),
-        WebCore::PlatformKeyboardEvent::windowsKeyCodeForWPEKeyCode(event->key_code),
+        WebCore::PlatformKeyboardEvent::windowsKeyCodeForWPEKeyCode(event->key_code, keyMappingRequired),
         event->key_code,
         handledByInputMethod,
         WTFMove(preeditUnderlines),

@@ -75,7 +75,7 @@ public:
     NativeWebKeyboardEvent(::WebEvent *, HandledByInputMethod);
 #elif USE(LIBWPE)
     enum class HandledByInputMethod : bool { No, Yes };
-    NativeWebKeyboardEvent(struct wpe_input_keyboard_event*, const String&, HandledByInputMethod, std::optional<Vector<WebCore::CompositionUnderline>>&&, std::optional<EditingRange>&&);
+    NativeWebKeyboardEvent(struct wpe_input_keyboard_event*, const String&, HandledByInputMethod, std::optional<Vector<WebCore::CompositionUnderline>>&&, std::optional<EditingRange>&&, bool keyMappingRequired);
 #elif PLATFORM(WIN)
     NativeWebKeyboardEvent(HWND, UINT message, WPARAM, LPARAM, Vector<MSG>&& pendingCharEvents);
 #endif

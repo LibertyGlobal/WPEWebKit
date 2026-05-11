@@ -435,7 +435,7 @@ void View::handleKeyboardEvent(struct wpe_input_keyboard_event* event)
     if (filterResult.handled)
         return;
 
-    page().handleKeyboardEvent(WebKit::NativeWebKeyboardEvent(event, event->pressed ? filterResult.keyText : String(), NativeWebKeyboardEvent::HandledByInputMethod::No, std::nullopt, std::nullopt));
+    page().handleKeyboardEvent(WebKit::NativeWebKeyboardEvent(event, event->pressed ? filterResult.keyText : String(), NativeWebKeyboardEvent::HandledByInputMethod::No, std::nullopt, std::nullopt, m_keyMappingRequired));
 }
 
 void View::synthesizeCompositionKeyPress(const String& text, std::optional<Vector<WebCore::CompositionUnderline>>&& underlines, std::optional<EditingRange>&& selectionRange)
@@ -445,7 +445,7 @@ void View::synthesizeCompositionKeyPress(const String& text, std::optional<Vecto
     // composition results. WPE doesn't have an equivalent, so we send VoidSymbol
     // here to WebCore. PlatformKeyEvent converts this code into VK_PROCESSKEY.
     static struct wpe_input_keyboard_event event = { 0, WPE_KEY_VoidSymbol, 0, true, 0 };
-    page().handleKeyboardEvent(WebKit::NativeWebKeyboardEvent(&event, text, NativeWebKeyboardEvent::HandledByInputMethod::Yes, WTFMove(underlines), WTFMove(selectionRange)));
+    page().handleKeyboardEvent(WebKit::NativeWebKeyboardEvent(&event, text, NativeWebKeyboardEvent::HandledByInputMethod::Yes, WTFMove(underlines), WTFMove(selectionRange), m_keyMappingRequired));
 }
 
 void View::close()
@@ -504,5 +504,10 @@ WebKit::WebPageProxy* View::platformWebPageProxyForGamepadInput()
     return nullptr;
 }
 #endif
+
+void View::setKeyMapping(bool keyMappingRequired)
+{
+    m_keyMappingRequired = keyMappingRequired;
+}
 
 } // namespace WKWPE

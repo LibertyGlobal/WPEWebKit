@@ -3214,11 +3214,12 @@ void webkit_web_view_try_close(WebKitWebView *webView)
  * You can monitor the load operation by connecting to
  * #WebKitWebView::load-changed signal.
  */
-void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri)
+void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri, const gboolean keyMappingRequired)
 {
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
     g_return_if_fail(uri);
 
+    webView->priv->view->setKeyMapping(keyMappingRequired);
     getPage(webView).loadRequest(URL({ }, String::fromUTF8(uri)));
 }
 
@@ -3233,12 +3234,13 @@ void webkit_web_view_load_uri(WebKitWebView* webView, const gchar* uri)
  * You can monitor the load operation by connecting to
  * #WebKitWebView::load-changed signal.
  */
-void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri, const gchar* cert_contents)
+void webkit_web_view_load_uri_and_cert(WebKitWebView* webView, const gchar* uri, const gchar* cert_contents, const gboolean keyMappingRequired)
 {
     g_return_if_fail(WEBKIT_IS_WEB_VIEW(webView));
     g_return_if_fail(uri);
     g_return_if_fail(cert_contents);
 
+    webView->priv->view->setKeyMapping(keyMappingRequired);
     auto userCertConf = API::String::create(String::fromUTF8(cert_contents));
     getPage(webView).loadRequestAndCert(URL({ }, String::fromUTF8(uri)) , userCertConf.ptr());
 }

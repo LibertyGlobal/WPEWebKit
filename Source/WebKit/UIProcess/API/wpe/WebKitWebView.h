@@ -345,12 +345,14 @@ webkit_web_view_try_close                            (WebKitWebView             
 
 WEBKIT_API void
 webkit_web_view_load_uri                             (WebKitWebView             *web_view,
-                                                      const gchar               *uri);
+                                                      const gchar               *uri,
+                                                      const gboolean            keyMappingRequired = false);
 
 WEBKIT_API void
 webkit_web_view_load_uri_and_cert                    (WebKitWebView             *webView,
                                                       const gchar               *uri,
-                                                      const gchar               *cert_contents);
+                                                      const gchar               *cert_contents,
+                                                      const gboolean            keyMappingRequired = false);
 
 WEBKIT_API void
 webkit_web_view_load_html                            (WebKitWebView             *web_view,

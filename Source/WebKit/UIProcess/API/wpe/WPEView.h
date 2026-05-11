@@ -98,6 +98,8 @@ public:
 
     void close();
 
+    void setKeyMapping(bool);
+
 #if ENABLE(FULLSCREEN_API)
     bool isFullScreen() { return m_fullScreenModeActive; };
     bool setFullScreen(bool);
@@ -140,6 +142,7 @@ private:
 
     bool m_horizontalScrollActive { false };
     bool m_verticalScrollActive { false };
+    bool m_keyMappingRequired {false};
 
     WebKit::InputMethodFilter m_inputMethodFilter;
 };
