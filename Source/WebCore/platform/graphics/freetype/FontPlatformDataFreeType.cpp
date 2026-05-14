@@ -222,6 +222,7 @@ void FontPlatformData::buildScaledFont(cairo_font_face_t* fontFace)
     ASSERT(m_pattern);
     CairoUniquePtr<cairo_font_options_t> options(cairo_font_options_copy(getDefaultCairoFontOptions()));
     setCairoFontOptionsFromFontConfigPattern(options.get(), m_pattern.get());
+    cairo_font_options_set_hint_metrics(options.get(), CAIRO_HINT_METRICS_OFF);
 
     cairo_matrix_t ctm;
     cairo_matrix_init_identity(&ctm);
