@@ -178,7 +178,13 @@ void Thread::signalHandlerSuspendResume(int, siginfo_t*, void* ucontext)
 void Thread::initializePlatformThreading()
 {
     if (!g_wtfConfig.isUserSpecifiedThreadSuspendResumeSignalConfigured) {
+#if PLATFORM(WPE)
+        // SIGUSR1 is used by GStreamer for pipeline debug dumps or mem leak tracers.
+        // Use a real-time signal instead so that sending SIGUSR1 to WPEWebProcess reaches GStreamer.
+        g_wtfConfig.sigThreadSuspendResume = SIGRTMIN;
+#else
         g_wtfConfig.sigThreadSuspendResume = SIGUSR1;
+#endif
         if (const char* string = getenv("JSC_SIGNAL_FOR_GC")) {
             int32_t value = 0;
             if (sscanf(string, "%d", &value) == 1)
