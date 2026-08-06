@@ -590,6 +590,9 @@ void NavigationScheduler::timerFired()
         return;
     }
 
+    if (m_frame.loader().provisionalDocumentLoader())
+        return;
+
     Ref<Frame> protect(m_frame);
 
     std::unique_ptr<ScheduledNavigation> redirect = std::exchange(m_redirect, nullptr);
